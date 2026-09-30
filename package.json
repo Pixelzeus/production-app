@@ -1,0 +1,19 @@
+{
+  "name": "carnet-de-prod",
+  "version": "1.0.0",
+  "description": "Application d'estimation et chronométrage pour Game Artists avec persistance serveur SQLite",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node --no-warnings server/index.js",
+    "dev": "node --no-warnings --watch server/index.js",
+    "test": "node test_suite.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

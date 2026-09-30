@@ -1,0 +1,2632 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carnet de Prod</title>
+<meta name="description" content="Apprendre à estimer sa charge de travail : découpe, estime avec un indice de confiance, chronomètre et compare.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='22' r='14' fill='%23ffd35c' stroke='%231d1a16' stroke-width='3'/%3E%3Cpath d='M20 22v-8M20 22l6 3M16 5h8' stroke='%231d1a16' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+<style>
+
+/* ============ Artist Profile & Server Sync ============ */
+.artist-badge {
+  display: inline-flex; align-items: center; gap: 8px; padding: 4px 11px 4px 6px;
+  border-radius: 999px; border: 1.5px solid var(--line-soft); background: var(--card-2);
+  font-weight: 650; font-size: .88rem; cursor: pointer; transition: all .15s ease;
+}
+.artist-badge:hover { border-color: var(--line); background: var(--hl-soft); color: #1d1a16; }
+.artist-badge .avatar {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--hl); border: 1.5px solid var(--line);
+  display: grid; place-items: center; font-size: .78rem; font-weight: 800; color: #1d1a16;
+}
+.artist-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
+  margin: 12px 0; max-height: 280px; overflow-y: auto; padding: 2px;
+}
+.artist-card-btn {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 11px;
+  border: 1.5px solid var(--line-soft); background: var(--card-2); text-align: left; cursor: pointer;
+  transition: transform .08s ease, border-color .12s;
+}
+.artist-card-btn:hover { border-color: var(--line); background: var(--card); transform: translateY(-1px); }
+.artist-card-btn.cur { border-color: var(--line); background: var(--hl-soft); }
+.artist-card-btn .avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--hl); border: 2px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: .95rem; }
+.sync-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--ok);
+  margin-right: 6px; vertical-align: middle;
+}
+.sync-dot.saving { background: var(--hl); animation: pulse 1s infinite; }
+.sync-dot.offline { background: var(--miss); }
+
+/* ============ Tokens ============ */
+:root {
+  color-scheme: light;
+  --paper: #f4eee2;
+  --paper-dot: #d9cfbc;
+  --card: #fffcf5;
+  --card-2: #f8f1e3;
+  --ink: #1d1a16;
+  --ink-2: #57504a;
+  --ink-3: #857d72;
+  --line: #1d1a16;
+  --line-soft: rgba(29, 26, 22, .16);
+  --line-hair: rgba(29, 26, 22, .10);
+  --hl: #ffd35c;
+  --hl-soft: #ffeeb8;
+  --band: #ffe08a;
+  --ok: #2a78d6;
+  --miss: #eb6834;
+  --run: #1d1a16;
+  --shadow-c: #1d1a16;
+  --focus: #2a78d6;
+  --overlay: rgba(29, 26, 22, .45);
+  --radius: 14px;
+  --font: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --paper: #171512;
+    --paper-dot: #2d2a25;
+    --card: #221f1b;
+    --card-2: #2a2621;
+    --ink: #f2ebdd;
+    --ink-2: #c9c0ae;
+    --ink-3: #958c7d;
+    --line: #d9d0bf;
+    --line-soft: rgba(242, 235, 221, .18);
+    --line-hair: rgba(242, 235, 221, .10);
+    --hl: #ffd35c;
+    --hl-soft: rgba(255, 211, 92, .16);
+    --band: rgba(255, 211, 92, .34);
+    --ok: #3987e5;
+    --miss: #d95926;
+    --run: #f2ebdd;
+    --shadow-c: #000;
+    --overlay: rgba(0, 0, 0, .6);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #171512;
+  --paper-dot: #2d2a25;
+  --card: #221f1b;
+  --card-2: #2a2621;
+  --ink: #f2ebdd;
+  --ink-2: #c9c0ae;
+  --ink-3: #958c7d;
+  --line: #d9d0bf;
+  --line-soft: rgba(242, 235, 221, .18);
+  --line-hair: rgba(242, 235, 221, .10);
+  --hl: #ffd35c;
+  --hl-soft: rgba(255, 211, 92, .16);
+  --band: rgba(255, 211, 92, .34);
+  --ok: #3987e5;
+  --miss: #d95926;
+  --run: #f2ebdd;
+  --shadow-c: #000;
+  --overlay: rgba(0, 0, 0, .6);
+}
+
+/* ============ Base ============ */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--paper-dot) 1.1px, transparent 1.4px);
+  background-size: 22px 22px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+h1, h2, h3 { line-height: 1.15; margin: 0 0 .4em; font-weight: 750; letter-spacing: -.01em; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.02rem; }
+p { margin: 0 0 .7em; }
+a { color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 6px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.small { font-size: .88rem; }
+.hand { font-family: var(--hand); font-size: 1.35rem; line-height: 1.1; color: var(--ink-2); font-weight: 600; }
+.mark { background: linear-gradient(transparent 58%, var(--hl) 58%, var(--hl) 88%, transparent 88%); padding: 0 .08em; }
+.num { font-variant-numeric: tabular-nums; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.stack > * + * { margin-top: 16px; }
+.icon { width: 18px; height: 18px; flex: none; display: inline-block; vertical-align: -3px; }
+
+/* ============ Header ============ */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--paper) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 2px solid var(--line);
+}
+.topbar-in { max-width: 1140px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 800; font-size: 1.2rem; letter-spacing: -.02em; }
+.brand svg { width: 34px; height: 34px; }
+.nav { display: flex; gap: 6px; }
+.nav a {
+  text-decoration: none; padding: 7px 12px; border-radius: 999px; font-weight: 600; color: var(--ink-2);
+  border: 2px solid transparent;
+}
+.nav a:hover { color: var(--ink); background: var(--card-2); }
+.nav a[aria-current="page"] { color: #1d1a16; border-color: var(--line); background: var(--hl); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.top-spacer { flex: 1; }
+.save-state { font-size: .82rem; color: var(--ink-3); white-space: nowrap; }
+.timer-pill {
+  display: none; align-items: center; gap: 8px; padding: 5px 6px 5px 12px; border-radius: 999px;
+  border: 2px solid var(--line); background: var(--card); font-weight: 600; font-size: .9rem; max-width: 340px;
+}
+.timer-pill.on { display: inline-flex; }
+.timer-pill .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--miss); animation: pulse 1.4s infinite; flex: none; }
+.timer-pill .tp-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; text-decoration: none; }
+@keyframes pulse { 50% { opacity: .25; } }
+
+main { max-width: 1140px; margin: 0 auto; padding: 22px 16px 80px; }
+
+/* ============ Buttons & inputs ============ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 9px 16px; border-radius: 11px; border: 2px solid var(--line); background: var(--card);
+  font-weight: 650; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow-c); text-decoration: none;
+  transition: transform .08s ease, box-shadow .08s ease, background .15s;
+  white-space: nowrap;
+}
+.btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--shadow-c); }
+.btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--shadow-c); }
+.btn[disabled] { opacity: .45; cursor: not-allowed; transform: none; box-shadow: 2px 2px 0 var(--shadow-c); }
+.btn-primary { background: var(--hl); color: #1d1a16; border-color: #1d1a16; }
+.btn-big { padding: 13px 20px; font-size: 1.05rem; border-radius: 13px; }
+.btn-sm { padding: 5px 10px; font-size: .88rem; border-radius: 9px; box-shadow: 1.5px 1.5px 0 var(--shadow-c); }
+.btn-ghost { border-color: transparent; box-shadow: none; background: transparent; }
+.btn-ghost:hover { background: var(--card-2); box-shadow: none; transform: none; }
+.btn-ghost:active { transform: none; }
+.btn-danger { color: var(--miss); }
+.btn-soft { border-color: var(--line-soft); box-shadow: none; }
+.btn-soft:hover { border-color: var(--line); box-shadow: none; transform: none; }
+.btn-soft:active { transform: none; }
+.icon-btn { width: 38px; height: 38px; padding: 0; border-radius: 10px; }
+.icon-btn.btn-sm { width: 32px; height: 32px; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label, .lbl { font-weight: 650; font-size: .9rem; }
+.input, select.input, textarea.input {
+  width: 100%; padding: 9px 11px; border-radius: 10px; border: 2px solid var(--line-soft);
+  background: var(--card); transition: border-color .15s;
+  min-width: 0;
+}
+.input:hover { border-color: color-mix(in srgb, var(--line) 45%, transparent); }
+.input:focus { border-color: var(--line); outline: none; box-shadow: 0 0 0 3px var(--hl-soft); }
+.input.bad { border-color: var(--miss); }
+textarea.input { resize: vertical; min-height: 90px; line-height: 1.45; }
+select.input { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--ink-2) 50%), linear-gradient(135deg, var(--ink-2) 50%, transparent 50%); background-position: calc(100% - 16px) 55%, calc(100% - 11px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 28px; }
+.title-input {
+  font-size: clamp(1.5rem, 3.6vw, 2.2rem); font-weight: 800; letter-spacing: -.02em; border: 2px dashed transparent;
+  background: transparent; padding: 2px 8px; margin-left: -10px; border-radius: 10px; width: calc(100% + 10px);
+  display: block; resize: none; overflow: hidden; line-height: 1.15; min-height: 0;
+}
+.title-input:hover { border-color: var(--line-soft); }
+.title-input:focus { outline: none; border-color: var(--line); background: var(--card); }
+
+/* ============ Cards ============ */
+.card {
+  background: var(--card); border: 2px solid var(--line); border-radius: var(--radius);
+  box-shadow: 4px 4px 0 var(--shadow-c); padding: 20px;
+  min-width: 0;
+}
+.card.soft { box-shadow: none; border-color: var(--line-soft); }
+.card.tint { background: var(--card-2); }
+.card-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.card-head h2 { margin: 0; }
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(290px, 1fr); gap: 22px; align-items: start; }
+.grid-eq { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; align-items: start; }
+@media (max-width: 900px) {
+  .grid-2, .grid-eq { grid-template-columns: minmax(0, 1fr); }
+}
+
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px;
+  border: 1.5px solid var(--line-soft); font-size: .8rem; font-weight: 600; color: var(--ink-2); background: var(--card);
+  white-space: nowrap;
+}
+.chip.hl { background: var(--hl-soft); border-color: transparent; color: var(--ink); }
+button.chip { cursor: pointer; }
+button.chip:hover { border-color: var(--line); color: var(--ink); }
+button.chip[aria-pressed="true"] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 650; white-space: nowrap;
+  padding: 2px 9px 2px 7px; border-radius: 999px; background: var(--card-2); border: 1.5px solid var(--line-soft);
+}
+.badge .sw { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.sw-ok { background: var(--ok); }
+.sw-miss { background: var(--miss); }
+.sw-hl { background: var(--hl); }
+.sw-ink { background: var(--ink); }
+
+/* ============ Page heads ============ */
+.page-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.page-head h1 { margin: 0; }
+.back { display: inline-flex; gap: 6px; align-items: center; text-decoration: none; color: var(--ink-2); font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
+.back:hover { color: var(--ink); }
+
+.stepper { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 6px 0 22px; }
+.step { display: inline-flex; align-items: center; gap: 8px; font-weight: 650; color: var(--ink-3); padding: 4px 12px 4px 4px; border-radius: 999px; border: 2px solid transparent; }
+.step .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line-soft); font-size: .85rem; }
+.step.cur { color: var(--ink); border-color: var(--line); background: var(--card); }
+.step.cur .n { background: var(--hl); border-color: #1d1a16; color: #1d1a16; }
+.step.past { color: var(--ink-2); }
+.step.past .n { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.step-sep { width: 22px; height: 2px; background: var(--line-soft); border-radius: 2px; }
+
+/* ============ Banners ============ */
+.banner {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap; padding: 11px 14px; border-radius: 12px;
+  border: 2px dashed var(--line-soft); background: var(--card); margin-bottom: 18px; font-size: .94rem;
+}
+.banner.warn { border-color: var(--miss); border-style: solid; }
+
+/* ============ Projects list ============ */
+.proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 20px; }
+.pcard { display: flex; flex-direction: column; gap: 10px; text-decoration: none; cursor: pointer; transition: transform .1s ease, box-shadow .1s ease; }
+.pcard:hover { transform: translate(-2px, -2px) rotate(-.3deg); box-shadow: 6px 6px 0 var(--shadow-c); }
+.pcard h3 { font-size: 1.15rem; margin: 0; }
+.pcard .meta { font-size: .85rem; color: var(--ink-2); }
+.pcard .big { font-size: 1.5rem; font-weight: 800; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.status.plan::before { background: var(--hl); box-shadow: 0 0 0 1.5px #1d1a16; }
+.status.wip::before { background: var(--miss); }
+.status.done::before { background: var(--ok); }
+.new-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; min-height: 170px;
+  border: 2.5px dashed var(--line-soft); border-radius: var(--radius); background: transparent; cursor: pointer; font-weight: 700; color: var(--ink-2);
+}
+.new-card:hover { border-color: var(--line); color: var(--ink); background: var(--card); }
+.new-card .plus { width: 44px; height: 44px; border-radius: 50%; border: 2px solid currentColor; display: grid; place-items: center; font-size: 1.6rem; line-height: 1; }
+
+.empty { text-align: center; padding: 36px 16px; }
+.empty > svg.doodle { width: 150px; height: auto; margin-bottom: 8px; }
+.empty p { max-width: 520px; margin: 0 auto 16px; }
+
+/* ============ Plan table ============ */
+.ttable { display: flex; flex-direction: column; gap: 10px; margin: 16px 0 10px; }
+.trow {
+  display: grid; grid-template-columns: minmax(0, 1fr) 132px 160px 34px; gap: 8px 10px; align-items: start;
+  padding: 10px; border-radius: 12px; background: var(--card-2); border: 1.5px solid transparent;
+}
+.trow:focus-within { border-color: var(--line-soft); }
+.trow .input { padding: 7px 9px; background: var(--card); }
+.trow > .t-name { grid-column: 1 / 4; grid-row: 1; font-weight: 700; font-size: 1.02rem; }
+.trow > .t-del { grid-column: 4; grid-row: 1; align-self: center; }
+.trow > .t-cat { grid-column: 1; grid-row: 2; font-size: .92rem; }
+.trow > .t-est { grid-column: 2; grid-row: 2; }
+.trow > .t-conf { grid-column: 3 / 5; grid-row: 2; padding-top: 4px; }
+.trow .hintline { grid-column: 1 / -1; font-size: .82rem; color: var(--ink-2); display: flex; gap: 12px; flex-wrap: wrap; padding: 0 3px; }
+.trow .hintline:empty { display: none; }
+.range-txt { font-variant-numeric: tabular-nums; }
+.add-row { display: flex; gap: 8px; margin-top: 6px; }
+.add-row .input { flex: 1; }
+.suggest { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 12px; font-size: .88rem; }
+@media (max-width: 720px) {
+  .trow { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 34px; }
+  .trow > .t-name { grid-column: 1 / 3; }
+  .trow > .t-del { grid-column: 3; }
+  .trow > .t-cat { grid-column: 1; }
+  .trow > .t-est { grid-column: 2 / 4; }
+  .trow > .t-conf { grid-column: 1 / -1; grid-row: 3; flex-direction: row; align-items: center; }
+}
+
+/* Confidence dots */
+.conf { display: inline-flex; align-items: center; gap: 3px; }
+.conf button {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); background: transparent; padding: 0; cursor: pointer;
+  transition: transform .1s;
+}
+.conf button:hover { transform: scale(1.15); }
+.conf button.on { background: var(--ink); }
+.conf.ro span { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--ink-2); display: inline-block; }
+.conf.ro span.on { background: var(--ink-2); }
+.conf-label { font-size: .8rem; color: var(--ink-2); margin-left: 6px; white-space: nowrap; }
+.t-conf { display: flex; flex-direction: column; gap: 2px; }
+@media (max-width: 720px) { .t-conf { flex-direction: row; align-items: center; } }
+
+/* Summary panel */
+.sum-big { font-size: 2.6rem; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+.sum-range { font-size: 1rem; color: var(--ink-2); margin-top: 6px; }
+.sum-line { display: flex; justify-content: space-between; gap: 10px; padding: 9px 0; border-top: 1.5px dashed var(--line-soft); font-size: .94rem; }
+.verdict { padding: 10px 12px; border-radius: 10px; background: var(--card-2); font-size: .92rem; display: flex; gap: 10px; align-items: flex-start; }
+.verdict .icon { margin-top: 2px; }
+.conf-legend { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.conf-legend td { padding: 6px 4px; border-top: 1.5px dashed var(--line-soft); vertical-align: middle; }
+.conf-legend td:last-child { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tips { padding-left: 18px; margin: 8px 0 0; }
+.tips li { margin-bottom: 6px; }
+
+/* ============ Track (estimate vs actual) ============ */
+.track { position: relative; height: 26px; }
+.track .rail { position: absolute; left: 0; right: 0; top: 11px; height: 4px; border-radius: 4px; background: var(--line-hair); }
+.track .band { position: absolute; top: 4px; height: 18px; border-radius: 6px; background: var(--band); }
+.track .bar { position: absolute; left: 0; top: 9px; height: 8px; border-radius: 0 4px 4px 0; background: var(--run); transition: width .4s ease; }
+.track .bar.in { background: var(--ok); }
+.track .bar.over, .track .bar.under { background: var(--miss); }
+.track .tick { position: absolute; top: 0; width: 3px; height: 26px; margin-left: -1.5px; border-radius: 2px; background: var(--ink); }
+.track .endcap { position: absolute; top: 6px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; border: 2px solid var(--card); background: inherit; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .84rem; color: var(--ink-2); align-items: center; }
+.legend .k { display: inline-flex; align-items: center; gap: 7px; }
+.legend .k-band { width: 22px; height: 12px; border-radius: 4px; background: var(--band); }
+.legend .k-tick { width: 3px; height: 16px; border-radius: 2px; background: var(--ink); }
+.legend .k-bar { width: 22px; height: 7px; border-radius: 0 3px 3px 0; }
+
+/* Report rows */
+.rrows { display: flex; flex-direction: column; }
+.rrow { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 150px; gap: 14px; align-items: center; padding: 9px 0; border-top: 1.5px dashed var(--line-soft); }
+.rrow:first-child { border-top: none; }
+.rrow .rname { font-weight: 650; font-size: .94rem; overflow-wrap: anywhere; }
+.rrow .rname small { display: block; font-weight: 500; color: var(--ink-3); font-size: .8rem; }
+.rrow .rval { font-size: .88rem; text-align: right; font-variant-numeric: tabular-nums; }
+.rrow .rval b { font-size: .98rem; }
+@media (max-width: 720px) {
+  .rrow { grid-template-columns: minmax(0, 1fr) auto; }
+  .rrow .track { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* ============ Production ============ */
+.tcards { display: flex; flex-direction: column; gap: 14px; }
+.tcard { background: var(--card); border: 2px solid var(--line-soft); border-radius: var(--radius); padding: 14px 16px; transition: border-color .15s, box-shadow .15s; }
+.tcard.running { border-color: var(--line); box-shadow: 4px 4px 0 var(--hl); }
+.tcard.done { background: var(--card-2); }
+.tcard.cut { opacity: .6; }
+.tcard.cut .tc-name { text-decoration: line-through; }
+.tc-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center; }
+.play {
+  width: 50px; height: 50px; border-radius: 50%; border: 2px solid var(--line); background: var(--hl); color: #1d1a16;
+  display: grid; place-items: center; cursor: pointer; box-shadow: 2px 2px 0 var(--shadow-c); transition: transform .08s;
+}
+.play:hover { transform: scale(1.05); }
+.play:active { transform: scale(.95); }
+.play.on { background: var(--ink); color: var(--card); }
+.play[disabled] { background: var(--card-2); color: var(--ink-3); cursor: default; box-shadow: none; border-color: var(--line-soft); }
+.play .icon { width: 22px; height: 22px; }
+.tc-name { font-weight: 700; font-size: 1.05rem; overflow-wrap: anywhere; }
+.tc-sub { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 3px; }
+.tc-time { text-align: right; }
+.tc-clock { font-size: 1.5rem; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.tc-est { font-size: .82rem; color: var(--ink-2); white-space: nowrap; }
+.tc-track { margin: 12px 0 6px; }
+.tc-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.tc-note { font-size: .85rem; color: var(--ink-2); }
+.why { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--card); border: 1.5px dashed var(--line-soft); }
+.why .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.edit-time { display: flex; gap: 6px; align-items: center; }
+.edit-time .input { width: 110px; padding: 5px 8px; }
+@media (max-width: 560px) {
+  .tc-top { grid-template-columns: auto minmax(0, 1fr); }
+  .tc-time { grid-column: 1 / -1; text-align: left; display: flex; gap: 10px; align-items: baseline; }
+}
+.add-form { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr) 110px; gap: 8px; align-items: center; }
+.add-form .t-conf { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+@media (max-width: 560px) { .add-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .add-form > :first-child { grid-column: 1 / -1; } }
+
+.meter-line { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px; }
+
+/* ============ Report ============ */
+.hero { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+@media (max-width: 760px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+.hero-fig { font-size: clamp(3.2rem, 9vw, 4.6rem); font-weight: 800; letter-spacing: -.04em; line-height: .95; }
+.hero-sub { font-size: 1.05rem; color: var(--ink-2); margin-top: 8px; max-width: 460px; }
+.pv { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: 1.05rem; margin-bottom: 10px; }
+.pv b { font-size: 1.4rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.tile { padding: 12px 14px; border-radius: 12px; background: var(--card-2); border: 1.5px solid var(--line-soft); }
+.tile .tl { font-size: .82rem; color: var(--ink-2); font-weight: 600; }
+.tile .tv { font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; line-height: 1.1; margin-top: 2px; }
+.tile .td { font-size: .8rem; color: var(--ink-3); }
+
+.findings { display: flex; flex-direction: column; gap: 10px; }
+.finding { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; padding: 12px; border-radius: 12px; background: var(--card-2); }
+.finding .fi { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--line); background: var(--card); }
+.finding .fi .icon { width: 17px; height: 17px; }
+.finding.good .fi { background: var(--ok); color: #fff; border-color: var(--ok); }
+.finding.bad .fi, .finding.warn .fi { background: var(--miss); color: #fff; border-color: var(--miss); }
+.finding.bad { box-shadow: inset 4px 0 0 var(--miss); }
+.finding h3 { margin: 2px 0 3px; }
+.finding p { margin: 0; font-size: .93rem; color: var(--ink-2); }
+.finding .tag { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: var(--ink-3); }
+
+.actions-list { list-style: none; padding: 0; margin: 0; counter-reset: a; display: flex; flex-direction: column; gap: 10px; }
+.actions-list li { counter-increment: a; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: start; }
+.actions-list li::before {
+  content: counter(a); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 800;
+  background: var(--hl); color: #1d1a16; border: 2px solid #1d1a16;
+}
+.actions-list li p { margin: 5px 0 0; }
+
+/* ============ Dashboard charts ============ */
+.chart { position: relative; width: 100%; min-height: 60px; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart svg text { font-family: var(--font); }
+.chart:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+.hbars { display: flex; flex-direction: column; gap: 4px; }
+.hbar { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) 92px; gap: 12px; align-items: center; padding: 5px 4px; border-radius: 8px; }
+.hbar:hover, .hbar:focus-visible { background: var(--card-2); }
+.hbar .hl-name { font-size: .9rem; font-weight: 600; overflow-wrap: anywhere; line-height: 1.2; }
+.hbar .hl-name small { display: block; color: var(--ink-3); font-weight: 500; font-size: .76rem; }
+.hbar .hl-val { font-size: .88rem; text-align: right; font-variant-numeric: tabular-nums; }
+.htrack { position: relative; height: 22px; }
+.htrack .axis0 { position: absolute; top: -2px; bottom: -2px; width: 1.5px; background: var(--ink-3); }
+.htrack .zone { position: absolute; top: 1px; bottom: 1px; background: var(--band); border-radius: 4px; opacity: .7; }
+.htrack .hb { position: absolute; top: 5px; height: 12px; }
+.htrack .hb.pos { background: var(--miss); border-radius: 0 4px 4px 0; }
+.htrack .hb.neg { background: var(--ok); border-radius: 4px 0 0 4px; }
+.htrack .hb.plain { background: var(--ok); border-radius: 0 4px 4px 0; left: 0; }
+.htrack .rail { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--line-hair); }
+.axis-note { display: flex; justify-content: space-between; font-size: .78rem; color: var(--ink-3); margin: 4px 0 0; padding-left: calc(150px + 12px + 4px); padding-right: calc(92px + 12px + 4px); }
+@media (max-width: 560px) {
+  .hbar { grid-template-columns: minmax(0, 1fr) 80px; }
+  .hbar .htrack { grid-column: 1 / -1; grid-row: 2; }
+  .axis-note { padding-left: 4px; padding-right: 4px; }
+}
+details.data { margin-top: 12px; font-size: .88rem; }
+details.data summary { cursor: pointer; color: var(--ink-2); font-weight: 600; }
+table.dt { width: 100%; border-collapse: collapse; margin-top: 8px; font-variant-numeric: tabular-nums; }
+table.dt th, table.dt td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line-hair); }
+table.dt th { color: var(--ink-3); font-weight: 650; font-size: .8rem; }
+table.dt td.r, table.dt th.r { text-align: right; }
+.dt-wrap { overflow-x: auto; }
+
+#tip {
+  position: fixed; z-index: 100; pointer-events: none; background: var(--card); color: var(--ink);
+  border: 2px solid var(--line); border-radius: 10px; padding: 8px 11px; font-size: .85rem; box-shadow: 3px 3px 0 var(--shadow-c);
+  max-width: 260px; opacity: 0; transition: opacity .1s; line-height: 1.35;
+}
+#tip.on { opacity: 1; }
+#tip .tv { font-weight: 800; font-size: 1.05rem; }
+#tip .tl { color: var(--ink-2); }
+#tip .tt { font-weight: 700; margin-bottom: 3px; }
+
+/* ============ Modal ============ */
+.modal-bg { position: fixed; inset: 0; background: var(--overlay); z-index: 50; display: grid; place-items: center; padding: 16px; animation: fade .15s ease; }
+.modal { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow: auto; }
+.modal.wide { width: min(720px, 100%); }
+.modal h2 { margin-bottom: 10px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+@keyframes fade { from { opacity: 0; } }
+.settings-sec { padding: 16px 0; border-top: 2px dashed var(--line-soft); }
+.settings-sec:first-of-type { border-top: none; padding-top: 4px; }
+.cat-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+.cat-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 120; background: var(--ink); color: var(--card);
+  padding: 10px 16px; border-radius: 12px; font-weight: 600; box-shadow: 3px 3px 0 var(--hl); animation: fade .2s ease; max-width: calc(100% - 32px);
+}
+
+.doodle { color: var(--ink); }
+.doodle .fillhl { fill: var(--hl); }
+.doodle .fillcard { fill: var(--card); }
+
+.print-only { display: none; }
+
+/* ============ Mobile ============ */
+@media (max-width: 640px) {
+  .topbar-in { gap: 8px 10px; padding: 8px 14px; }
+  .brand { font-size: 1.05rem; }
+  .brand svg { width: 28px; height: 28px; }
+  .top-actions { order: 2; }
+  .top-spacer { order: 1; }
+  .nav { order: 3; width: 100%; }
+  .timer-pill { order: 4; width: 100%; max-width: none; }
+  .timer-pill .tp-name { max-width: none; flex: 1; }
+  .save-state { display: none; }
+  main { padding-top: 16px; }
+  .card { padding: 16px; box-shadow: 3px 3px 0 var(--shadow-c); }
+  .step-sep { display: none; }
+  .step { font-size: .9rem; padding-right: 10px; }
+  .stepper { margin-bottom: 16px; }
+  .banner { font-size: .9rem; }
+}
+
+/* ============ Print ============ */
+@media print {
+  :root, :root[data-theme="dark"] {
+    color-scheme: light;
+    --paper: #fff; --card: #fff; --card-2: #f6f3ec; --ink: #111; --ink-2: #444; --ink-3: #777; --line: #111;
+    --line-soft: rgba(0,0,0,.18); --line-hair: rgba(0,0,0,.1); --band: #ffe08a; --ok: #2a78d6; --miss: #eb6834; --run: #111; --shadow-c: transparent; --hl: #ffd35c; --hl-soft: #ffeeb8;
+  }
+  html, body { min-height: 0 !important; height: auto !important; }
+  body { background: #fff; font-size: 12.5px; }
+  .topbar, .no-print, .stepper, .banner, .toast, #tip { display: none !important; }
+  .print-only { display: block; }
+  main { padding: 0; max-width: none; }
+  .card { box-shadow: none; border-width: 1.5px; padding: 14px; margin-top: 12px !important; }
+  .grid-2, .grid-eq { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .hero { grid-template-columns: 1.1fr 1fr; }
+  .hero-fig { font-size: 3.2rem; }
+  .rrow { grid-template-columns: 180px minmax(0, 1fr) 150px; break-inside: avoid; padding: 6px 0; }
+  .badge { font-size: .72rem; }
+  .rrow .track { grid-column: auto; grid-row: auto; }
+  .finding, .actions-list li, .tile { break-inside: avoid; }
+  .finding { padding: 8px; }
+  textarea.input { border: 1.5px dashed rgba(0,0,0,.25); padding: 8px; min-height: 70px; resize: none; }
+  textarea.input::placeholder { color: transparent; }
+  .title-input { font-size: 1.6rem; }
+  .title-input { border: none; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  /* Page bilan : seule la fiche dédiée est imprimée */
+  #app:has(.print-sheet) > :not(.print-sheet) { display: none !important; }
+  .print-sheet { display: block !important; page: fiche; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+.htrack .goal { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+
+/* ============ Fiche bilan imprimable (A4) ============ */
+@page { size: A4 portrait; margin: 12mm; }
+@page fiche { size: A4 portrait; margin: 0; } /* marges gérées dans la fiche : pas d'en-têtes navigateur */
+.print-sheet { display: none; font-family: var(--font); color: #1d1a16; font-size: 9pt; line-height: 1.38; background: #fff; }
+.print-sheet b { font-weight: 700; }
+.print-sheet { padding: 13mm 15mm 19mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.ps-foot { position: fixed; left: 15mm; right: 15mm; bottom: 7mm; display: flex; justify-content: space-between; gap: 6mm; font-size: 7pt; color: #8a8276; border-top: .5pt solid #e0d8c8; padding-top: 1.5mm; }
+.ps-head { padding-bottom: 3.5mm; border-bottom: 1.5pt solid #1d1a16; margin-bottom: 4.5mm; }
+.ps-kicker { display: flex; align-items: center; gap: 2mm; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: #57504a; }
+.ps-kicker svg { width: 5.5mm; height: 5.5mm; }
+.ps-head h1 { font-size: 22pt; font-weight: 800; letter-spacing: -.02em; margin: 2mm 0 2.5mm; line-height: 1.12; }
+.ps-head h1 span { background: linear-gradient(transparent 58%, #ffd35c 58%, #ffd35c 90%, transparent 90%); -webkit-box-decoration-break: clone; box-decoration-break: clone; padding: 0 .5mm; }
+.ps-meta { display: flex; flex-wrap: wrap; gap: 1mm 7mm; font-size: 9pt; }
+.ps-meta b { font-weight: 700; color: #857d72; text-transform: uppercase; font-size: 6.8pt; letter-spacing: .07em; margin-right: 1.5mm; }
+.ps-blank { display: inline-block; width: 42mm; border-bottom: .75pt solid #1d1a16; vertical-align: -1pt; }
+
+.ps-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2.5mm; }
+.ps-kpi { border: .75pt solid #ddd5c5; border-radius: 2.5mm; padding: 2.5mm 3mm 2.2mm; background: #faf6ee; }
+.ps-kpi .l { font-size: 6.3pt; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; color: #857d72; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-kpi .v { font-size: 15pt; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin-top: .6mm; white-space: nowrap; }
+.ps-kpi .s { font-size: 7pt; color: #857d72; white-space: nowrap; }
+.ps-kpi.hl { background: #ffd35c; border-color: #1d1a16; }
+.ps-kpi.hl .l, .ps-kpi.hl .s { color: #1d1a16; }
+.ps-verdict { font-size: 10.5pt; margin: 3.5mm 0 6mm; }
+
+.ps-sec { margin-bottom: 6mm; }
+.ps-sec h2 { font-size: 8pt; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; margin: 0 0 2mm; padding-bottom: 1.3mm; border-bottom: .75pt solid #1d1a16; break-after: avoid; }
+.ps-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 4mm; border-bottom: .75pt solid #1d1a16; padding-bottom: 1.3mm; break-after: avoid; }
+.ps-sec-head h2 { border: none; margin: 0; padding: 0; white-space: nowrap; }
+.ps-legend { display: flex; gap: 1mm 3.5mm; font-size: 7pt; color: #57504a; flex-wrap: wrap; justify-content: flex-end; }
+.ps-legend span { display: inline-flex; align-items: center; gap: 1.2mm; white-space: nowrap; }
+.ps-legend i { display: inline-block; }
+.ps-legend .k-band { width: 5mm; height: 2.6mm; border-radius: 1mm; background: #ffe08a; }
+.ps-legend .k-tick { width: .7mm; height: 3.4mm; background: #1d1a16; border-radius: .3mm; }
+.ps-legend .k-bar { width: 5mm; height: 1.5mm; border-radius: 0 .8mm .8mm 0; }
+.ps-legend .k-bar.ok { background: #2a78d6; }
+.ps-legend .k-bar.miss { background: #eb6834; }
+
+.ps-table { width: 100%; border-collapse: collapse; font-size: 8.8pt; }
+.ps-table th { font-size: 6.3pt; text-transform: uppercase; letter-spacing: .06em; color: #857d72; font-weight: 700; text-align: left; padding: 1.8mm 1.6mm 1.2mm; white-space: nowrap; }
+.ps-table th.ps-trk { font-family: var(--hand); text-transform: none; letter-spacing: 0; font-size: 10pt; font-weight: 600; color: #57504a; }
+.ps-table td { padding: 1.7mm 1.6mm; border-top: .5pt solid #e6dfd1; vertical-align: middle; }
+.ps-table tr { break-inside: avoid; }
+.ps-table td:first-child, .ps-table th:first-child { padding-left: 0; }
+.ps-table td:last-child, .ps-table th:last-child { padding-right: 0; }
+.ps-table .r { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ps-name b { display: block; }
+.ps-name small { display: block; font-size: 7pt; color: #857d72; }
+.ps-name em { font-style: normal; color: #b8481c; font-weight: 600; }
+.ps-trk { width: 60mm; }
+.ps-dots { display: inline-flex; gap: .7mm; white-space: nowrap; }
+.ps-dots i { width: 1.9mm; height: 1.9mm; border-radius: 50%; border: .6pt solid #57504a; display: inline-block; }
+.ps-dots i.on { background: #57504a; }
+.ps-res { display: inline-flex; align-items: center; gap: 1.2mm; font-weight: 700; }
+.ps-res::before { content: ""; width: 1.9mm; height: 1.9mm; border-radius: 50%; }
+.ps-res.ok::before { background: #2a78d6; }
+.ps-res.miss::before { background: #eb6834; }
+.ps-track { position: relative; height: 4.2mm; }
+.ps-track .rail { position: absolute; left: 0; right: 0; top: 1.8mm; height: .6mm; background: #ebe4d6; border-radius: .3mm; }
+.ps-track .band { position: absolute; top: .6mm; height: 3mm; background: #ffe08a; border-radius: 1mm; }
+.ps-track .bar { position: absolute; left: 0; top: 1.4mm; height: 1.4mm; background: #1d1a16; border-radius: 0 .7mm .7mm 0; }
+.ps-track .bar.in { background: #2a78d6; }
+.ps-track .bar.over, .ps-track .bar.under { background: #eb6834; }
+.ps-track .tick { position: absolute; top: 0; width: .7mm; margin-left: -.35mm; height: 4.2mm; background: #1d1a16; border-radius: .3mm; }
+.ps-note, .ps-muted { font-size: 8pt; color: #857d72; margin: 1.8mm 0 0; }
+
+.ps-cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 7mm; align-items: start; }
+.ps-find ul { list-style: none; margin: 0; padding: 0; }
+.ps-find li { display: grid; grid-template-columns: 3mm minmax(0, 1fr); gap: 2mm; padding: 1.8mm 0; border-top: .5pt solid #e6dfd1; break-inside: avoid; }
+.ps-find li:first-child { border-top: none; padding-top: .5mm; }
+.ps-bullet { width: 2.2mm; height: 2.2mm; border-radius: 50%; margin-top: 1.3mm; background: #b9b1a3; }
+.ps-find li.miss .ps-bullet { background: #eb6834; }
+.ps-find li.ok .ps-bullet { background: #2a78d6; }
+.ps-tag { display: block; font-size: 6.3pt; text-transform: uppercase; letter-spacing: .06em; color: #857d72; font-weight: 700; }
+.ps-find p { margin: .4mm 0 0; color: #3d3731; font-size: 8.4pt; }
+.ps-next { background: #fff3c7; border: .75pt solid #1d1a16; border-radius: 2.5mm; padding: 3mm 3.5mm 1mm; break-inside: avoid; }
+.ps-next ol { list-style: none; margin: 0; padding: 0; counter-reset: n; }
+.ps-next li { counter-increment: n; display: grid; grid-template-columns: 5.5mm minmax(0, 1fr); gap: 2mm; margin-bottom: 2.8mm; font-size: 8.8pt; }
+.ps-next li::before { content: counter(n); width: 5.2mm; height: 5.2mm; border-radius: 50%; background: #ffd35c; border: .75pt solid #1d1a16; display: grid; place-items: center; font-weight: 800; font-size: 8pt; }
+.ps-notes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); break-inside: avoid; margin-top: 1mm; }
+.ps-lines i { display: block; height: 7mm; border-bottom: .75pt solid #cfc6b6; }
+.ps-text { white-space: pre-wrap; font-size: 9pt; min-height: 14mm; }
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#/projets" aria-label="Carnet de Prod, accueil">
+      <svg class="doodle" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
+        <path d="M16 5h8M20 5v4"/>
+        <circle cx="20" cy="23" r="13" class="fillhl"/>
+        <path d="M20 23v-7.5M20 23l5.5 3"/>
+        <path d="M31.5 9.5l3-3"/>
+      </svg>
+      <span>Carnet de Prod</span>
+    </a>
+    <nav class="nav" aria-label="Navigation principale">
+      <a href="#/projets" data-page="projects">Projets</a>
+      <a href="#/tableau" data-page="dashboard">Tableau de bord</a>
+    </nav>
+    <div class="top-spacer"></div>
+    <div class="timer-pill" id="timerPill" aria-live="off">
+        <span class="dot" aria-hidden="true"></span>
+        <a class="tp-name" id="tpName" href="#/projets"></a>
+        <span class="num" id="tpTime"></span>
+        <button class="btn btn-sm icon-btn" data-act="pill-pause" aria-label="Mettre le chrono en pause" title="Pause"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor"/></svg></button>
+      </div>
+    <div class="top-actions">
+      <button class="artist-badge" id="artistBtn" data-act="switch-artist" title="Changer d'artiste ou créer un profil">
+        <span class="avatar" id="artistAvatar">?</span>
+        <span id="artistNameDisplay">Choisir un profil</span>
+      </button>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+      <button class="btn btn-ghost icon-btn" id="themeBtn" data-act="theme" aria-label="Changer de thème"></button>
+      <button class="btn icon-btn" data-act="settings" aria-label="Réglages et sauvegarde" title="Réglages et sauvegarde"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
+    </div>
+  </div>
+</header>
+<main id="app" tabindex="-1"></main>
+<div id="tip" role="tooltip"></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+<noscript><p style="padding:20px">Cette application a besoin de JavaScript.</p></noscript>
+<script>
+(() => {
+'use strict';
+/* ================== CONSTANTES ================== */
+const STORE_KEY = 'carnet-de-prod:v1';
+const THEME_KEY = 'carnet-de-prod:theme';
+const DAY_MIN = 7 * 60; // "1j" = 7h de travail
+
+// Niveau de confiance -> fourchette autour de l'estimation (multiplicateurs)
+const CONF = {
+  1: { label: 'Jamais fait', hint: 'Je découvre complètement', lo: 0.7, hi: 2.5 },
+  2: { label: 'Pas sûr·e', hint: 'Fait une fois, ou il y a longtemps', lo: 0.75, hi: 1.8 },
+  3: { label: 'Déjà fait', hint: 'Je l’ai déjà fait quelques fois', lo: 0.8, hi: 1.5 },
+  4: { label: 'À l’aise', hint: 'Je le fais souvent', lo: 0.85, hi: 1.3 },
+  5: { label: 'Je maîtrise', hint: 'Je pourrais le faire les yeux fermés', lo: 0.9, hi: 1.15 },
+};
+
+const DEFAULT_CATS = [
+  { id: 'refs', name: 'Recherche & références' },
+  { id: 'concept', name: 'Concept / design' },
+  { id: 'blocking', name: 'Blocking' },
+  { id: 'model', name: 'Modélisation' },
+  { id: 'sculpt', name: 'Sculpt' },
+  { id: 'retopo', name: 'Retopo & UV' },
+  { id: 'texture', name: 'Texturing' },
+  { id: 'rig', name: 'Rig & skin' },
+  { id: 'anim', name: 'Animation' },
+  { id: 'light', name: 'Lighting & rendu' },
+  { id: 'integ', name: 'Intégration moteur' },
+  { id: 'retours', name: 'Retours & corrections' },
+  { id: 'pres', name: 'Présentation / planche' },
+  { id: 'autre', name: 'Autre' },
+];
+
+const REASONS = [
+  { id: 'new', label: 'Technique nouvelle', advice: 'Prévois une tâche « test / apprentissage » à part avant de te lancer : on n’estime bien que ce qu’on a déjà essayé.' },
+  { id: 'complex', label: 'Plus complexe que prévu', advice: 'Avant d’estimer, fais une esquisse ou un blocking rapide (15 min) pour voir la vraie complexité.' },
+  { id: 'iter', label: 'Retours / itérations', advice: 'Estime explicitement une ou deux passes de retours : elles arrivent toujours.' },
+  { id: 'tech', label: 'Souci technique / logiciel', advice: 'Garde une marge « imprévus techniques » de 10 à 15 % sur ton total (crash, export, bake…).' },
+  { id: 'interrupt', label: 'Interruptions', advice: 'Travaille en sessions chronométrées (ex : 50 min), notifications coupées.' },
+  { id: 'polish', label: 'J’ai trop peaufiné', advice: 'Définis ton critère de « fini » avant de commencer : sans limite, le polish n’a pas de fin.' },
+];
+
+const FORGOTTEN = [
+  { name: 'Recherche de références', cat: 'refs' },
+  { name: 'Retours & corrections', cat: 'retours' },
+  { name: 'Export & intégration', cat: 'integ' },
+  { name: 'Rendu / planche de présentation', cat: 'pres' },
+];
+
+/* ================== OUTILS ================== */
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-3);
+const sum = (arr, f) => arr.reduce((a, x) => a + (f(x) || 0), 0);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const now = () => Date.now();
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// minutes -> "1h30", "45 min", "12h"
+function fmtMin(min, opts = {}) {
+  if (min == null || !isFinite(min)) return '—';
+  let m = Math.round(min);
+  if (opts.round5 && m > 90) m = Math.round(m / 5) * 5;
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? `${h}h${String(r).padStart(2, '0')}` : `${h}h`;
+}
+// ms -> "1:02:15"
+function fmtClock(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+function fmtRatio(r) {
+  if (r == null || !isFinite(r)) return '—';
+  return '×' + String(parseFloat(r.toFixed(2))).replace('.', ',');
+}
+function fmtPct(p, signed = true) {
+  if (p == null || !isFinite(p)) return '—';
+  const v = Math.round(p * 100);
+  return (signed && v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' %';
+}
+function fmtDate(ts, long = false) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return long
+    ? d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+function plural(n, one, many) { return n + ' ' + (n > 1 ? many : one); }
+
+// "1h30" | "90min" | "1,5" | "1.5h" | "2j" | "1:30" | "45 m" -> minutes
+function parseDur(str) {
+  if (str == null) return null;
+  let s = String(str).trim().toLowerCase().replace(',', '.').replace(/\s+/g, '');
+  if (!s) return null;
+  let m;
+  if ((m = s.match(/^(\d+(?:\.\d+)?)(?:j|jour|jours|d)$/))) return pos(parseFloat(m[1]) * DAY_MIN);
+  if ((m = s.match(/^(\d+)h(\d{1,2})(?:m|min)?$/))) return pos(+m[1] * 60 + +m[2]);
+  if ((m = s.match(/^(\d+(?:\.\d+)?)h$/))) return pos(parseFloat(m[1]) * 60);
+  if ((m = s.match(/^(\d+)(?:m|mn|min|mins|minutes?)$/))) return pos(+m[1]);
+  if ((m = s.match(/^(\d+):(\d{2})$/))) return pos(+m[1] * 60 + +m[2]);
+  if ((m = s.match(/^(\d+(?:\.\d+)?)$/))) return pos(parseFloat(m[1]) * 60); // nombre seul = heures
+  return null;
+  function pos(v) { return v > 0 && v < 100000 ? Math.round(v) : null; }
+}
+
+/* ================== ÉTAT & SAUVEGARDE (CLIENT / SERVEUR) ================== */
+const ARTIST_KEY = 'carnet-de-prod:active-artist';
+let currentArtist = null;
+let serverSyncOK = true;
+let isSaving = false;
+let storageOK = true;
+
+function freshState() {
+  return { v: 1, student: currentArtist ? currentArtist.name : '', categories: DEFAULT_CATS.map(c => ({ ...c })), projects: [], timer: null, lastExport: null, created: now() };
+}
+
+function normalize(s) {
+  if (!s || typeof s !== 'object' || !Array.isArray(s.projects)) throw new Error('format');
+  const base = freshState();
+  const out = Object.assign(base, s);
+  if (!Array.isArray(out.categories) || !out.categories.length) out.categories = DEFAULT_CATS.map(c => ({ ...c }));
+  out.projects.forEach(p => {
+    p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    p.status = p.status || 'plan';
+    p.tasks.forEach(t => {
+      t.spent = +t.spent || 0;
+      t.conf = clamp(+t.conf || 3, 1, 5);
+      t.status = t.status || 'todo';
+      t.reasons = Array.isArray(t.reasons) ? t.reasons : [];
+      if (t.planned == null) t.planned = true;
+    });
+  });
+  if (out.timer && !findTask(out, out.timer.pid, out.timer.tid)) out.timer = null;
+  return out;
+}
+
+function updateArtistBadge() {
+  const btn = $('#artistBtn');
+  const nameEl = $('#artistNameDisplay');
+  const avatarEl = $('#artistAvatar');
+  if (!nameEl) return;
+  if (currentArtist) {
+    nameEl.textContent = currentArtist.name;
+    avatarEl.textContent = currentArtist.name.slice(0, 1).toUpperCase();
+    if (btn) btn.title = 'Connecté en tant que ' + currentArtist.name + ' (cliquer pour changer)';
+  } else {
+    nameEl.textContent = 'Choisir un profil';
+    avatarEl.textContent = '?';
+    if (btn) btn.title = 'Sélectionner ou créer un profil artiste';
+  }
+}
+
+async function fetchArtists() {
+  try {
+    const res = await fetch('/api/artists');
+    if (!res.ok) throw new Error();
+    return await res.json();
+  } catch (_) { return null; }
+}
+
+async function loadArtistState(artistId) {
+  try {
+    const res = await fetch('/api/artists/' + encodeURIComponent(artistId) + '/state');
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error();
+    return await res.json();
+  } catch (_) {
+    try {
+      const raw = localStorage.getItem(STORE_KEY + ':' + artistId);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  }
+}
+
+async function selectArtist(artist, stateData = null) {
+  currentArtist = artist;
+  try { localStorage.setItem(ARTIST_KEY, JSON.stringify(artist)); } catch (_) {}
+  updateArtistBadge();
+
+  if (stateData) {
+    state = normalize(stateData);
+  } else {
+    const loaded = await loadArtistState(artist.id);
+    state = loaded ? normalize(loaded) : freshState();
+    if (!state.student) state.student = artist.name;
+  }
+  closeModal();
+  render();
+  saveNow();
+}
+
+async function openArtistModal(forced = false) {
+  const list = await fetchArtists() || [];
+  const items = list.map(a => `
+    <button class="artist-card-btn ${currentArtist && currentArtist.id === a.id ? 'cur' : ''}" data-act="choose-artist" data-aid="${esc(a.id)}" data-aname="${esc(a.name)}">
+      <span class="avatar">${esc(a.name.slice(0, 1).toUpperCase())}</span>
+      <div style="min-width:0;overflow:hidden">
+        <div style="font-weight:700;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">${esc(a.name)}</div>
+        <small class="faint">${a.lastActive ? 'Actif ' + fmtDate(a.lastActive) : 'Nouveau'}</small>
+      </div>
+    </button>
+  `).join('');
+
+  openModal({
+    title: '🎨 Espace Game Artist',
+    wide: true,
+    cancelLabel: forced ? null : 'Fermer',
+    okLabel: null,
+    body: `
+      <p class="muted">Tes projets et chronos sont sauvegardés de manière sécurisée et centralisée sur le serveur.</p>
+      <div class="field">
+        <label>Artistes enregistrés sur ce serveur :</label>
+        ${items.length ? `<div class="artist-grid">${items}</div>` : '<p class="faint small" style="margin:8px 0">Aucun artiste pour le moment. Crée ton profil ci-dessous !</p>'}
+      </div>
+      <div class="settings-sec" style="margin-top:14px;padding-top:14px">
+        <label for="newArtistInput" style="font-weight:700">Ou entre ton prénom / pseudo :</label>
+        <form data-form="create-artist" class="add-row" style="margin-top:8px">
+          <input id="newArtistInput" class="input" name="name" placeholder="Ex: Alexandre, Camille, Lead 3D..." autocomplete="off" required>
+          <button class="btn btn-primary" type="submit">${ic('plus')} Commencer</button>
+        </form>
+      </div>
+    `
+  });
+}
+
+let saveTimer = null;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 250);
+}
+
+async function saveNow() {
+  const el = $('#saveState');
+  if (!currentArtist) {
+    if (el) { el.innerHTML = '<span class="sync-dot offline"></span>Profil non sélectionné'; }
+    return;
+  }
+
+  // Cache local instantané
+  try {
+    localStorage.setItem(STORE_KEY + ':' + currentArtist.id, JSON.stringify(state));
+  } catch (_) {}
+
+  if (el) { el.innerHTML = '<span class="sync-dot saving"></span>Enregistrement...'; }
+
+  try {
+    const res = await fetch('/api/artists/' + encodeURIComponent(currentArtist.id) + '/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    if (res.ok) {
+      serverSyncOK = true;
+      if (el) {
+        el.innerHTML = '<span class="sync-dot"></span>Serveur synchronisé';
+        el.title = 'Données sauvegardées en direct dans la base SQLite du serveur';
+      }
+    } else {
+      throw new Error();
+    }
+  } catch (e) {
+    serverSyncOK = false;
+    if (el) {
+      el.innerHTML = '<span class="sync-dot offline"></span>Local uniquement';
+      el.title = 'Serveur inaccessible : données conservées en cache local dans ce navigateur';
+    }
+  }
+}
+
+let state = freshState();
+
+function findTask(s, pid, tid) {
+  const p = s.projects.find(x => x.id === pid);
+  return p ? p.tasks.find(t => t.id === tid) : null;
+}
+const getProject = id => state.projects.find(p => p.id === id);
+const catName = id => (state.categories.find(c => c.id === id) || { name: 'Sans catégorie' }).name;
+
+/* ================== CALCULS ================== */
+function isRunning(t) { return !!(state.timer && state.timer.tid === t.id); }
+function spentMs(t) { return t.spent + (isRunning(t) ? now() - state.timer.since : 0); }
+function actualMin(t) { return spentMs(t) / 60000; }
+function rangeOf(t) {
+  if (!t.est) return [null, null];
+  const c = CONF[t.conf] || CONF[3];
+  return [t.est * c.lo, t.est * c.hi];
+}
+// 'in' | 'over' | 'under' (null si pas d'estimation)
+function classify(t) {
+  if (!t.est) return null;
+  const [lo, hi] = rangeOf(t);
+  const a = actualMin(t);
+  if (a > hi) return 'over';
+  if (a < lo) return 'under';
+  return 'in';
+}
+
+function projectStats(p) {
+  const active = p.tasks.filter(t => t.status !== 'cut');
+  const planned = active.filter(t => t.planned);
+  const unplanned = p.tasks.filter(t => !t.planned);
+  const cut = p.tasks.filter(t => t.status === 'cut');
+  const done = p.tasks.filter(t => t.status === 'done' && t.est > 0);
+  const estTotal = sum(active, t => t.est);
+  const lowTotal = sum(active, t => rangeOf(t)[0]);
+  const highTotal = sum(active, t => rangeOf(t)[1]);
+  const plannedTotal = sum(planned, t => t.est);
+  const actualTotal = sum(p.tasks, t => actualMin(t));
+  const ratio = plannedTotal > 0 && actualTotal > 0 ? actualTotal / plannedTotal : null;
+  const inRange = done.filter(t => classify(t) === 'in').length;
+  const hitRate = done.length ? inRange / done.length : null;
+  const mape = done.length ? sum(done, t => Math.abs(actualMin(t) / t.est - 1)) / done.length : null;
+  const unplannedTime = sum(unplanned.filter(t => t.status !== 'cut'), t => actualMin(t));
+  return { active, planned, unplanned, cut, done, estTotal, lowTotal, highTotal, plannedTotal, actualTotal, ratio, inRange, hitRate, mape, unplannedTime };
+}
+
+function finishedProjects(excludeId, before) {
+  return state.projects
+    .filter(p => p.status === 'done' && p.id !== excludeId && (!before || (p.finishedAt || 0) < before))
+    .sort((a, b) => (a.finishedAt || 0) - (b.finishedAt || 0));
+}
+
+// Coefficient perso = temps réel total ÷ temps prévu au découpage, sur les 5 derniers projets terminés
+function personalCoef(excludeId) {
+  const fin = finishedProjects(excludeId).slice(-5);
+  let a = 0, e = 0, n = 0;
+  fin.forEach(p => { const s = projectStats(p); if (s.ratio) { a += s.actualTotal; e += s.plannedTotal; n++; } });
+  return n && e ? { coef: a / e, n } : null;
+}
+
+// Par catégorie, sur tous les projets terminés : { catId: {a, e, n, ratio} }
+function catStats(excludeId, before) {
+  const map = {};
+  finishedProjects(excludeId, before).forEach(p => {
+    projectStats(p).done.forEach(t => {
+      const k = t.cat || 'autre';
+      map[k] = map[k] || { a: 0, e: 0, n: 0, hit: 0 };
+      map[k].a += actualMin(t); map[k].e += t.est; map[k].n++;
+      if (classify(t) === 'in') map[k].hit++;
+    });
+  });
+  Object.values(map).forEach(v => v.ratio = v.a / v.e);
+  return map;
+}
+
+// Par niveau de confiance : { 1..5: {n, hit, a, e} }
+function confStats() {
+  const map = {};
+  for (let i = 1; i <= 5; i++) map[i] = { n: 0, hit: 0, a: 0, e: 0, over: 0, under: 0 };
+  finishedProjects().forEach(p => {
+    projectStats(p).done.forEach(t => {
+      const m = map[t.conf]; const c = classify(t);
+      m.n++; m.a += actualMin(t); m.e += t.est;
+      if (c === 'in') m.hit++; else if (c === 'over') m.over++; else m.under++;
+    });
+  });
+  return map;
+}
+
+/* ================== BILAN : analyse & conseils ================== */
+// tone : 'bad' | 'warn' | 'info' | 'good'
+const TONE_RANK = { bad: 0, warn: 1, info: 2, good: 3 };
+
+function buildReport(p) {
+  const s = projectStats(p);
+  const F = [];
+  const done = s.done;
+  const R = s.ratio;
+  const catsHist = catStats(p.id, p.finishedAt || now());
+
+  // 1. Biais global
+  if (R != null) {
+    const pct = R - 1;
+    if (R > 1.5) {
+      F.push({ tone: 'bad', tag: 'Global', title: 'Grosse sous-estimation',
+        text: `Le projet a pris ${fmtMin(s.actualTotal)} au lieu des ${fmtMin(s.plannedTotal)} prévues au découpage, soit ${fmtRatio(R)} le temps prévu.`,
+        action: `La prochaine fois, découpe plus fin (tâches de 1 à 3h) et multiplie ton total brut par ${fmtRatio(R)} avant de t’engager sur un délai.`, w: 10 });
+    } else if (R > 1.15) {
+      F.push({ tone: 'warn', tag: 'Global', title: 'Légère sous-estimation',
+        text: `Ton projet a pris ${fmtPct(pct)} de temps en plus que prévu (${fmtMin(s.actualTotal)} au lieu de ${fmtMin(s.plannedTotal)}).`,
+        action: `Ajoute une marge de sécurité d’environ ${Math.round(pct * 100)} % à ton prochain total : c’est ta marge réelle, pas une option.`, w: 8 });
+    } else if (R >= 0.85) {
+      F.push({ tone: 'good', tag: 'Global', title: 'Estimation globale réussie',
+        text: `Tu es tombé·e à ${Math.abs(Math.round(pct * 100))} % près : ${fmtMin(s.actualTotal)} pour ${fmtMin(s.plannedTotal)} prévues. Bravo !`,
+        action: 'Garde ta méthode de découpage, elle fonctionne. Essaie maintenant de resserrer ta confiance tâche par tâche.', w: 2 });
+    } else {
+      F.push({ tone: 'info', tag: 'Global', title: 'Plus rapide que prévu',
+        text: `Le projet a pris ${fmtMin(s.actualTotal)} au lieu de ${fmtMin(s.plannedTotal)} (${fmtPct(pct)}). Tu es plus efficace que tu ne le penses.`,
+        action: 'Réduis un peu tes estimations sur ce type de travail : un planning trop large a tendance à se remplir tout seul (loi de Parkinson).', w: 6 });
+    }
+  }
+
+  // 2. Erreurs qui se compensent
+  if (R != null && R >= 0.85 && R <= 1.15 && done.length >= 3 && s.mape > 0.35) {
+    F.push({ tone: 'warn', tag: 'Précision', title: 'Des erreurs qui se compensent',
+      text: `Le total tombe juste, mais tâche par tâche tu te trompes de ${Math.round(s.mape * 100)} % en moyenne : des dépassements et des tâches plus rapides s’annulent.`,
+      action: 'Regarde le graphique tâche par tâche : c’est là que tu peux vraiment progresser. Ne compte pas sur la chance la prochaine fois.', w: 7 });
+  }
+
+  // 3. Catégories : la plus piégeuse / la plus fiable
+  const byCat = {};
+  done.forEach(t => {
+    const k = t.cat || 'autre';
+    byCat[k] = byCat[k] || { a: 0, e: 0, n: 0 };
+    byCat[k].a += actualMin(t); byCat[k].e += t.est; byCat[k].n++;
+  });
+  const cats = Object.entries(byCat).map(([k, v]) => ({ k, ...v, r: v.a / v.e }));
+  const worst = cats.filter(c => c.r >= 1.3).sort((a, b) => (b.a - b.e) - (a.a - a.e))[0];
+  if (worst) {
+    const hist = catsHist[worst.k];
+    const again = hist && hist.n >= 2 && hist.ratio >= 1.25;
+    F.push({ tone: worst.r >= 1.6 ? 'bad' : 'warn', tag: 'Catégorie', title: `Catégorie piège : ${catName(worst.k)}`,
+      text: `${catName(worst.k)} : ${fmtMin(worst.a)} au lieu de ${fmtMin(worst.e)} (${fmtRatio(worst.r)}).` + (again ? ` Et ce n’est pas la première fois : sur tes projets précédents c’était déjà ${fmtRatio(hist.ratio)}.` : ''),
+      action: `Pour les tâches « ${catName(worst.k)} », multiplie ton intuition par ${fmtRatio(worst.r)} — ou découpe-les en sous-étapes (préparation, passe principale, détails).`, w: again ? 9 : 7 });
+  }
+  const best = cats.filter(c => c.n >= 2 && Math.abs(c.r - 1) <= 0.12).sort((a, b) => b.n - a.n)[0];
+  if (best) {
+    F.push({ tone: 'good', tag: 'Point fort', title: `Tu estimes bien : ${catName(best.k)}`,
+      text: `Sur ${plural(best.n, 'tâche', 'tâches')} « ${catName(best.k)} », tu es à ${Math.round(Math.abs(best.r - 1) * 100)} % près.`,
+      action: null, w: 1 });
+  }
+
+  // 4. Calibration de la confiance
+  const high = done.filter(t => t.conf >= 4);
+  const highMiss = high.filter(t => classify(t) !== 'in');
+  if (high.length >= 2 && highMiss.length / high.length >= 0.5) {
+    F.push({ tone: 'warn', tag: 'Confiance', title: 'Excès de confiance',
+      text: `Sur les tâches où tu te sentais à l’aise (confiance 4-5), tu es sorti·e de ta fourchette ${highMiss.length} fois sur ${high.length}.`,
+      action: 'Quand tu te sentes sûr·e de toi, pose-toi la question : ai-je déjà fait exactement ça, avec ce niveau de détail et ce logiciel ? Sinon, baisse ta confiance d’un cran.', w: 7 });
+  }
+  const low = done.filter(t => t.conf <= 2);
+  const lowHit = low.filter(t => classify(t) === 'in');
+  if (low.length >= 2 && lowHit.length / low.length >= 0.75) {
+    F.push({ tone: 'good', tag: 'Confiance', title: 'Tu peux te faire plus confiance',
+      text: `Même sur les tâches où tu doutais (confiance 1-2), tu es tombé·e dans ta fourchette ${lowHit.length} fois sur ${low.length}.`,
+      action: 'Sur ce type de tâche, tu peux monter ta confiance d’un cran : ta fourchette sera plus serrée et ton planning plus utile.', w: 3 });
+  }
+  if (done.length >= 3 && s.hitRate >= 0.75 && !F.some(f => f.tag === 'Confiance')) {
+    F.push({ tone: 'good', tag: 'Confiance', title: 'Des fourchettes réalistes',
+      text: `${s.inRange} tâches sur ${done.length} sont tombées dans ta fourchette. Ta confiance est bien réglée.`, action: null, w: 1 });
+  }
+
+  // 5. Tâches trop grosses
+  const big = done.filter(t => t.est > 240);
+  const small = done.filter(t => t.est <= 240);
+  if (big.length) {
+    const errBig = sum(big, t => Math.abs(actualMin(t) / t.est - 1)) / big.length;
+    const errSmall = small.length ? sum(small, t => Math.abs(actualMin(t) / t.est - 1)) / small.length : null;
+    const slipped = big.filter(t => actualMin(t) / t.est > 1.3);
+    const worseThanSmall = errSmall != null && errBig > errSmall + 0.15;
+    if (slipped.length || worseThanSmall) {
+      const worstBig = big.slice().sort((a, b) => actualMin(b) / b.est - actualMin(a) / a.est)[0];
+      F.push({ tone: 'warn', tag: 'Découpage', title: 'Des tâches trop grosses',
+        text: worseThanSmall
+          ? `Tes tâches de plus de 4h ont un écart moyen de ${Math.round(errBig * 100)} %, contre ${Math.round(errSmall * 100)} % pour les plus petites.`
+          : `${slipped.length > 1 ? slipped.length + ' tâches de plus de 4h ont' : 'Une tâche de plus de 4h a'} dérapé de plus de 30 % (« ${worstBig.name} » : ${fmtPct(actualMin(worstBig) / worstBig.est - 1)}).`,
+        action: 'Découpe toute tâche de plus d’une demi-journée en étapes de 1 à 3h (ex : blocking → formes principales → détails → nettoyage).', w: 6 });
+    }
+  }
+
+  // 6. Tâches oubliées
+  const forgot = s.unplanned.filter(t => t.status !== 'cut');
+  if (forgot.length) {
+    const share = s.actualTotal ? s.unplannedTime / s.actualTotal : 0;
+    F.push({ tone: share >= 0.15 ? 'bad' : 'warn', tag: 'Découpage', title: forgot.length > 1 ? `${forgot.length} tâches oubliées au découpage` : 'Une tâche oubliée au découpage',
+      text: `Ajoutée${forgot.length > 1 ? 's' : ''} en cours de route : ${forgot.map(t => '« ' + t.name + ' »').join(', ')}. Cela représente ${fmtMin(s.unplannedTime)}, soit ${Math.round(share * 100)} % du temps total.`,
+      action: `Au prochain découpage, pense dès le début à : ${forgot.map(t => t.name.toLowerCase()).join(', ')}.`, w: share >= 0.15 ? 9 : 6 });
+  }
+
+  // 7. Scope coupé
+  if (s.cut.length) {
+    F.push({ tone: 'info', tag: 'Scope', title: `${plural(s.cut.length, 'tâche coupée', 'tâches coupées')} du scope`,
+      text: `${s.cut.map(t => '« ' + t.name + ' »').join(', ')}. Couper du scope est un bon réflexe quand le temps manque ; l’important est de le décider tôt, pas la veille du rendu.`,
+      action: null, w: 2 });
+  }
+
+  // 8. Causes de dépassement citées
+  const rc = {};
+  p.tasks.forEach(t => (t.reasons || []).forEach(r => rc[r] = (rc[r] || 0) + 1));
+  const topR = Object.entries(rc).sort((a, b) => b[1] - a[1]).slice(0, 2);
+  topR.forEach(([id, n], i) => {
+    const r = REASONS.find(x => x.id === id); if (!r) return;
+    F.push({ tone: 'warn', tag: 'Ce qui t’a ralenti·e', title: r.label, text: `Cité${n > 1 ? ' ' + n + ' fois' : ' une fois'} dans tes tâches qui ont dépassé.`, action: r.advice, w: 5 + n - i });
+  });
+
+  // 9. Temps disponible
+  if (p.available && s.actualTotal > p.available) {
+    F.push({ tone: 'bad', tag: 'Délai', title: 'Temps disponible dépassé',
+      text: `Tu avais ${fmtMin(p.available)} de disponibles, tu as passé ${fmtMin(s.actualTotal)}.`,
+      action: 'Avant de lancer la prod, compare ta fourchette haute à ton temps disponible, et note à l’avance ce que tu couperais en cas de retard.', w: 8 });
+  }
+
+  // 10. Rien à analyser
+  if (!done.length) {
+    F.push({ tone: 'info', tag: 'Info', title: 'Pas encore de tâche terminée', text: 'Termine au moins une tâche pour obtenir une analyse.', action: null, w: 0 });
+  }
+
+  F.sort((a, b) => TONE_RANK[a.tone] - TONE_RANK[b.tone] || b.w - a.w);
+  const actions = F.filter(f => f.action).sort((a, b) => b.w - a.w).slice(0, 3).map(f => f.action);
+  return { s, findings: F, actions };
+}
+
+// Quelques phrases de synthèse pour le tableau de bord
+function globalInsights() {
+  const out = [];
+  const cs = catStats();
+  const worst = Object.entries(cs).filter(([, v]) => v.n >= 2 && v.ratio >= 1.2).sort((a, b) => b[1].ratio - a[1].ratio)[0];
+  if (worst) out.push({ tone: 'warn', text: `Ta catégorie piège : <b>${esc(catName(worst[0]))}</b> (${fmtRatio(worst[1].ratio)} en moyenne sur ${worst[1].n} tâches).` });
+  const best = Object.entries(cs).filter(([, v]) => v.n >= 2).sort((a, b) => Math.abs(a[1].ratio - 1) - Math.abs(b[1].ratio - 1))[0];
+  if (best && Math.abs(best[1].ratio - 1) <= 0.15) out.push({ tone: 'good', text: `Ton point fort : <b>${esc(catName(best[0]))}</b>, estimé à ${Math.round(Math.abs(best[1].ratio - 1) * 100)} % près.` });
+  const cf = confStats();
+  const hi = { n: cf[4].n + cf[5].n, hit: cf[4].hit + cf[5].hit };
+  if (hi.n >= 3) {
+    const r = hi.hit / hi.n;
+    out.push({ tone: r < 0.6 ? 'warn' : 'good', text: r < 0.6
+      ? `Quand tu te sens « à l’aise », tu tombes juste seulement <b>${Math.round(r * 100)} %</b> du temps : méfie-toi de ta confiance.`
+      : `Quand tu te sens « à l’aise », tu tombes juste <b>${Math.round(r * 100)} %</b> du temps : ta confiance est fiable.` });
+  }
+  return out;
+}
+
+/* ================== ICÔNES ================== */
+const ICONS = {
+  play: '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+  pause: '<rect x="6.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/><rect x="13.5" y="5" width="4" height="14" rx="1.2" fill="currentColor" stroke="none"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  trash: '<path d="M4 7h16M10 7V4.5h4V7M6.5 7l1 12.5h9l1-12.5"/>',
+  clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  download: '<path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14"/>',
+  upload: '<path d="M12 16V5M7 9.5l5-5 5 5M5 19.5h14"/>',
+  print: '<path d="M7 9V4h10v5M7 17H5a1.5 1.5 0 0 1-1.5-1.5v-5A1.5 1.5 0 0 1 5 9h14a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 19 17h-2"/><path d="M7 14h10v6H7z"/>',
+  sliders: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  cut: '<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8.2 8.3L19 17M8.2 15.7L19 7"/>',
+  pencil: '<path d="M15.5 4.5l4 4L8 20H4v-4z"/>',
+  undo: '<path d="M9 5L4 10l5 5"/><path d="M4 10h9.5a5.5 5.5 0 0 1 0 11H11"/>',
+  right: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  left: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  alert: '<path d="M12 7.5v5.5M12 16.5v.3"/><circle cx="12" cy="12" r="9"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.3"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>',
+  bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
+  up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
+  down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+};
+const ic = (n, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
+
+const DOODLE_EMPTY = `<svg class="doodle" viewBox="0 0 170 116" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="8" y="10" width="154" height="96" rx="10" class="fillcard" stroke-width="2.5"/>
+  <path d="M85 10v96" stroke-width="2" stroke-dasharray="2 5"/>
+  <rect x="22" y="28" width="46" height="9" rx="4.5" class="fillhl" stroke="none"/>
+  <path d="M22 33h28" stroke-width="3"/>
+  <rect x="30" y="50" width="34" height="9" rx="4.5" class="fillhl" stroke="none"/>
+  <path d="M22 55h36" stroke-width="3"/>
+  <rect x="22" y="72" width="40" height="9" rx="4.5" class="fillhl" stroke="none"/>
+  <path d="M22 77h22" stroke-width="3"/>
+  <path d="M112 25h14M119 25v6" stroke-width="2.5"/>
+  <circle cx="119" cy="58" r="24" class="fillhl" stroke-width="2.5"/>
+  <path d="M119 58V44M119 58l10 6" stroke-width="2.5"/>
+  <path d="M137 36l5-5" stroke-width="2.5"/>
+  <path d="M100 94c8-4 22 4 34-2" stroke-width="2"/>
+</svg>`;
+
+/* ================== COMPOSANTS ================== */
+function catOptions(sel) {
+  return state.categories.map(c => `<option value="${esc(c.id)}" ${c.id === sel ? 'selected' : ''}>${esc(c.name)}</option>`).join('');
+}
+
+function confPicker(t, ro = false) {
+  const c = CONF[t.conf] || CONF[3];
+  if (ro) {
+    return `<span class="conf ro" title="Confiance ${t.conf}/5 : ${esc(c.label)}">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= t.conf ? 'on' : ''}"></span>`).join('')}</span><span class="conf-label">${esc(c.label)}</span>`;
+  }
+  return `<div class="conf" role="radiogroup" aria-label="Confiance">${[1, 2, 3, 4, 5].map(i =>
+    `<button type="button" role="radio" aria-checked="${i === t.conf}" class="${i <= t.conf ? 'on' : ''}" data-act="set-conf" data-tid="${t.id}" data-v="${i}" data-key="cf-${t.id}-${i}" title="${i} · ${esc(CONF[i].label)} — ${esc(CONF[i].hint)}"><span class="sr-only">${i} sur 5, ${esc(CONF[i].label)}</span></button>`).join('')}</div><span class="conf-label">${esc(c.label)}</span>`;
+}
+
+// Piste « fourchette / estimation / réel »
+function trackInner({ est, lo, hi, a, cls, max }) {
+  max = max || Math.max(hi || 0, a || 0, est || 0) * 1.08 || 1;
+  const pc = v => clamp(v / max * 100, 0, 100).toFixed(2) + '%';
+  let h = '<div class="rail"></div>';
+  if (lo != null && hi != null) h += `<div class="band" style="left:${pc(lo)};width:calc(${pc(hi)} - ${pc(lo)})"></div>`;
+  if (a > 0) h += `<div class="bar ${cls || ''}" style="width:${pc(a)}"></div>`;
+  if (est) h += `<div class="tick" style="left:${pc(est)}"></div>`;
+  return h;
+}
+function taskTrackInner(t, max) {
+  const [lo, hi] = rangeOf(t);
+  const a = actualMin(t);
+  let cls = '';
+  if (t.status === 'done') cls = classify(t);
+  else if (a > hi) cls = 'over';
+  return trackInner({ est: t.est, lo, hi, a, cls, max: max || Math.max(hi || 0, a) * 1.08 });
+}
+function taskAria(t) {
+  const [lo, hi] = rangeOf(t);
+  return `Estimé ${fmtMin(t.est)}, fourchette ${fmtMin(lo)} à ${fmtMin(hi)}, réel ${fmtMin(actualMin(t))}`;
+}
+function projTrackInner(p, s = projectStats(p)) {
+  const lo = sum(s.planned, t => rangeOf(t)[0]);
+  const hi = sum(s.planned, t => rangeOf(t)[1]);
+  const a = s.actualTotal;
+  return trackInner({ est: s.plannedTotal, lo, hi, a, cls: p.status === 'done' ? (a > hi ? 'over' : a < lo ? 'under' : 'in') : (a > hi ? 'over' : ''), max: Math.max(hi, a) * 1.08 });
+}
+function trackLegend(done = true) {
+  return `<div class="legend">
+    <span class="k"><span class="k-band"></span>ta fourchette</span>
+    <span class="k"><span class="k-tick"></span>ton estimation</span>
+    ${done
+      ? `<span class="k"><span class="k-bar" style="background:var(--ok)"></span>réel, dans la fourchette</span><span class="k"><span class="k-bar" style="background:var(--miss)"></span>réel, hors fourchette</span>`
+      : `<span class="k"><span class="k-bar" style="background:var(--run)"></span>temps passé</span><span class="k"><span class="k-bar" style="background:var(--miss)"></span>au-delà de la fourchette</span>`}
+  </div>`;
+}
+function resultBadge(t, short = false) {
+  const c = classify(t); if (!c) return '';
+  const d = actualMin(t) / t.est - 1;
+  if (c === 'in') return `<span class="badge" title="Dans ta fourchette"><span class="sw sw-ok"></span>✓ ${short ? 'juste' : 'Dans ta fourchette'} · ${fmtPct(d)}</span>`;
+  if (c === 'over') return `<span class="badge" title="Plus long que ta fourchette"><span class="sw sw-miss"></span>▲ ${short ? 'plus long' : 'Plus long que prévu'} · ${fmtPct(d)}</span>`;
+  return `<span class="badge" title="Plus rapide que ta fourchette"><span class="sw sw-miss"></span>▼ ${short ? 'plus rapide' : 'Plus rapide que prévu'} · ${fmtPct(d)}</span>`;
+}
+const STATUS_LABEL = { plan: 'En découpage', wip: 'En production', done: 'Terminé' };
+
+/* ================== BANNIÈRES ================== */
+function banners() {
+  let h = '';
+  if (!storageOK) h += `<div class="banner warn no-print">${ic('alert')}<span><b>La sauvegarde automatique ne fonctionne pas</b> dans ce navigateur (mode privé ?). Pense à exporter un fichier avant de fermer.</span><span class="spacer"></span><button class="btn btn-sm" data-act="export">${ic('download')} Exporter</button></div>`;
+  if (state.timer) {
+    const t = findTask(state, state.timer.pid, state.timer.tid);
+    const run = now() - state.timer.since;
+    if (t && run > 3 * 3600000 && !state.timer.ack) {
+      h += `<div class="banner warn no-print">${ic('clock')}<span>Ton chrono sur <b>${esc(t.name)}</b> tourne depuis <b>${fmtMin(run / 60000)}</b>. Un oubli ?</span><span class="spacer"></span><button class="btn btn-sm" data-act="timer-keep">C’est normal</button><button class="btn btn-sm" data-act="timer-discard">Ne pas compter cette session</button></div>`;
+    }
+  }
+  if (state.projects.some(p => p.demo)) {
+    h += `<div class="banner no-print">${ic('info')}<span>Tu regardes des <b>projets d’exemple</b> pour découvrir l’outil.</span><span class="spacer"></span><button class="btn btn-sm" data-act="demo-remove">Retirer les exemples</button></div>`;
+  }
+  const real = state.projects.filter(p => !p.demo);
+  const ref = state.lastExport || state.created || now();
+  if (storageOK && real.some(p => p.tasks.length) && now() - ref > 7 * 86400000) {
+    h += `<div class="banner no-print">${ic('download')}<span>${state.lastExport ? `Dernier export il y a ${Math.floor((now() - state.lastExport) / 86400000)} jours.` : 'Tu n’as encore jamais exporté tes données.'} Un petit fichier de sauvegarde, au cas où ?</span><span class="spacer"></span><button class="btn btn-sm" data-act="export">${ic('download')} Exporter</button></div>`;
+  }
+  return h;
+}
+
+/* ================== PAGE : MES PROJETS ================== */
+function viewProjects() {
+  const ps = state.projects;
+  const head = `<div class="page-head"><div><h1><span class="mark">Mes projets</span></h1><p class="muted" style="margin:6px 0 0">Découpe, estime, chronomètre… puis compare. C’est comme ça qu’on apprend à estimer.</p></div><span class="spacer"></span>${ps.length ? `<button class="btn btn-primary btn-big" data-act="new-project">${ic('plus')} Nouveau projet</button>` : ''}</div>`;
+  if (!ps.length) {
+    return head + `<section class="card empty">
+      ${DOODLE_EMPTY}
+      <h2>Ton carnet est vide</h2>
+      <p class="muted">Pour chaque projet : <b>1.</b> découpe-le en tâches et estime-les, <b>2.</b> chronomètre ton travail, <b>3.</b> lis ton bilan pour savoir quoi améliorer la prochaine fois.</p>
+      <div class="row" style="justify-content:center">
+        <button class="btn btn-primary btn-big" data-act="new-project">${ic('plus')} Créer mon premier projet</button>
+        <button class="btn btn-big" data-act="demo-load">Voir un exemple</button>
+      </div>
+    </section>`;
+  }
+  const groups = [['wip', 'En production'], ['plan', 'En découpage'], ['done', 'Terminés']];
+  let h = head;
+  groups.forEach(([st, label]) => {
+    const list = ps.filter(p => p.status === st).sort((a, b) => st === 'done' ? (b.finishedAt || 0) - (a.finishedAt || 0) : (b.createdAt || 0) - (a.createdAt || 0));
+    if (!list.length) return;
+    h += `<h2 style="margin:26px 0 12px">${label} <span class="faint" style="font-weight:600">· ${list.length}</span></h2><div class="proj-grid">${list.map(projCard).join('')}${st === 'plan' || (st === 'wip' && !ps.some(p => p.status === 'plan')) ? `<button class="new-card" data-act="new-project"><span class="plus">+</span>Nouveau projet</button>` : ''}</div>`;
+  });
+  return h;
+}
+function projCard(p) {
+  const s = projectStats(p);
+  let body = '';
+  if (p.status === 'plan') {
+    body = `<div><span class="big">${s.estTotal ? fmtMin(s.estTotal) : '—'}</span> <span class="muted">estimées</span></div>
+      <div class="small muted">${s.estTotal ? `fourchette ${fmtMin(s.lowTotal)} – ${fmtMin(s.highTotal)}` : 'Commence par découper ton travail'}</div>`;
+  } else if (p.status === 'wip') {
+    body = `<div><span class="big">${fmtMin(s.actualTotal)}</span> <span class="muted">sur ${fmtMin(s.plannedTotal)} prévues</span></div>
+      <div class="track" aria-hidden="true">${projTrackInner(p, s)}</div>
+      <div class="small muted">${s.done.length}/${s.active.length} tâches terminées</div>`;
+  } else {
+    body = `<div class="row" style="gap:8px"><span class="big">${fmtRatio(s.ratio)}</span><span class="muted small">prévu ${fmtMin(s.plannedTotal)} → réel ${fmtMin(s.actualTotal)}</span></div>
+      <div class="track" aria-hidden="true">${projTrackInner(p, s)}</div>
+      <div class="small muted">${s.inRange}/${s.done.length} tâches dans la fourchette</div>`;
+  }
+  return `<a class="card pcard" href="#/projet/${p.id}">
+    <span class="status ${p.status}">${STATUS_LABEL[p.status]}</span>
+    <h3>${esc(p.name || 'Sans titre')}</h3>
+    <div class="meta">${plural(p.tasks.length, 'tâche', 'tâches')} · ${p.status === 'done' ? 'terminé le ' + fmtDate(p.finishedAt) : 'créé le ' + fmtDate(p.createdAt)}${p.demo ? ' · exemple' : ''}</div>
+    ${body}
+  </a>`;
+}
+
+/* ================== PAGE : PROJET ================== */
+function viewProject(p) {
+  const idx = { plan: 0, wip: 1, done: 2 }[p.status];
+  const steps = ['Découper & estimer', 'Produire', 'Bilan'];
+  const stepper = `<nav class="stepper" aria-label="Étapes du projet">${steps.map((s, i) => `${i ? '<span class="step-sep" aria-hidden="true"></span>' : ''}<span class="step ${i === idx ? 'cur' : i < idx ? 'past' : ''}" ${i === idx ? 'aria-current="step"' : ''}><span class="n">${i < idx ? '✓' : i + 1}</span>${s}</span>`).join('')}</nav>`;
+  const head = `<a class="back no-print" href="#/projets">${ic('left')} Mes projets</a>
+    <div class="print-only small muted">${state.student ? esc(state.student) + ' · ' : ''}Bilan imprimé le ${fmtDate(now(), true)}</div>
+    <textarea class="title-input" rows="1" data-key="p-name" data-field="p.name" aria-label="Nom du projet" placeholder="Nom du projet" spellcheck="false">${esc(p.name)}</textarea>
+    ${stepper}`;
+  let body = p.status === 'plan' ? viewPlan(p) : p.status === 'wip' ? viewProd(p) : viewDone(p);
+  body += `<div class="row no-print" style="margin-top:40px;justify-content:flex-end"><button class="btn btn-ghost btn-sm btn-danger" data-act="delete-project">${ic('trash')} Supprimer ce projet</button></div>`;
+  return head + body;
+}
+
+/* ---------- Étape 1 : découper ---------- */
+function planVerdict(p, s, coef) {
+  const missing = p.tasks.filter(t => !t.est).length;
+  if (!p.tasks.length) return `<div class="verdict">${ic('info')}<span>Ajoute tes premières tâches à gauche.</span></div>`;
+  if (missing) return `<div class="verdict">${ic('alert')}<span>Il manque une estimation sur ${plural(missing, 'tâche', 'tâches')}.</span></div>`;
+  if (!p.available) return `<div class="verdict">${ic('bulb')}<span>Indique ton temps disponible pour vérifier que le projet rentre.</span></div>`;
+  const exp = s.estTotal * (coef ? Math.max(1, coef.coef) : 1);
+  if (s.highTotal <= p.available && exp <= p.available) return `<div class="verdict">${ic('check')}<span><b>Ça rentre</b>, même si tout se passe mal (fourchette haute : ${fmtMin(s.highTotal)}).</span></div>`;
+  if (exp <= p.available) return `<div class="verdict">${ic('alert')}<span><b>Ça rentre si tout va bien</b>, mais ta fourchette haute (${fmtMin(s.highTotal)}) dépasse ton temps dispo. Note dès maintenant ce que tu couperais.</span></div>`;
+  return `<div class="verdict" style="box-shadow:inset 4px 0 0 var(--miss)">${ic('alert')}<span><b>Ça ne rentre pas</b> : ${coef && coef.coef > 1 ? 'avec ton coef perso, ' : ''}il te faudrait ~${fmtMin(exp, { round5: true })} pour ${fmtMin(p.available)} dispo. Réduis le scope avant de commencer.</span></div>`;
+}
+function planRowHint(t, hist) {
+  const out = [];
+  const h = hist[t.cat];
+  if (h && h.n >= 2 && Math.abs(h.ratio - 1) >= 0.15) {
+    out.push(`<span>${ic('clock')} Historique « ${esc(catName(t.cat))} » : ${h.ratio > 1 ? 'ça te prend en général' : 'tu vas en général plus vite,'} <b>${fmtRatio(h.ratio)}</b> ton estimation</span>`);
+  }
+  if (t.est > 240) out.push(`<span>${ic('alert')} Plus de 4h : essaie de la découper en 2 ou 3 étapes.</span>`);
+  return out.join('');
+}
+function planRow(t, hist) {
+  const [lo, hi] = rangeOf(t);
+  return `<div class="trow" data-row="${t.id}">
+    <input class="input t-name" data-key="n-${t.id}" data-field="t.name" data-tid="${t.id}" value="${esc(t.name)}" placeholder="Nom de la tâche" aria-label="Nom de la tâche" autocomplete="off">
+    <select class="input t-cat" data-key="c-${t.id}" data-field="t.cat" data-tid="${t.id}" aria-label="Catégorie">${catOptions(t.cat)}</select>
+    <div class="t-est"><input class="input" data-key="e-${t.id}" data-field="t.est" data-tid="${t.id}" value="${t.est ? fmtMin(t.est) : ''}" placeholder="ex : 1h30" aria-label="Estimation de durée" autocomplete="off"><div class="small faint range-txt" data-range="${t.id}" style="margin-top:3px;padding-left:3px">${t.est ? fmtMin(lo) + ' – ' + fmtMin(hi) : 'combien de temps ?'}</div></div>
+    <div class="t-conf" title="À quel point es-tu sûr·e de ton estimation ?">${confPicker(t)}</div>
+    <button class="btn btn-ghost icon-btn btn-sm t-del" data-act="del-task" data-tid="${t.id}" title="Supprimer la tâche" aria-label="Supprimer la tâche">${ic('trash')}</button>
+    <div class="hintline" data-hint="${t.id}">${planRowHint(t, hist)}</div>
+  </div>`;
+}
+function viewPlan(p) {
+  const s = projectStats(p);
+  const coef = personalCoef(p.id);
+  const hist = catStats(p.id);
+  const missing = p.tasks.filter(t => !t.est || !t.name.trim()).length;
+  const canStart = p.tasks.length > 0 && !missing;
+  const sugg = FORGOTTEN.filter(f => !p.tasks.some(t => t.cat === f.cat));
+  return `<div class="grid-2">
+    <section class="card">
+      <div class="card-head"><h2>Découpe ton travail</h2><span class="hand">une tâche = une étape concrète</span></div>
+      <p class="muted small" style="margin:0">Liste les étapes, estime chacune, puis indique à quel point tu es sûr·e de toi. Moins tu es sûr·e, plus ta fourchette s’élargit.</p>
+      <div class="ttable">
+        ${p.tasks.map(t => planRow(t, hist)).join('')}
+      </div>
+      <form class="add-row" data-form="add-task">
+        <input class="input" name="name" data-key="add-name" placeholder="Nouvelle tâche, ex : Blocking du personnage" aria-label="Nouvelle tâche" autocomplete="off">
+        <button class="btn" type="submit">${ic('plus')} Ajouter</button>
+      </form>
+      ${sugg.length ? `<div class="suggest"><span class="faint">Souvent oubliées :</span>${sugg.map(f => `<button class="chip" data-act="add-suggest" data-name="${esc(f.name)}" data-cat="${f.cat}">+ ${esc(f.name)}</button>`).join('')}</div>` : ''}
+    </section>
+    <aside class="stack">
+      <section class="card">
+        <h2>Ton estimation</h2>
+        <div class="sum-big" data-sum="est">${s.estTotal ? fmtMin(s.estTotal) : '—'}</div>
+        <div class="sum-range">fourchette : <b class="num" data-sum="range">${s.estTotal ? fmtMin(s.lowTotal) + ' – ' + fmtMin(s.highTotal) : '—'}</b></div>
+        <div style="margin-top:12px">
+        ${coef
+          ? `<div class="sum-line"><span>Avec ton coef perso <b>${fmtRatio(coef.coef)}</b></span><b data-sum="coef">${s.estTotal ? '~' + fmtMin(s.estTotal * coef.coef, { round5: true }) : '—'}</b></div>`
+          : `<div class="sum-line"><span class="muted">Coef perso</span><span class="faint small">dispo après ton 1ᵉʳ projet terminé</span></div>`}
+        <div class="sum-line" style="align-items:center"><label for="avail">Temps disponible</label><input id="avail" class="input" style="width:120px" data-key="avail" data-field="p.available" value="${p.available ? fmtMin(p.available) : ''}" placeholder="optionnel" autocomplete="off"></div>
+        </div>
+        <div data-sum="verdict">${planVerdict(p, s, coef)}</div>
+        <button class="btn btn-primary btn-big" style="width:100%;margin-top:14px" data-act="start-prod" ${canStart ? '' : 'disabled'}>Lancer la production ${ic('right')}</button>
+        <p class="small faint" style="margin:8px 0 0">Une fois la prod lancée, tes estimations sont verrouillées : c’est tout l’intérêt de l’exercice.</p>
+      </section>
+      <section class="card tint">
+        <h3>Les 5 niveaux de confiance</h3>
+        <table class="conf-legend"><tbody>
+          ${[5, 4, 3, 2, 1].map(i => `<tr><td>${confPicker({ conf: i }, true)}</td><td>−${Math.round((1 - CONF[i].lo) * 100)} % / +${Math.round((CONF[i].hi - 1) * 100)} %</td></tr>`).join('')}
+        </tbody></table>
+        <p class="small muted" style="margin:10px 0 0">Exemple : 2h en confiance 3 → fourchette de ${fmtMin(120 * CONF[3].lo)} à ${fmtMin(120 * CONF[3].hi)}.</p>
+      </section>
+      <section class="card tint">
+        <h3>Astuces de découpage</h3>
+        <ul class="tips small">
+          <li>Vise des tâches de <b>30 min à 3h</b>. Au-delà, découpe.</li>
+          <li>Une tâche = un résultat visible (un blocking, une texture, une planche…).</li>
+          <li>N’oublie pas les <b>retours</b>, l’<b>export</b> et la <b>présentation</b>.</li>
+          <li>Tu ne sais pas du tout ? Mets confiance 1 : ta fourchette sera large, et c’est honnête.</li>
+          <li>Durées acceptées : <span class="num">45min, 1h30, 2h, 1,5, 1j</span> (1j = 7h).</li>
+        </ul>
+      </section>
+      <section class="card soft">
+        <div class="field"><label for="brief">Le brief <span class="faint" style="font-weight:500">(optionnel)</span></label>
+        <textarea id="brief" class="input" data-key="brief" data-field="p.brief" rows="3" placeholder="Ce que je dois livrer, pour quand, avec quelles contraintes…">${esc(p.brief || '')}</textarea></div>
+      </section>
+    </aside>
+  </div>`;
+}
+// Mise à jour ciblée pendant la frappe (sans tout redessiner)
+function refreshPlanComputed(p) {
+  const s = projectStats(p);
+  const coef = personalCoef(p.id);
+  const set = (k, v) => { const el = $(`[data-sum="${k}"]`); if (el) el.innerHTML = v; };
+  set('est', s.estTotal ? fmtMin(s.estTotal) : '—');
+  set('range', s.estTotal ? fmtMin(s.lowTotal) + ' – ' + fmtMin(s.highTotal) : '—');
+  set('coef', coef && s.estTotal ? '~' + fmtMin(s.estTotal * coef.coef, { round5: true }) : '—');
+  set('verdict', planVerdict(p, s, coef));
+  const btn = $('[data-act="start-prod"]');
+  if (btn) btn.disabled = !(p.tasks.length && !p.tasks.some(t => !t.est || !t.name.trim()));
+  p.tasks.forEach(t => {
+    const r = $(`[data-range="${t.id}"]`);
+    if (r) { const [lo, hi] = rangeOf(t); r.textContent = t.est ? fmtMin(lo) + ' – ' + fmtMin(hi) : 'combien de temps ?'; }
+  });
+}
+
+/* ---------- Étape 2 : produire ---------- */
+function prodCard(p, t) {
+  const run = isRunning(t);
+  const [lo, hi] = rangeOf(t);
+  const a = actualMin(t);
+  const cls = t.status === 'done' ? 'done' : t.status === 'cut' ? 'cut' : run ? 'running' : '';
+  let actions;
+  if (t.status === 'todo') {
+    const started = t.spent > 0 || run;
+    actions = `<button class="btn btn-sm btn-soft" data-act="adj" data-tid="${t.id}" data-v="-15" data-key="m-${t.id}" ${t.spent <= 0 && !run ? 'disabled' : ''}>−15 min</button>
+      <button class="btn btn-sm btn-soft" data-act="adj" data-tid="${t.id}" data-v="15" data-key="p-${t.id}">+15 min</button>
+      <button class="btn btn-sm btn-ghost" data-act="edit-time" data-tid="${t.id}">${ic('pencil')} Corriger</button>
+      <span class="spacer"></span>
+      <button class="btn btn-sm btn-ghost" data-act="cut" data-tid="${t.id}" title="Retirer cette tâche du projet (manque de temps, changement de plan…)">${ic('cut')} Couper du scope</button>
+      <button class="btn btn-sm ${started ? 'btn-primary' : 'btn-soft'}" data-act="done" data-tid="${t.id}" data-key="d-${t.id}">${ic('check')} Terminé</button>`;
+  } else if (t.status === 'done') {
+    actions = `${resultBadge(t)}<span class="spacer"></span><button class="btn btn-sm btn-ghost" data-act="reopen-task" data-tid="${t.id}">${ic('undo')} Rouvrir</button>`;
+  } else {
+    actions = `<span class="tc-note">Coupée du scope</span><span class="spacer"></span><button class="btn btn-sm btn-ghost" data-act="reopen-task" data-tid="${t.id}">${ic('undo')} Remettre</button>`;
+  }
+  const showWhy = t.status === 'done' && (classify(t) === 'over' || a > t.est * 1.2);
+  return `<article class="tcard ${cls}" data-tcard="${t.id}">
+    <div class="tc-top">
+      ${t.status === 'todo'
+        ? `<button class="play ${run ? 'on' : ''}" data-act="toggle-timer" data-tid="${t.id}" data-key="play-${t.id}" aria-label="${run ? 'Mettre en pause' : 'Lancer le chrono'} : ${esc(t.name)}" title="${run ? 'Pause' : 'Lancer le chrono'}">${ic(run ? 'pause' : 'play')}</button>`
+        : `<span class="play" aria-hidden="true" style="background:var(--card-2);border-color:var(--line-soft);box-shadow:none;color:var(--ink-2)">${ic(t.status === 'done' ? 'check' : 'cut')}</span>`}
+      <div style="min-width:0">
+        <div class="tc-name">${esc(t.name)}</div>
+        <div class="tc-sub"><span class="chip">${esc(catName(t.cat))}</span>${confPicker(t, true)}${!t.planned ? '<span class="chip hl">ajoutée en cours</span>' : ''}</div>
+      </div>
+      <div class="tc-time">
+        <div class="tc-clock" data-live-time="${t.id}">${fmtClock(spentMs(t))}</div>
+        <div class="tc-est">prévu <b>${fmtMin(t.est)}</b> · <span class="range-txt">${fmtMin(lo)}–${fmtMin(hi)}</span></div>
+      </div>
+    </div>
+    <div class="tc-track"><div class="track" role="img" aria-label="${esc(taskAria(t))}" data-live-track="${t.id}">${taskTrackInner(t)}</div></div>
+    <div class="tc-actions">${actions}</div>
+    ${ui.editTime === t.id ? `<form class="edit-time" data-form="edit-time" data-tid="${t.id}" style="margin-top:10px">
+        <label class="small" for="et-${t.id}">Temps réellement passé :</label>
+        <input id="et-${t.id}" class="input" name="v" data-key="et-${t.id}" value="${fmtMin(a)}" autocomplete="off">
+        <button class="btn btn-sm btn-primary" type="submit">OK</button>
+        <button class="btn btn-sm btn-ghost" type="button" data-act="cancel-edit">Annuler</button>
+      </form>` : ''}
+    ${showWhy ? `<div class="why"><div class="small"><b>Qu’est-ce qui a pris plus de temps ?</b> <span class="faint">plusieurs choix possibles</span></div>
+      <div class="chips">${REASONS.map(r => `<button class="chip" aria-pressed="${t.reasons.includes(r.id)}" data-act="reason" data-tid="${t.id}" data-v="${r.id}" data-key="r-${t.id}-${r.id}">${esc(r.label)}</button>`).join('')}</div></div>` : ''}
+  </article>`;
+}
+function addUnplannedForm() {
+  const d = ui.draft;
+  const parsed = parseDur(d.est);
+  return `<form class="card soft" data-form="add-unplanned" style="border-style:dashed">
+    <h3>Tâche oubliée</h3>
+    <p class="small muted">Ça arrive à tout le monde, et c’est justement ce qu’on veut mesurer. Estime-la <b>maintenant</b>, avant de la commencer.</p>
+    <div class="add-form">
+      <input class="input" name="name" data-key="d-name" data-field="d.name" value="${esc(d.name)}" placeholder="Nom de la tâche" aria-label="Nom de la tâche" autocomplete="off">
+      <select class="input" name="cat" data-key="d-cat" data-field="d.cat" aria-label="Catégorie">${catOptions(d.cat)}</select>
+      <input class="input" name="est" data-key="d-est" data-field="d.est" value="${esc(d.est)}" placeholder="ex : 45min" aria-label="Estimation" autocomplete="off">
+      <div class="t-conf">${confPicker({ id: '__draft', conf: d.conf })}<span class="small faint" data-draft-range style="margin-left:auto">${parsed ? 'fourchette ' + fmtMin(parsed * CONF[d.conf].lo) + ' – ' + fmtMin(parsed * CONF[d.conf].hi) : ''}</span></div>
+    </div>
+    <div class="modal-actions" style="margin-top:12px"><button type="button" class="btn btn-ghost" data-act="close-add">Annuler</button><button class="btn btn-primary" type="submit">${ic('plus')} Ajouter la tâche</button></div>
+  </form>`;
+}
+function viewProd(p) {
+  const s = projectStats(p);
+  const todo = p.tasks.filter(t => t.status === 'todo').length;
+  return `<div class="grid-2">
+    <section class="stack">
+      <div class="card">
+        <div class="meter-line"><h2 style="margin:0">Produis et chronomètre</h2><span class="hand">lance le chrono quand tu bosses</span></div>
+        <div class="meter-line" style="margin-top:8px"><span><b style="font-size:1.35rem" data-live="p-actual">${fmtMin(s.actualTotal)}</b> <span class="muted">passées sur ${fmtMin(s.plannedTotal)} prévues</span></span><span class="muted small">${s.done.length}/${s.active.length} tâches terminées</span></div>
+        <div class="track" role="img" aria-label="Projet : prévu ${fmtMin(s.plannedTotal)}, passé ${fmtMin(s.actualTotal)}" data-live-ptrack="${p.id}">${projTrackInner(p, s)}</div>
+        <div style="margin-top:10px">${trackLegend(false)}</div>
+      </div>
+      <div class="tcards">${p.tasks.map(t => prodCard(p, t)).join('')}</div>
+      ${ui.adding ? addUnplannedForm() : `<button class="btn" data-act="open-add" style="align-self:flex-start">${ic('plus')} J’ai oublié une tâche</button>`}
+    </section>
+    <aside class="stack">
+      <section class="card">
+        <h2>Terminé ?</h2>
+        <p class="small muted">Quand tout est fini (ou que le temps est écoulé), clôture le projet pour découvrir ton bilan.${todo ? ` Il reste ${plural(todo, 'tâche', 'tâches')} en cours.` : ''}</p>
+        <button class="btn btn-primary btn-big" style="width:100%" data-act="finish">Voir mon bilan ${ic('right')}</button>
+      </section>
+      <section class="card tint">
+        <h3>Pendant la prod</h3>
+        <ul class="tips small">
+          <li>Un seul chrono à la fois : en lancer un met les autres en pause.</li>
+          <li>Oublié le chrono ? Corrige avec <b>+15 / −15</b> ou <b>Corriger</b>.</li>
+          <li>Une tâche dépasse ? Note <b>pourquoi</b> quand tu la termines : c’est ça qui te fera progresser.</li>
+          <li>Plus assez de temps ? <b>Coupe du scope</b> plutôt que de tout bâcler.</li>
+        </ul>
+      </section>
+      <section class="card soft small">
+        <div class="lbl" style="margin-bottom:4px">Estimation de départ</div>
+        <div><b>${fmtMin(s.plannedTotal)}</b> <span class="muted">(fourchette ${fmtMin(sum(s.planned, t => rangeOf(t)[0]))} – ${fmtMin(sum(s.planned, t => rangeOf(t)[1]))})</span></div>
+        ${p.available ? `<div class="muted" style="margin-top:4px">Temps disponible : ${fmtMin(p.available)}</div>` : ''}
+        ${p.brief ? `<div class="lbl" style="margin:12px 0 4px">Brief</div><div class="muted" style="white-space:pre-wrap">${esc(p.brief)}</div>` : ''}
+      </section>
+    </aside>
+  </div>`;
+}
+
+/* ---------- Étape 3 : bilan ---------- */
+function viewDone(p) {
+  const rep = buildReport(p);
+  const s = rep.s;
+  const R = s.ratio;
+  const tasks = p.tasks.filter(t => t.status === 'done' && t.est > 0);
+  const max = Math.max(1, ...tasks.map(t => Math.max(rangeOf(t)[1], actualMin(t)))) * 1.06;
+  let sentence = 'Pas assez de données pour conclure.';
+  if (R != null) {
+    if (R > 1.15) sentence = `Ton projet a pris <b>${Math.round((R - 1) * 100)} % de temps en plus</b> que ton découpage de départ.`;
+    else if (R >= 0.85) sentence = `<b>Pile dans les temps</b>, à ${Math.round(Math.abs(R - 1) * 100)} % près. Bien joué !`;
+    else sentence = `Tu as fini <b>${Math.round((1 - R) * 100)} % plus vite</b> que prévu.`;
+  }
+  const fIcon = tone => tone === 'good' ? ic('check') : tone === 'info' ? ic('info') : ic('alert');
+  return `
+  <section class="card">
+    <div class="hero">
+      <div>
+        <div class="pv"><span class="muted">Prévu <b style="color:var(--ink)">${fmtMin(s.plannedTotal)}</b></span>${ic('right')}<span class="muted">Réel <b style="color:var(--ink)">${fmtMin(s.actualTotal)}</b></span></div>
+        <div class="hero-fig">${fmtRatio(R)}</div>
+        <div class="hero-sub">${sentence}</div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><div class="tl">Dans ta fourchette</div><div class="tv">${s.inRange}/${s.done.length}</div><div class="td">tâches terminées</div></div>
+        <div class="tile"><div class="tl">Écart moyen par tâche</div><div class="tv">${s.mape != null ? '±' + Math.round(s.mape * 100) + ' %' : '—'}</div><div class="td">plus c’est bas, mieux c’est</div></div>
+        <div class="tile"><div class="tl">Tâches oubliées</div><div class="tv">${s.unplanned.length}</div><div class="td">${s.unplanned.length ? fmtMin(s.unplannedTime) + ' en plus' : 'bravo !'}</div></div>
+        <div class="tile"><div class="tl">Coupées du scope</div><div class="tv">${s.cut.length}</div><div class="td">${s.cut.length ? 'décision de prod' : 'tout est livré'}</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:22px">
+    <div class="card-head"><h2>Prévu vs réel, tâche par tâche</h2><span class="hand">la barre doit finir dans le surligné</span></div>
+    <div style="margin-bottom:6px">${trackLegend(true)}</div>
+    <div class="rrows">
+      ${tasks.length ? tasks.map(t => `<div class="rrow">
+        <div class="rname">${esc(t.name)}<small>${esc(catName(t.cat))} · confiance ${t.conf}/5${!t.planned ? ' · oubliée au découpage' : ''}</small></div>
+        <div class="track" role="img" aria-label="${esc(taskAria(t))}">${taskTrackInner(t, max)}</div>
+        <div class="rval"><b>${fmtMin(actualMin(t))}</b> <span class="faint">/ ${fmtMin(t.est)}</span><div style="margin-top:3px">${resultBadge(t, true)}</div></div>
+      </div>`).join('') : '<p class="muted">Aucune tâche terminée.</p>'}
+    </div>
+  </section>
+
+  <div class="grid-eq" style="margin-top:22px">
+    <section class="card">
+      <h2>Ce que disent tes chiffres</h2>
+      <div class="findings">${rep.findings.map(f => `<div class="finding ${f.tone}">
+        <span class="fi">${fIcon(f.tone)}</span>
+        <div><div class="tag">${esc(f.tag)}</div><h3>${esc(f.title)}</h3><p>${esc(f.text)}</p></div>
+      </div>`).join('')}</div>
+    </section>
+    <section class="stack">
+      <div class="card" style="background:var(--hl-soft)">
+        <h2>${ic('bulb')} Pour la prochaine fois</h2>
+        ${rep.actions.length ? `<ol class="actions-list">${rep.actions.map(a => `<li><p>${esc(a)}</p></li>`).join('')}</ol>` : '<p class="muted">Rien de particulier : continue comme ça !</p>'}
+      </div>
+      <div class="card">
+        <h2>Mon ressenti</h2>
+        <p class="small muted">Qu’est-ce qui t’a surpris·e ? Qu’est-ce que tu ferais autrement ?</p>
+        <textarea class="input" data-field="p.reflection" data-key="refl" rows="5" aria-label="Mon ressenti" placeholder="Ex : j’ai sous-estimé le baking, je n’avais jamais utilisé Marmoset…">${esc(p.reflection || '')}</textarea>
+      </div>
+    </section>
+  </div>
+  <div class="row no-print" style="margin-top:22px">
+    <button class="btn btn-primary" data-act="print">${ic('print')} Imprimer / enregistrer en PDF</button>
+    <button class="btn" data-act="reuse" title="Crée un nouveau projet avec les mêmes tâches, à ré-estimer">${ic('copy')} Réutiliser ce découpage</button>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost" data-act="reopen-project">${ic('undo')} Rouvrir la production</button>
+  </div>
+  ${printSheet(p)}`;
+}
+
+/* ================== PAGE : TABLEAU DE BORD ================== */
+let chartCfgs = {};
+function viewDashboard() {
+  chartCfgs = {};
+  const fin = finishedProjects();
+  const head = `<div class="page-head"><div><h1><span class="mark">Tableau de bord</span></h1><p class="muted" style="margin:6px 0 0">Comment tes estimations évoluent, projet après projet.</p></div></div>`;
+  if (!fin.length) {
+    return head + `<section class="card empty">${DOODLE_EMPTY}<h2>Rien à afficher pour l’instant</h2>
+      <p class="muted">Ton tableau de bord se remplit dès que tu termines ton premier projet (étape « Bilan »).</p>
+      <div class="row" style="justify-content:center"><a class="btn btn-primary" href="#/projets">Aller à mes projets</a>${state.projects.some(p => p.demo) ? '' : '<button class="btn" data-act="demo-load">Voir un exemple</button>'}</div></section>`;
+  }
+  const rows = fin.map(p => ({ p, s: projectStats(p) }));
+  const coef = personalCoef();
+  const allDone = rows.flatMap(r => r.s.done);
+  const totalHit = allDone.filter(t => classify(t) === 'in').length;
+  const tracked = sum(rows, r => r.s.actualTotal);
+  const firstR = rows[0].s.ratio, lastR = rows[rows.length - 1].s.ratio;
+  let coefTxt = '';
+  if (coef) {
+    const c = coef.coef;
+    if (c > 1.05) coefTxt = `En moyenne, tes projets prennent <b>${Math.round((c - 1) * 100)} % de temps en plus</b> que ton découpage. Pour planifier, multiplie ton estimation par <b>${fmtRatio(c)}</b>.`;
+    else if (c >= 0.95) coefTxt = 'Tes projets tombent pile sur ton découpage. Continue comme ça !';
+    else coefTxt = `Tu finis en général <b>${Math.round((1 - c) * 100)} % plus vite</b> que prévu : tu peux resserrer tes estimations.`;
+    coefTxt += ` <span class="faint">Calculé sur ${coef.n > 1 ? 'tes ' + coef.n + ' derniers projets' : 'ton dernier projet'}.</span>`;
+  }
+  const insights = globalInsights();
+  if (rows.length >= 2 && firstR && lastR) {
+    insights.unshift({ tone: lastR < firstR ? 'good' : 'warn', text: lastR < firstR
+      ? `Tu progresses : de <b>${fmtRatio(firstR)}</b> sur ton premier projet à <b>${fmtRatio(lastR)}</b> sur le dernier.`
+      : `Ton écart n’a pas diminué : <b>${fmtRatio(firstR)}</b> au premier projet, <b>${fmtRatio(lastR)}</b> au dernier.` });
+  }
+
+  // Graphique 1 : ratio réel ÷ prévu par projet
+  const ys = rows.map(r => r.s.ratio || 1);
+  const yMax = Math.max(1.5, Math.ceil((Math.max(...ys) + 0.1) * 4) / 4);
+  const yMin = Math.min(0.5, Math.floor((Math.min(...ys) - 0.1) * 4) / 4);
+  const step = yMax - yMin > 1.6 ? 0.5 : 0.25;
+  const ticks = []; for (let v = Math.ceil(yMin / step) * step; v <= yMax + 1e-9; v += step) ticks.push(+v.toFixed(2));
+  chartCfgs.ratio = {
+    type: 'line', yMin, yMax, ticks, ref: 1, refLabel: 'pile à l’heure', zone: [0.85, 1.15], zoneLabel: 'zone juste',
+    fmtTick: v => '×' + String(v).replace('.', ','), fmtVal: fmtRatio,
+    aria: 'Évolution du rapport temps réel sur temps prévu, projet par projet',
+    points: rows.map(r => ({ label: fmtDate(r.p.finishedAt), y: r.s.ratio || 1, title: r.p.name, lines: [`prévu ${fmtMin(r.s.plannedTotal)} → réel ${fmtMin(r.s.actualTotal)}`] })),
+  };
+  // Graphique 2 : % de tâches dans la fourchette
+  chartCfgs.hit = {
+    type: 'column', yMin: 0, yMax: 100, ticks: [0, 25, 50, 75, 100], ref: 70, refLabel: 'objectif 70 %',
+    fmtTick: v => v + ' %', fmtVal: v => Math.round(v) + ' %',
+    aria: 'Part des tâches tombées dans la fourchette, projet par projet',
+    points: rows.map(r => ({ label: fmtDate(r.p.finishedAt), y: (r.s.hitRate || 0) * 100, title: r.p.name, lines: [`${r.s.inRange} tâches sur ${r.s.done.length} dans la fourchette`] })),
+  };
+
+  // Par catégorie (divergent)
+  const cs = Object.entries(catStats()).map(([k, v]) => ({ k, ...v, d: v.ratio - 1 })).sort((a, b) => b.d - a.d);
+  const dMax = Math.max(0.3, ...cs.map(c => c.d));
+  const dMin = Math.min(-0.3, ...cs.map(c => c.d));
+  const pos = v => ((v - dMin) / (dMax - dMin) * 100).toFixed(2) + '%';
+  const w = (a, b) => ((Math.abs(b - a)) / (dMax - dMin) * 100).toFixed(2) + '%';
+  const catBars = cs.map(c => `<div class="hbar" tabindex="0" data-tip-t="${esc(catName(c.k))}" data-tip-v="${esc(fmtPct(c.d))}" data-tip-l="${esc(`réel ${fmtMin(c.a)} pour ${fmtMin(c.e)} prévues|${c.n} tâches · ${c.hit} dans la fourchette`)}">
+      <div class="hl-name">${esc(catName(c.k))}<small>${plural(c.n, 'tâche', 'tâches')}</small></div>
+      <div class="htrack" aria-hidden="true"><div class="zone" style="left:${pos(-0.1)};width:${w(-0.1, 0.1)}"></div><div class="axis0" style="left:${pos(0)}"></div><div class="hb ${c.d >= 0 ? 'pos' : 'neg'}" style="left:${pos(Math.min(0, c.d))};width:${w(0, c.d)}"></div></div>
+      <div class="hl-val"><b>${fmtPct(c.d)}</b></div>
+    </div>`).join('');
+
+  // Calibration de la confiance
+  const cf = confStats();
+  const confBars = [5, 4, 3, 2, 1].map(i => {
+    const m = cf[i]; const r = m.n ? m.hit / m.n : null;
+    return `<div class="hbar" tabindex="0" data-tip-t="Confiance ${i} · ${esc(CONF[i].label)}" data-tip-v="${r != null ? Math.round(r * 100) + ' % dans la fourchette' : 'pas encore de données'}" data-tip-l="${esc((m.n ? `${m.hit} sur ${m.n} tâches|${m.over} plus longues · ${m.under} plus rapides|` : '') + `fourchette −${Math.round((1 - CONF[i].lo) * 100)} % / +${Math.round((CONF[i].hi - 1) * 100)} %`)}">
+      <div class="hl-name">${esc(CONF[i].label)}<small>niveau ${i}</small></div>
+      <div class="htrack" aria-hidden="true"><div class="rail"></div>${r != null ? `<div class="hb plain" style="width:${(r * 100).toFixed(1)}%"></div>` : ''}<div class="goal" style="left:70%"></div></div>
+      <div class="hl-val">${r != null ? `<b>${Math.round(r * 100)} %</b> <span class="faint">${m.hit}/${m.n}</span>` : '<span class="faint">—</span>'}</div>
+    </div>`;
+  }).join('');
+
+  const table = (cols, data) => `<details class="data"><summary>Voir les données</summary><div class="dt-wrap"><table class="dt"><thead><tr>${cols.map((c, i) => `<th class="${i ? 'r' : ''}">${c}</th>`).join('')}</tr></thead><tbody>${data.map(r => `<tr>${r.map((c, i) => `<td class="${i ? 'r' : ''}">${c}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
+
+  return head + `
+  <section class="card">
+    <div class="hero">
+      <div>
+        <div class="lbl muted">Ton coefficient perso</div>
+        <div class="hero-fig">${coef ? fmtRatio(coef.coef) : '—'}</div>
+        <div class="hero-sub">${coefTxt}</div>
+      </div>
+      <div>
+        <h3>À retenir</h3>
+        <div class="findings">${insights.slice(0, 4).map(x => `<div class="finding ${x.tone}" style="padding:10px"><span class="fi">${x.tone === 'good' ? ic('check') : ic('alert')}</span><p style="margin:5px 0 0">${x.text}</p></div>`).join('') || '<p class="muted small">Termine quelques projets de plus pour voir apparaître des tendances.</p>'}</div>
+      </div>
+    </div>
+  </section>
+  <div class="tiles" style="margin:22px 0">
+    <div class="tile card soft"><div class="tl">Projets terminés</div><div class="tv">${rows.length}</div></div>
+    <div class="tile card soft"><div class="tl">Tâches terminées</div><div class="tv">${allDone.length}</div></div>
+    <div class="tile card soft"><div class="tl">Temps chronométré</div><div class="tv">${fmtMin(tracked)}</div></div>
+    <div class="tile card soft"><div class="tl">Dans la fourchette</div><div class="tv">${allDone.length ? Math.round(totalHit / allDone.length * 100) + ' %' : '—'}</div><div class="td">${totalHit} tâches sur ${allDone.length}</div></div>
+  </div>
+  <div class="grid-eq">
+    <section class="card">
+      <h2>Réel ÷ prévu, projet par projet</h2>
+      <p class="small muted">×1 = pile à l’heure. Au-dessus, le projet a pris plus de temps que ton découpage.</p>
+      <div class="chart" data-chart="ratio" tabindex="0" aria-label="${esc(chartCfgs.ratio.aria)}. Utilise les flèches pour parcourir."></div>
+      ${table(['Projet', 'Prévu', 'Réel', 'Rapport'], rows.map(r => [esc(r.p.name), fmtMin(r.s.plannedTotal), fmtMin(r.s.actualTotal), fmtRatio(r.s.ratio)]))}
+    </section>
+    <section class="card">
+      <h2>Tâches dans la fourchette</h2>
+      <p class="small muted">Part des tâches dont le temps réel est tombé dans ta fourchette.</p>
+      <div class="chart" data-chart="hit" tabindex="0" aria-label="${esc(chartCfgs.hit.aria)}. Utilise les flèches pour parcourir."></div>
+      ${table(['Projet', 'Dans la fourchette', '%'], rows.map(r => [esc(r.p.name), `${r.s.inRange}/${r.s.done.length}`, r.s.hitRate != null ? Math.round(r.s.hitRate * 100) + ' %' : '—']))}
+    </section>
+  </div>
+  <div class="grid-eq" style="margin-top:22px">
+    <section class="card">
+      <h2>Par catégorie</h2>
+      <p class="small muted">Écart moyen entre ton estimation et le temps réel. La zone surlignée = à 10 % près.</p>
+      <div class="hbars">${catBars}</div>
+      <div class="axis-note" aria-hidden="true"><span>← plus rapide</span><span>plus long →</span></div>
+      ${table(['Catégorie', 'Tâches', 'Prévu', 'Réel', 'Écart'], cs.map(c => [esc(catName(c.k)), c.n, fmtMin(c.e), fmtMin(c.a), fmtPct(c.d)]))}
+    </section>
+    <section class="card">
+      <h2>Ta confiance est-elle fiable ?</h2>
+      <p class="small muted">Pour chaque niveau : combien de fois tu es tombé·e dans ta fourchette. Le trait marque l’objectif de 70 %.</p>
+      <div class="hbars">${confBars}</div>
+      ${table(['Confiance', 'Tâches', 'Dans la fourchette', 'Plus long', 'Plus rapide'], [5, 4, 3, 2, 1].map(i => [i + ' · ' + esc(CONF[i].label), cf[i].n, cf[i].hit, cf[i].over, cf[i].under]))}
+    </section>
+  </div>`;
+}
+
+/* ================== GRAPHIQUES SVG ================== */
+function colPath(x, y0, y1, w, r) {
+  const h = y0 - y1; if (h <= 0.5) return '';
+  r = Math.min(r, h, w / 2);
+  const l = x - w / 2, rr = x + w / 2;
+  return `M${l},${y0}V${y1 + r}Q${l},${y1} ${l + r},${y1}H${rr - r}Q${rr},${y1} ${rr},${y1 + r}V${y0}Z`;
+}
+
+function drawCharts() {
+  Object.entries(chartCfgs).forEach(([id, cfg]) => {
+    const el = document.querySelector(`[data-chart="${id}"]`);
+    if (el) drawXY(el, cfg);
+  });
+}
+
+function drawXY(el, cfg) {
+  const W = Math.max(260, Math.floor(el.clientWidth || 520));
+  const H = cfg.height || 230;
+  const m = { t: 20, r: cfg.type === 'line' ? 46 : 14, b: 30, l: 46 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const pts = cfg.points, n = pts.length;
+  const band = iw / n;
+  const X = i => m.l + band * i + band / 2;
+  const Y = v => m.t + ih - (clamp(v, cfg.yMin, cfg.yMax) - cfg.yMin) / (cfg.yMax - cfg.yMin) * ih;
+  let g = '', refTxt = '';
+  if (cfg.zone) {
+    const y1 = Y(cfg.zone[1]), y0 = Y(cfg.zone[0]);
+    g += `<rect x="${m.l}" y="${y1}" width="${iw}" height="${y0 - y1}" fill="var(--band)" opacity=".7" rx="4"/>`;
+    g += `<text x="${m.l + iw - 6}" y="${y0 - 5}" text-anchor="end" font-size="11" fill="var(--ink-2)">${esc(cfg.zoneLabel || '')}</text>`;
+  }
+  cfg.ticks.forEach(v => {
+    g += `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line-hair)" stroke-width="1"/>`;
+    g += `<text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--ink-3)" style="font-variant-numeric:tabular-nums">${esc(cfg.fmtTick(v))}</text>`;
+  });
+  g += `<line x1="${m.l}" x2="${m.l + iw}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--line-soft)" stroke-width="1"/>`;
+  if (cfg.ref != null) {
+    g += `<line x1="${m.l}" x2="${m.l + iw}" y1="${Y(cfg.ref)}" y2="${Y(cfg.ref)}" stroke="var(--ink-2)" stroke-width="1.5"/>`;
+    refTxt = `<text x="${m.l + 6}" y="${Y(cfg.ref) - 6}" font-size="11" font-weight="600" fill="var(--ink-2)" stroke="var(--card)" stroke-width="4" paint-order="stroke" stroke-linejoin="round">${esc(cfg.refLabel || '')}</text>`;
+  }
+  const every = Math.max(1, Math.ceil(n / Math.max(1, Math.floor(iw / 62))));
+  pts.forEach((p, i) => {
+    if (i % every === 0 || i === n - 1) g += `<text x="${X(i)}" y="${H - 9}" text-anchor="middle" font-size="11" fill="var(--ink-3)">${esc(p.label)}</text>`;
+  });
+  g += `<line class="xh" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="var(--ink-3)" stroke-width="1" opacity="0"/>`;
+  if (cfg.type === 'line') {
+    const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
+    g += `<path d="${d}" fill="none" stroke="var(--ok)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach((p, i) => { g += `<circle class="mk" data-i="${i}" cx="${X(i)}" cy="${Y(p.y)}" r="5" fill="var(--ok)" stroke="var(--card)" stroke-width="2"/>`; });
+    const L = pts[n - 1];
+    g += `<text x="${X(n - 1) + 10}" y="${Y(L.y) + 4}" font-size="12.5" font-weight="700" fill="var(--ink)">${esc(cfg.fmtVal(L.y))}</text>`;
+  } else {
+    const w = Math.min(24, band * 0.6);
+    pts.forEach((p, i) => { g += `<path class="mk" data-i="${i}" d="${colPath(X(i), m.t + ih, Y(p.y), w, 4)}" fill="var(--ok)"/>`; });
+    const L = pts[n - 1];
+    g += `<text x="${X(n - 1)}" y="${Y(L.y) - 7}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink)">${esc(cfg.fmtVal(L.y))}</text>`;
+  }
+  g += refTxt;
+  g += `<rect class="hit" x="${m.l}" y="${m.t - 8}" width="${iw}" height="${ih + 16}" fill="transparent"/>`;
+  el.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true">${g}</svg>`;
+
+  const svg = el.firstChild;
+  const xh = svg.querySelector('.xh');
+  const marks = $$('.mk', svg);
+  let cur = -1;
+  const setIdx = (i, cx, cy) => {
+    cur = i;
+    if (i < 0) { xh.setAttribute('opacity', 0); marks.forEach(mk => mk.removeAttribute('opacity')); hideTip(); return; }
+    if (cfg.type === 'line') { xh.setAttribute('x1', X(i)); xh.setAttribute('x2', X(i)); xh.setAttribute('opacity', 1); }
+    marks.forEach((mk, j) => cfg.type === 'line' ? mk.setAttribute('r', j === i ? 6.5 : 5) : mk.setAttribute('opacity', j === i ? 1 : 0.55));
+    const p = pts[i];
+    if (cx == null) { const r = svg.getBoundingClientRect(); cx = r.left + X(i); cy = r.top + Y(p.y); }
+    showTip({ title: p.title, value: cfg.fmtVal(p.y), lines: p.lines }, cx, cy);
+  };
+  svg.addEventListener('pointermove', e => {
+    const r = svg.getBoundingClientRect();
+    const i = clamp(Math.floor((e.clientX - r.left - m.l) / band), 0, n - 1);
+    setIdx(i, e.clientX, e.clientY);
+  });
+  svg.addEventListener('pointerleave', () => setIdx(-1));
+  el.onfocus = () => setIdx(n - 1);
+  el.onblur = () => setIdx(-1);
+  el.onkeydown = e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setIdx(clamp((cur < 0 ? n - 1 : cur) + (e.key === 'ArrowRight' ? 1 : -1), 0, n - 1));
+    } else if (e.key === 'Escape') setIdx(-1);
+  };
+}
+
+/* ---------- Infobulle ---------- */
+function showTip(d, x, y) {
+  const tip = $('#tip'); if (!tip) return;
+  tip.textContent = '';
+  const add = (cls, txt) => { if (!txt) return; const div = document.createElement('div'); div.className = cls; div.textContent = txt; tip.appendChild(div); };
+  add('tv', d.value); add('tt', d.title);
+  (d.lines || []).forEach(l => add('tl', l));
+  tip.classList.add('on');
+  const r = tip.getBoundingClientRect();
+  let left = x + 14, top = y + 14;
+  if (left + r.width > innerWidth - 8) left = x - r.width - 14;
+  if (top + r.height > innerHeight - 8) top = y - r.height - 14;
+  tip.style.left = Math.max(8, left) + 'px';
+  tip.style.top = Math.max(8, top) + 'px';
+}
+function hideTip() { const tip = $('#tip'); if (tip) tip.classList.remove('on'); }
+function tipFrom(el) {
+  return { title: el.dataset.tipT, value: el.dataset.tipV, lines: (el.dataset.tipL || '').split('|').filter(Boolean) };
+}
+document.addEventListener('pointermove', e => {
+  const el = e.target.closest && e.target.closest('[data-tip-t]');
+  if (el) showTip(tipFrom(el), e.clientX, e.clientY);
+  else if (!e.target.closest || !e.target.closest('.chart')) hideTip();
+});
+document.addEventListener('focusin', e => {
+  const el = e.target.closest && e.target.closest('[data-tip-t]');
+  if (el) { const r = el.getBoundingClientRect(); showTip(tipFrom(el), r.left + r.width * 0.6, r.top + r.height / 2); }
+});
+document.addEventListener('focusout', e => { if (e.target.closest && e.target.closest('[data-tip-t]')) hideTip(); });
+
+/* ================== ROUTAGE & RENDU ================== */
+const ui = { adding: false, editTime: null, draft: null, focusKey: null, selectAll: false };
+
+function route() {
+  const h = location.hash.replace(/^#\/?/, '');
+  const [page, id] = h.split('/');
+  if (page === 'projet' && getProject(id)) return { page: 'project', id };
+  if (page === 'tableau') return { page: 'dashboard' };
+  return { page: 'projects' };
+}
+function currentProject() { const r = route(); return r.page === 'project' ? getProject(r.id) : null; }
+
+function captureFocus() {
+  const el = document.activeElement;
+  if (!el || !el.dataset || !el.dataset.key) return null;
+  let s = null, e = null;
+  try { s = el.selectionStart; e = el.selectionEnd; } catch (_) { }
+  return { key: el.dataset.key, s, e };
+}
+function restoreFocus(f) {
+  if (ui.focusKey) { f = { key: ui.focusKey, s: null, e: null, all: ui.selectAll }; ui.focusKey = null; ui.selectAll = false; }
+  if (!f) return;
+  const el = document.querySelector(`[data-key="${CSS.escape(f.key)}"]`);
+  if (!el) return;
+  el.focus({ preventScroll: true });
+  try {
+    if (f.all) el.select();
+    else if (f.s != null) el.setSelectionRange(f.s, f.e);
+  } catch (_) { }
+}
+
+function render() {
+  const f = captureFocus();
+  const r = route();
+  const app = $('#app');
+  if (r.page !== 'dashboard') chartCfgs = {};
+  let html;
+  if (r.page === 'project') html = viewProject(getProject(r.id));
+  else if (r.page === 'dashboard') html = viewDashboard();
+  else html = viewProjects();
+  app.innerHTML = banners() + html;
+  const navKey = r.page === 'project' ? 'projects' : r.page;
+  $$('.nav a').forEach(a => a.dataset.page === navKey ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  const p = currentProject();
+  document.title = (p ? (p.name || 'Projet') + ' — ' : r.page === 'dashboard' ? 'Tableau de bord — ' : '') + 'Carnet de Prod';
+  drawCharts();
+  updateTimerPill();
+  $$('.title-input').forEach(autoGrow);
+  restoreFocus(f);
+}
+function autoGrow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+let renderQueued = false;
+function renderSoon() { if (renderQueued) return; renderQueued = true; setTimeout(() => { renderQueued = false; render(); }, 0); }
+function commit() { save(); render(); }
+
+/* ================== CHRONO ================== */
+function stopTimer() {
+  if (!state.timer) return;
+  const t = findTask(state, state.timer.pid, state.timer.tid);
+  if (t) t.spent += now() - state.timer.since;
+  state.timer = null;
+}
+function toggleTimer(p, t) {
+  if (isRunning(t)) stopTimer();
+  else { stopTimer(); state.timer = { pid: p.id, tid: t.id, since: now() }; }
+  commit();
+}
+function updateTimerPill() {
+  const pill = $('#timerPill');
+  if (!state.timer) { pill.classList.remove('on'); return; }
+  const t = findTask(state, state.timer.pid, state.timer.tid);
+  if (!t) { state.timer = null; pill.classList.remove('on'); return; }
+  pill.classList.add('on');
+  const a = $('#tpName'); a.textContent = t.name; a.href = '#/projet/' + state.timer.pid;
+  $('#tpTime').textContent = fmtClock(spentMs(t));
+}
+function tick() {
+  if (!state.timer) return;
+  const t = findTask(state, state.timer.pid, state.timer.tid);
+  const p = getProject(state.timer.pid);
+  if (!t || !p) return;
+  $$(`[data-live-time="${t.id}"]`).forEach(el => el.textContent = fmtClock(spentMs(t)));
+  $$(`[data-live-track="${t.id}"]`).forEach(el => el.innerHTML = taskTrackInner(t));
+  const s = projectStats(p);
+  $$(`[data-live-ptrack="${p.id}"]`).forEach(el => el.innerHTML = projTrackInner(p, s));
+  $$('[data-live="p-actual"]').forEach(el => el.textContent = fmtMin(s.actualTotal));
+  updateTimerPill();
+  document.title = `${fmtClock(spentMs(t))} · ${t.name} — Carnet de Prod`;
+}
+setInterval(tick, 1000);
+
+/* ================== FENÊTRES ================== */
+let modalOk = null;
+function openModal({ title, body, okLabel, cancelLabel = 'Annuler', onOk, wide, danger }) {
+  closeModal();
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg'; bg.id = 'modalBg';
+  bg.innerHTML = `<div class="card modal ${wide ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <h2 id="mTitle">${title}</h2><div class="mbody">${body}</div>
+    <div class="modal-actions">${cancelLabel ? `<button class="btn btn-ghost" data-mact="cancel">${cancelLabel}</button>` : ''}${okLabel ? `<button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-mact="ok">${okLabel}</button>` : ''}</div></div>`;
+  document.body.appendChild(bg);
+  modalOk = onOk || null;
+  bg.addEventListener('mousedown', e => { if (e.target === bg) closeModal(); });
+  bg.addEventListener('click', e => {
+    const b = e.target.closest('[data-mact]'); if (!b) return;
+    if (b.dataset.mact === 'ok' && modalOk && modalOk() === false) return;
+    closeModal();
+  });
+  const first = bg.querySelector('[data-mact="ok"]') || bg.querySelector('input,button');
+  if (first) first.focus();
+}
+function closeModal() { const bg = $('#modalBg'); if (bg) bg.remove(); modalOk = null; }
+function confirmBox(title, body, okLabel, onOk, danger) { openModal({ title, body: `<p>${body}</p>`, okLabel, onOk, danger }); }
+
+let toastT = null;
+function toast(msg) {
+  let el = $('#toast');
+  if (!el) { el = document.createElement('div'); el.id = 'toast'; el.className = 'toast'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = msg;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.remove(), 3400);
+}
+
+/* ================== RÉGLAGES / SAUVEGARDE ================== */
+function openSettings() {
+  const used = new Set(state.projects.flatMap(p => p.tasks.map(t => t.cat)));
+  const hasDemo = state.projects.some(p => p.demo);
+  openModal({
+    title: 'Réglages', wide: true, cancelLabel: null, okLabel: 'Fermer',
+    body: `
+    <div class="settings-sec"><div class="field"><label for="stName">Ton prénom <span class="faint" style="font-weight:500">(affiché sur tes bilans imprimés)</span></label><input id="stName" class="input" data-field="s.student" value="${esc(state.student)}" autocomplete="off"></div></div>
+    <div class="settings-sec"><h3>Espace Game Artist & Synchronisation</h3>
+      <div class="row" style="align-items:center;justify-content:space-between">
+        <div>
+          <div>Connecté en tant que : <b>${esc(currentArtist ? currentArtist.name : 'Aucun')}</b></div>
+          <div class="small muted">Base de données : <b>SQLite (serveur)</b> · ${serverSyncOK ? '<span style="color:var(--ok)">● En ligne</span>' : '<span style="color:var(--miss)">● Hors-ligne</span>'}</div>
+        </div>
+        <button class="btn btn-sm" data-act="switch-artist">Changer d’artiste</button>
+      </div>
+      <div style="margin-top:12px">
+        <a class="btn btn-sm" href="/api/backup" download>${ic('download')} Sauvegarde complète de tous les artistes (.json)</a>
+      </div>
+    </div>
+    <div class="settings-sec"><h3>Sauvegarde individuelle</h3>
+      <p class="small muted">Tes données sont enregistrées automatiquement <b>dans ce navigateur, sur cet ordinateur</b>. Exporte un fichier pour les garder en sécurité, changer d’ordinateur ou les montrer à ton prof.</p>
+      <div class="row"><button class="btn" data-act="export">${ic('download')} Exporter mes données (.json)</button><button class="btn" data-act="import">${ic('upload')} Importer un fichier</button></div>
+      <p class="small faint" style="margin-top:8px">Dernier export : ${state.lastExport ? fmtDate(state.lastExport, true) : 'jamais'}</p>
+    </div>
+    <div class="settings-sec"><h3>Catégories de tâches</h3>
+      <div class="cat-list">${state.categories.map(c => `<div class="cat-item"><input class="input" data-field="s.cat" data-cid="${esc(c.id)}" value="${esc(c.name)}" aria-label="Nom de la catégorie" autocomplete="off"><button class="btn btn-ghost icon-btn btn-sm" data-act="cat-del" data-cid="${esc(c.id)}" ${used.has(c.id) ? 'disabled title="Utilisée dans un projet"' : 'title="Supprimer"'} aria-label="Supprimer la catégorie">${ic('trash')}</button></div>`).join('')}</div>
+      <form data-form="cat-add" class="add-row"><input class="input" name="name" placeholder="Nouvelle catégorie (ex : VFX, UI, Hard surface…)" autocomplete="off" aria-label="Nouvelle catégorie"><button class="btn" type="submit">${ic('plus')} Ajouter</button></form>
+    </div>
+    <div class="settings-sec"><h3>Projets d’exemple</h3>
+      <p class="small muted">Des projets fictifs pour découvrir le bilan et le tableau de bord.</p>
+      ${hasDemo ? '<button class="btn" data-act="demo-remove">Retirer les exemples</button>' : '<button class="btn" data-act="demo-load">Charger les exemples</button>'}
+    </div>
+    <div class="settings-sec"><h3>Tout recommencer</h3><button class="btn btn-danger" data-act="reset-all">${ic('trash')} Effacer toutes mes données</button></div>`,
+  });
+}
+function slug(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+function exportData() {
+  state.lastExport = now();
+  saveNow();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const name = (state.student ? slug(state.student) + '-' : '') + 'carnet-de-prod-' + new Date().toISOString().slice(0, 10) + '.json';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  toast('Fichier exporté : ' + name);
+  if (!$('#modalBg')) render();
+}
+function importFile(file) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    let data;
+    try { data = normalize(JSON.parse(rd.result)); }
+    catch (e) { closeModal(); toast('Ce fichier n’est pas une sauvegarde du Carnet de Prod.'); return; }
+    const n = data.projects.length;
+    confirmBox('Importer cette sauvegarde ?', `Le fichier contient <b>${plural(n, 'projet', 'projets')}</b>. Il va <b>remplacer</b> les données actuelles de ce navigateur (${plural(state.projects.length, 'projet', 'projets')}).`, 'Importer', () => {
+      state = data; saveNow(); location.hash = '#/projets'; render(); toast('Sauvegarde importée.');
+    });
+  };
+  rd.readAsText(file);
+}
+
+/* ================== THÈME ================== */
+function currentTheme() {
+  return document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+function applyTheme(t) {
+  if (t) document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme;
+  const b = $('#themeBtn');
+  if (b) { const dark = currentTheme() === 'dark'; b.innerHTML = ic(dark ? 'sun' : 'moon'); b.setAttribute('aria-label', dark ? 'Passer en thème clair' : 'Passer en thème sombre'); b.title = b.getAttribute('aria-label'); }
+}
+
+/* ================== CRÉATION DE TÂCHES ================== */
+const CAT_GUESS = [
+  [/r[ée]f[ée]rence|moodboard|recherche|palette/, 'refs'],
+  [/concept|design|croquis|sketch|silhouette|dessin/, 'concept'],
+  [/blocking|block/, 'blocking'],
+  [/retopo|uv|unwrap|trim/, 'retopo'],
+  [/sculpt|zbrush/, 'sculpt'],
+  [/textur|substance|bak|mat[ée]riau|shader/, 'texture'],
+  [/rig|skin/, 'rig'],
+  [/anim/, 'anim'],
+  [/light|[ée]clair|lumi/, 'light'],
+  [/unreal|unity|godot|moteur|int[ée]gr|export|lod|collision/, 'integ'],
+  [/retour|correct|feedback|review/, 'retours'],
+  [/pr[ée]sent|planche|portfolio|artstation|rendu|render|turn/, 'pres'],
+  [/mod[ée]li|low ?poly|high ?poly|props?|mesh/, 'model'],
+];
+function guessCat(name) {
+  const n = name.toLowerCase();
+  const hit = CAT_GUESS.find(([re, id]) => re.test(n) && state.categories.some(c => c.id === id));
+  return hit ? hit[1] : null;
+}
+function newTask(fields) {
+  return Object.assign({ id: uid(), name: '', cat: 'autre', est: null, conf: 3, spent: 0, status: 'todo', planned: true, reasons: [], doneAt: null }, fields);
+}
+
+/* ================== CLICS ================== */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const act = el.dataset.act;
+  const p = currentProject();
+  const tid = el.dataset.tid;
+  const t = p && tid ? p.tasks.find(x => x.id === tid) : null;
+
+  switch (act) {
+    case 'new-project': {
+      const np = { id: uid(), name: 'Nouveau projet', brief: '', available: null, status: 'plan', createdAt: now(), startedAt: null, finishedAt: null, reflection: '', tasks: [] };
+      state.projects.push(np); save();
+      ui.focusKey = 'p-name'; ui.selectAll = true;
+      location.hash = '#/projet/' + np.id;
+      break;
+    }
+    case 'demo-load': closeModal(); loadDemo(); save(); location.hash = '#/projets'; render(); toast('Projets d’exemple chargés.'); break;
+    case 'demo-remove': {
+      if (state.timer && (getProject(state.timer.pid) || {}).demo) state.timer = null;
+      state.projects = state.projects.filter(x => !x.demo);
+      closeModal(); save(); if (!currentProject()) location.hash = '#/projets'; render(); toast('Exemples retirés.'); break;
+    }
+    case 'settings': openSettings(); break;
+    case 'switch-artist': openArtistModal(false); break;
+    case 'choose-artist': {
+      selectArtist({ id: el.dataset.aid, name: el.dataset.aname });
+      break;
+    }
+    case 'theme': { const next = currentTheme() === 'dark' ? 'light' : 'dark'; applyTheme(next); try { localStorage.setItem(THEME_KEY, next); } catch (_) { } break; }
+    case 'export': exportData(); break;
+    case 'import': $('#importFile').value = ''; $('#importFile').click(); break;
+    case 'reset-all':
+      confirmBox('Effacer toutes tes données ?', 'Tous tes projets seront supprimés de ce navigateur. Pense à exporter une sauvegarde avant si tu veux les garder.', 'Tout effacer', () => {
+        state = freshState(); saveNow(); location.hash = '#/projets'; render(); toast('Carnet remis à zéro.');
+      }, true);
+      break;
+    case 'cat-del': {
+      state.categories = state.categories.filter(c => c.id !== el.dataset.cid);
+      save(); openSettings(); break;
+    }
+    case 'pill-pause': stopTimer(); commit(); break;
+    case 'timer-keep': if (state.timer) state.timer.ack = true; commit(); break;
+    case 'timer-discard': state.timer = null; commit(); toast('Session non comptée.'); break;
+    case 'print': window.print(); break;
+
+    /* --- projet --- */
+    case 'delete-project':
+      if (!p) break;
+      confirmBox('Supprimer ce projet ?', `« ${esc(p.name)} » et ses ${plural(p.tasks.length, 'tâche', 'tâches')} seront supprimés définitivement.`, 'Supprimer', () => {
+        if (state.timer && state.timer.pid === p.id) state.timer = null;
+        state.projects = state.projects.filter(x => x.id !== p.id); save(); location.hash = '#/projets';
+      }, true);
+      break;
+    case 'del-task':
+      if (!p || !t) break;
+      if (isRunning(t)) state.timer = null;
+      p.tasks = p.tasks.filter(x => x.id !== t.id); commit(); break;
+    case 'set-conf': {
+      const v = +el.dataset.v;
+      if (tid === '__draft') ui.draft.conf = v;
+      else if (t) t.conf = v;
+      ui.focusKey = el.dataset.key;
+      commit(); break;
+    }
+    case 'add-suggest':
+      if (!p) break;
+      { const nt = newTask({ name: el.dataset.name, cat: el.dataset.cat }); p.tasks.push(nt); ui.focusKey = 'e-' + nt.id; commit(); }
+      break;
+    case 'start-prod': {
+      if (!p) break;
+      const s = projectStats(p);
+      confirmBox('Lancer la production ?', `Ton découpage : <b>${plural(p.tasks.length, 'tâche', 'tâches')}</b>, <b>${fmtMin(s.estTotal)}</b> estimées (fourchette ${fmtMin(s.lowTotal)} – ${fmtMin(s.highTotal)}).<br><br>Tes estimations seront <b>verrouillées</b> : tu pourras ajouter des tâches oubliées, mais pas modifier celles-ci.`, 'C’est parti !', () => {
+        p.status = 'wip'; p.startedAt = now(); p.tasks.forEach(x => { x.planned = true; });
+        commit(); scrollTo(0, 0);
+      });
+      break;
+    }
+    case 'toggle-timer': if (p && t) toggleTimer(p, t); break;
+    case 'adj': {
+      if (!t) break;
+      if (isRunning(t)) { t.spent += now() - state.timer.since; state.timer.since = now(); }
+      t.spent = Math.max(0, t.spent + (+el.dataset.v) * 60000);
+      ui.focusKey = el.dataset.key; commit(); break;
+    }
+    case 'edit-time': ui.editTime = tid; ui.focusKey = 'et-' + tid; ui.selectAll = true; render(); break;
+    case 'cancel-edit': ui.editTime = null; render(); break;
+    case 'cut': if (!t) break; if (isRunning(t)) stopTimer(); t.status = 'cut'; commit(); toast('Tâche coupée du scope.'); break;
+    case 'done': {
+      if (!t) break;
+      if (isRunning(t)) stopTimer();
+      if (t.spent < 60000) {
+        confirmBox('Aucun temps enregistré', `Tu n’as presque pas de temps sur « ${esc(t.name)} ». Utilise <b>Corriger</b> pour indiquer le temps passé, sinon la tâche comptera pour 0.`, 'Terminer quand même', () => { t.status = 'done'; t.doneAt = now(); commit(); });
+        break;
+      }
+      t.status = 'done'; t.doneAt = now(); commit();
+      const c = classify(t);
+      toast(c === 'in' ? 'Pile dans ta fourchette, bien estimé !' : c === 'over' ? 'Plus long que prévu : note ce qui t’a ralenti·e.' : 'Plus rapide que prévu !');
+      break;
+    }
+    case 'reopen-task': if (t) { t.status = 'todo'; t.doneAt = null; commit(); } break;
+    case 'reason': {
+      if (!t) break;
+      const v = el.dataset.v;
+      t.reasons = t.reasons.includes(v) ? t.reasons.filter(x => x !== v) : t.reasons.concat(v);
+      ui.focusKey = el.dataset.key; commit(); break;
+    }
+    case 'open-add': ui.adding = true; ui.draft = { name: '', cat: 'autre', est: '', conf: 3 }; ui.focusKey = 'd-name'; render(); break;
+    case 'close-add': ui.adding = false; render(); break;
+    case 'finish': {
+      if (!p) break;
+      const todo = p.tasks.filter(x => x.status === 'todo');
+      const doFinish = () => {
+        if (state.timer && state.timer.pid === p.id) stopTimer();
+        todo.forEach(x => { x.status = 'cut'; });
+        p.status = 'done'; p.finishedAt = now(); ui.adding = false;
+        commit(); scrollTo(0, 0);
+      };
+      if (todo.length) confirmBox('Clôturer le projet ?', `${plural(todo.length, 'tâche n’est pas terminée', 'tâches ne sont pas terminées')} : ${todo.map(x => '« ' + esc(x.name) + ' »').join(', ')}.<br><br>Elles seront marquées <b>coupées du scope</b> (tu pourras rouvrir la production si besoin).`, 'Clôturer et voir mon bilan', doFinish);
+      else doFinish();
+      break;
+    }
+    case 'reopen-project': if (p) { p.status = 'wip'; p.finishedAt = null; commit(); } break;
+    case 'reuse': {
+      if (!p) break;
+      const np = { id: uid(), name: p.name + ' — v2', brief: p.brief || '', available: null, status: 'plan', createdAt: now(), startedAt: null, finishedAt: null, reflection: '', tasks: p.tasks.filter(x => x.status !== 'cut').map(x => newTask({ name: x.name, cat: x.cat })) };
+      state.projects.push(np); save(); location.hash = '#/projet/' + np.id;
+      toast('Découpage copié : ré-estime chaque tâche en pensant à ton bilan.');
+      break;
+    }
+  }
+});
+
+/* ================== FORMULAIRES ================== */
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-form]');
+  if (!form) return;
+  e.preventDefault();
+  const kind = form.dataset.form;
+  const p = currentProject();
+  if (kind === 'create-artist') {
+    const name = form.elements.name.value.trim();
+    if (!name) return;
+    try {
+      const res = await fetch('/api/artists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+      const data = await res.json();
+      if (data.artist) {
+        selectArtist(data.artist, data.state);
+        toast('Bienvenue, ' + data.artist.name + ' !');
+      }
+    } catch (_) {
+      selectArtist({ id: slug(name), name });
+    }
+    return;
+  }
+  if (kind === 'add-task' && p) {
+    const inp = form.elements.name; const name = inp.value.trim();
+    if (!name) { inp.focus(); return; }
+    const last = p.tasks[p.tasks.length - 1];
+    p.tasks.push(newTask({ name, cat: guessCat(name) || (last ? last.cat : 'autre') }));
+    ui.focusKey = 'add-name'; commit();
+  } else if (kind === 'add-unplanned' && p) {
+    const d = ui.draft; const est = parseDur(d.est);
+    if (!d.name.trim()) { toast('Donne un nom à la tâche.'); $('[data-key="d-name"]').focus(); return; }
+    if (!est) { toast('Estime la tâche (ex : 45min, 1h30, 2h).'); const x = $('[data-key="d-est"]'); x.classList.add('bad'); x.focus(); return; }
+    p.tasks.push(newTask({ name: d.name.trim(), cat: d.cat, est, conf: d.conf, planned: false }));
+    ui.adding = false; commit(); toast('Tâche ajoutée. Elle comptera comme « oubliée au découpage ».');
+  } else if (kind === 'edit-time' && p) {
+    const t = p.tasks.find(x => x.id === form.dataset.tid);
+    const v = parseDur(form.elements.v.value);
+    const zero = /^\s*0\s*(h|min|m)?\s*$/i.test(form.elements.v.value);
+    if (!t) return;
+    if (v == null && !zero) { form.elements.v.classList.add('bad'); toast('Format non reconnu. Exemples : 45min, 1h30, 2h.'); return; }
+    if (isRunning(t)) state.timer.since = now();
+    t.spent = (v || 0) * 60000; ui.editTime = null; commit();
+  } else if (kind === 'cat-add') {
+    const name = form.elements.name.value.trim(); if (!name) return;
+    let id = slug(name) || uid(); if (state.categories.some(c => c.id === id)) id += '-' + uid().slice(0, 3);
+    state.categories.splice(Math.max(0, state.categories.length - 1), 0, { id, name });
+    save(); openSettings(); const x = $('#modalBg input[name="name"]'); if (x) x.focus();
+  }
+});
+
+/* ================== SAISIE ================== */
+document.addEventListener('input', e => {
+  const el = e.target; const f = el.dataset && el.dataset.field; if (!f) return;
+  const p = currentProject();
+  const t = p && el.dataset.tid ? p.tasks.find(x => x.id === el.dataset.tid) : null;
+  switch (f) {
+    case 'p.name': if (p) { el.value = el.value.replace(/\n/g, ' '); autoGrow(el); p.name = el.value; document.title = (p.name || 'Projet') + ' — Carnet de Prod'; save(); } break;
+    case 'p.brief': if (p) { p.brief = el.value; save(); } break;
+    case 'p.reflection': if (p) { p.reflection = el.value; save(); } break;
+    case 'p.available': if (p) { p.available = parseDur(el.value); el.classList.toggle('bad', !!el.value.trim() && !p.available); save(); refreshPlanComputed(p); } break;
+    case 't.name': if (t) { t.name = el.value; save(); refreshPlanComputed(p); } break;
+    case 't.est': if (t) {
+      const v = parseDur(el.value);
+      t.est = v; el.classList.toggle('bad', !!el.value.trim() && !v);
+      save(); refreshPlanComputed(p);
+    } break;
+    case 'd.name': {
+      ui.draft.name = el.value;
+      const g = guessCat(el.value);
+      if (g && !ui.draft.catTouched) { ui.draft.cat = g; const sel = $('[data-key="d-cat"]'); if (sel) sel.value = g; }
+      break;
+    }
+    case 'd.est': {
+      ui.draft.est = el.value; const v = parseDur(el.value); el.classList.toggle('bad', !!el.value.trim() && !v);
+      const r = $('[data-draft-range]'); if (r) r.textContent = v ? 'fourchette ' + fmtMin(v * CONF[ui.draft.conf].lo) + ' – ' + fmtMin(v * CONF[ui.draft.conf].hi) : '';
+      break;
+    }
+    case 's.student': state.student = el.value; save(); break;
+    case 's.cat': { const c = state.categories.find(x => x.id === el.dataset.cid); if (c) { c.name = el.value; save(); } break; }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target; const f = el.dataset && el.dataset.field;
+  if (el.id === 'importFile' && el.files && el.files[0]) { importFile(el.files[0]); return; }
+  if (!f) return;
+  const p = currentProject();
+  const t = p && el.dataset.tid ? p.tasks.find(x => x.id === el.dataset.tid) : null;
+  if (f === 't.cat' && t) { t.cat = el.value; commit(); }
+  else if (f === 'd.cat') { ui.draft.cat = el.value; ui.draft.catTouched = true; }
+  else if (f === 't.est' || f === 'p.available') {
+    if (el.value.trim() && !parseDur(el.value)) { toast('Durée non reconnue. Exemples : 45min, 1h30, 2h, 1,5 ou 1j.'); return; }
+    renderSoon();
+  } else if (f === 's.cat') { if (!$('#modalBg')) render(); }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && $('#modalBg')) { closeModal(); return; }
+  const el = e.target; if (!el.dataset || e.key !== 'Enter') return;
+  const f = el.dataset.field;
+  if (f === 't.name') { e.preventDefault(); const n = $(`[data-key="e-${el.dataset.tid}"]`); if (n) n.focus(); }
+  else if (f === 't.est') {
+    e.preventDefault();
+    const rows = $$('[data-row]'); const i = rows.findIndex(r => r.dataset.row === el.dataset.tid);
+    const next = rows[i + 1] ? $(`[data-key="e-${rows[i + 1].dataset.row}"]`) : $('[data-key="add-name"]');
+    if (next) next.focus();
+  }
+  else if (f === 'p.name') { e.preventDefault(); el.blur(); }
+});
+
+
+/* ================== PROJETS D'EXEMPLE ================== */
+function loadDemo() {
+  state.projects = state.projects.filter(p => !p.demo);
+  const D = 86400000, t0 = now();
+  const mk = (name, startAgo, endAgo, tasks, extra = {}) => {
+    const wip = extra.status === 'wip';
+    const p = {
+      id: uid(), name, brief: extra.brief || '', available: extra.available || null,
+      status: extra.status || 'done', createdAt: t0 - (startAgo + 1) * D, startedAt: t0 - startAgo * D,
+      finishedAt: wip ? null : t0 - endAgo * D, reflection: extra.reflection || '', demo: true, tasks: [],
+    };
+    p.tasks = tasks.map(([n, cat, est, conf, act, o = {}]) => newTask({
+      name: n, cat, est, conf, spent: (act || 0) * 60000, planned: !o.unplanned, reasons: o.r || [],
+      status: o.status || 'done', doneAt: wip ? (o.status === 'done' ? t0 - D : null) : p.finishedAt,
+    }));
+    state.projects.push(p);
+  };
+  mk('Props : tonneau & caisse stylisés', 66, 62, [
+    ['Références & moodboard', 'refs', 30, 4, 45],
+    ['Blocking', 'blocking', 60, 3, 70],
+    ['Modélisation low poly', 'model', 120, 3, 150],
+    ['UV unwrap', 'retopo', 45, 2, 110, { r: ['new'] }],
+    ['Texturing Substance', 'texture', 120, 3, 240, { r: ['complex', 'polish'] }],
+    ['Rendu Marmoset', 'pres', 30, 4, 50, { r: ['tech'] }],
+    ['Export & correction des normales', 'integ', 20, 3, 60, { unplanned: true, r: ['tech'] }],
+  ], { available: 480, reflection: 'J’ai passé beaucoup trop de temps sur les textures, je voulais que tout soit parfait. Et je n’avais jamais fait d’UV proprement.' });
+  mk('Arme sci-fi low poly', 50, 46, [
+    ['Concept rapide', 'concept', 60, 3, 75],
+    ['Blocking', 'blocking', 45, 4, 50],
+    ['Modélisation', 'model', 180, 3, 210],
+    ['Retopo & UV', 'retopo', 90, 2, 140],
+    ['Texturing', 'texture', 150, 3, 260, { r: ['complex'] }],
+    ['Planche de présentation', 'pres', 45, 4, 70, { r: ['polish'] }],
+    ['Retours du prof', 'retours', 60, 3, 60, { unplanned: true }],
+  ]);
+  mk('Buste de personnage (sculpt)', 36, 31, [
+    ['Références anatomie', 'refs', 50, 5, 50],
+    ['Sculpt : formes primaires', 'sculpt', 180, 3, 200],
+    ['Sculpt : détails', 'sculpt', 240, 2, 330, { r: ['complex'] }],
+    ['Retopo', 'retopo', 120, 3, 150],
+    ['Baking & texturing', 'texture', 180, 3, 290, { r: ['iter'] }],
+    ['Rendu', 'pres', 60, 4, 70],
+    ['Retours & corrections', 'retours', 90, 3, 100, { unplanned: true }],
+  ]);
+  mk('Coin de taverne (environnement)', 22, 16, [
+    ['Moodboard', 'refs', 45, 5, 45],
+    ['Blocking de la scène', 'blocking', 120, 4, 130],
+    ['Modélisation des props', 'model', 300, 4, 320],
+    ['UV & trim sheet', 'retopo', 120, 3, 150],
+    ['Texturing', 'texture', 240, 3, 300],
+    ['Lighting', 'light', 90, 2, 130],
+    ['Intégration Unreal', 'integ', 90, 3, 100],
+    ['Retours & corrections', 'retours', 60, 3, 70],
+    ['Rendu & planche', 'pres', 60, 4, 90, { r: ['polish'] }],
+    ['Collisions & LODs', 'integ', 60, 2, 75, { unplanned: true }],
+  ], { available: 1500 });
+  mk('Créature : du concept à la 3D', 12, 5, [
+    ['Recherche & références', 'refs', 60, 5, 55],
+    ['Concept (3 propositions)', 'concept', 180, 4, 190],
+    ['Blocking 3D', 'blocking', 90, 4, 95],
+    ['Sculpt', 'sculpt', 360, 3, 400],
+    ['Retopo & UV', 'retopo', 180, 3, 200],
+    ['Texturing', 'texture', 300, 3, 330],
+    ['Retours & corrections', 'retours', 120, 3, 110],
+    ['Présentation ArtStation', 'pres', 60, 4, 75],
+  ], { available: 1680, reflection: 'Premier projet où j’ai prévu les retours dès le début. Ça change tout !' });
+  mk('Diorama : forêt stylisée', 2, 0, [
+    ['Moodboard & palette', 'refs', 45, 5, 43, { status: 'done' }],
+    ['Blocking du diorama', 'blocking', 90, 4, 100, { status: 'done' }],
+    ['Modélisation arbres & rochers', 'model', 240, 3, 85, { status: 'todo' }],
+    ['Sculpt des rochers', 'sculpt', 120, 3, 0, { status: 'todo' }],
+    ['Texturing', 'texture', 240, 3, 0, { status: 'todo' }],
+    ['Lighting & rendu', 'light', 90, 2, 0, { status: 'todo' }],
+    ['Retours & corrections', 'retours', 90, 3, 0, { status: 'todo' }],
+    ['Planche de présentation', 'pres', 60, 4, 0, { status: 'todo' }],
+  ], { status: 'wip', available: 1200, brief: 'Diorama stylisé 30×30 cm, rendu temps réel dans Unreal. Rendu dans 2 semaines.' });
+}
+
+/* ================== FICHE BILAN IMPRIMABLE (A4) ================== */
+// Mise en page dédiée au papier / PDF : invisible à l'écran, seule visible à l'impression.
+const PS_LINES = '<div class="ps-lines"><i></i><i></i><i></i><i></i></div>';
+function printSheet(p) {
+  const rep = buildReport(p);
+  const s = rep.s;
+  const R = s.ratio;
+  const tasks = p.tasks.filter(t => t.status === 'done' && t.est > 0);
+  const max = Math.max(1, ...tasks.map(t => Math.max(rangeOf(t)[1], actualMin(t)))) * 1.05;
+  const same = p.startedAt && p.finishedAt && new Date(p.startedAt).toDateString() === new Date(p.finishedAt).toDateString();
+  const period = !p.finishedAt ? '' : same || !p.startedAt ? `le ${fmtDate(p.finishedAt, true)}` : `du ${fmtDate(p.startedAt)} au ${fmtDate(p.finishedAt, true)}`;
+  let verdict = 'Pas assez de tâches terminées pour conclure.';
+  if (R != null) {
+    if (R > 1.15) verdict = `Ton projet a pris <b>${Math.round((R - 1) * 100)} % de temps en plus</b> que ton découpage de départ.`;
+    else if (R >= 0.85) verdict = `<b>Pile dans les temps</b> : à ${Math.round(Math.abs(R - 1) * 100)} % près de ton découpage de départ.`;
+    else verdict = `Tu as fini <b>${Math.round((1 - R) * 100)} % plus vite</b> que ton découpage de départ.`;
+  }
+  const dots = n => `<span class="ps-dots" aria-label="confiance ${n} sur 5">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+  const res = t => {
+    const c = classify(t); const d = actualMin(t) / t.est - 1;
+    const pct = fmtPct(d);
+    if (c === 'in') return `<span class="ps-res ok">✓ ${pct}</span>`;
+    return `<span class="ps-res miss">${c === 'over' ? '▲' : '▼'} ${pct}</span>`;
+  };
+  const rows = tasks.map(t => `<tr>
+      <td class="ps-name"><b>${esc(t.name)}</b><small>${esc(catName(t.cat))}${!t.planned ? ' · <em>oubliée au découpage</em>' : ''}</small></td>
+      <td>${dots(t.conf)}</td>
+      <td class="r">${fmtMin(t.est)}</td>
+      <td class="r"><b>${fmtMin(actualMin(t))}</b></td>
+      <td class="r">${res(t)}</td>
+      <td class="ps-trk"><div class="ps-track">${taskTrackInner(t, max)}</div></td>
+    </tr>`).join('');
+  const toneCls = { bad: 'miss', warn: 'miss', good: 'ok', info: 'info' };
+  const findings = rep.findings.map(f => `<li class="${toneCls[f.tone]}"><span class="ps-bullet"></span><div><span class="ps-tag">${esc(f.tag)}</span><b>${esc(f.title)}</b><p>${esc(f.text)}</p></div></li>`).join('');
+  const actions = rep.actions.length
+    ? `<ol>${rep.actions.map(a => `<li><span>${esc(a)}</span></li>`).join('')}</ol>`
+    : '<p class="ps-muted">Rien de particulier : garde ta méthode !</p>';
+  const cut = s.cut.length ? `<p class="ps-note">Coupées du scope : ${s.cut.map(t => esc(t.name)).join(', ')}.</p>` : '';
+  const dateStr = new Date().toLocaleDateString('fr-FR');
+
+  return `<div class="print-sheet" aria-hidden="true">
+    <div class="ps-foot"><span>Carnet de Prod · Bilan « ${esc(p.name || 'Sans titre')} »</span><span>${state.student ? esc(state.student) + ' · ' : ''}imprimé le ${dateStr}</span></div>
+
+    <header class="ps-head">
+      <div class="ps-kicker">
+        <svg viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="#1d1a16" stroke-width="3" stroke-linecap="round"><path d="M16 5h8M20 5v4"/><circle cx="20" cy="23" r="13" fill="#ffd35c"/><path d="M20 23v-7.5M20 23l5.5 3"/></svg>
+        Carnet de Prod — bilan de projet
+      </div>
+      <h1><span>${esc(p.name || 'Sans titre')}</span></h1>
+      <div class="ps-meta">
+        <span><b>Étudiant·e</b> ${state.student ? esc(state.student) : '<span class="ps-blank"></span>'}</span>
+        ${period ? `<span><b>Production</b> ${period}</span>` : ''}
+        ${p.available ? `<span><b>Temps disponible</b> ${fmtMin(p.available)}</span>` : ''}
+      </div>
+    </header>
+
+    <section class="ps-kpis">
+      <div class="ps-kpi"><div class="l">Prévu</div><div class="v">${fmtMin(s.plannedTotal)}</div><div class="s">au découpage</div></div>
+      <div class="ps-kpi"><div class="l">Réel</div><div class="v">${fmtMin(s.actualTotal)}</div><div class="s">chronométré</div></div>
+      <div class="ps-kpi hl"><div class="l">Réel ÷ prévu</div><div class="v">${fmtRatio(R)}</div><div class="s">${R != null ? fmtPct(R - 1) + ' de temps' : '—'}</div></div>
+      <div class="ps-kpi"><div class="l">Justes</div><div class="v">${s.inRange}/${s.done.length}</div><div class="s">dans la fourchette</div></div>
+      <div class="ps-kpi"><div class="l">Écart moyen</div><div class="v">${s.mape != null ? '±' + Math.round(s.mape * 100) + ' %' : '—'}</div><div class="s">par tâche</div></div>
+      <div class="ps-kpi"><div class="l">Oubliées</div><div class="v">${s.unplanned.length}</div><div class="s">${s.cut.length ? plural(s.cut.length, 'coupée', 'coupées') + ' du scope' : 'rien de coupé'}</div></div>
+    </section>
+    <p class="ps-verdict">${verdict}</p>
+
+    <section class="ps-sec">
+      <div class="ps-sec-head">
+        <h2>Prévu vs réel, tâche par tâche</h2>
+        <div class="ps-legend"><span><i class="k-band"></i>ta fourchette</span><span><i class="k-tick"></i>ton estimation</span><span><i class="k-bar ok"></i>réel, dans la fourchette</span><span><i class="k-bar miss"></i>réel, hors fourchette</span></div>
+      </div>
+      ${tasks.length ? `<table class="ps-table">
+        <thead><tr><th>Tâche</th><th>Confiance</th><th class="r">Prévu</th><th class="r">Réel</th><th class="r">Écart</th><th class="ps-trk">La barre doit finir dans le surligné</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>` : '<p class="ps-muted">Aucune tâche terminée.</p>'}
+      ${cut}
+    </section>
+
+    <div class="ps-cols">
+      <section class="ps-sec ps-find">
+        <h2>Ce que disent tes chiffres</h2>
+        <ul>${findings}</ul>
+      </section>
+      <section class="ps-sec ps-next">
+        <h2>Pour la prochaine fois</h2>
+        ${actions}
+      </section>
+    </div>
+
+    <div class="ps-cols ps-notes">
+      <section class="ps-sec">
+        <h2>Mon ressenti</h2>
+        ${p.reflection && p.reflection.trim() ? `<div class="ps-text">${esc(p.reflection.trim())}</div>` : PS_LINES}
+      </section>
+      <section class="ps-sec">
+        <h2>Retour de l’enseignant·e</h2>
+        ${PS_LINES}
+      </section>
+    </div>
+
+</div>`;
+}
+
+/* Démarrage : toujours en dernier, une fois toutes les constantes définies */
+/* ================== DÉMARRAGE ================== */
+window.addEventListener('hashchange', () => { ui.adding = false; ui.editTime = null; closeModal(); hideTip(); render(); if (!ui.focusKey) scrollTo(0, 0); });
+let rzT = null;
+window.addEventListener('resize', () => { clearTimeout(rzT); rzT = setTimeout(() => { drawCharts(); $$('.title-input').forEach(autoGrow); }, 150); });
+window.addEventListener('beforeprint', () => {
+  $$('.title-input').forEach(autoGrow);
+  const p = currentProject();
+  if (p && p.status === 'done') document.title = 'Bilan - ' + (p.name || 'projet') + (state.student ? ' - ' + state.student : '');
+});
+window.addEventListener('afterprint', () => { const p = currentProject(); document.title = (p ? (p.name || 'Projet') + ' — ' : '') + 'Carnet de Prod'; });
+window.addEventListener('storage', e => { if (e.key === STORE_KEY) { const s = load(); if (s) { state = s; render(); } } });
+window.addEventListener('beforeunload', saveNow);
+try { const th = localStorage.getItem(THEME_KEY); applyTheme(th || null); } catch (_) { applyTheme(null); }
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => applyTheme(document.documentElement.dataset.theme || null));
+if (!storageOK) { try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); storageOK = true; } catch (_) { storageOK = false; } }
+
+// Démarrage : chargement du profil actif ou affichage du sélecteur
+(async () => {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(ARTIST_KEY)); } catch (_) {}
+  
+  if (saved && saved.id) {
+    currentArtist = saved;
+    updateArtistBadge();
+    const loaded = await loadArtistState(saved.id);
+    state = loaded ? normalize(loaded) : freshState();
+    if (!state.student) state.student = saved.name;
+    render();
+    saveNow();
+  } else {
+    render();
+    updateArtistBadge();
+    openArtistModal(true);
+  }
+})();
+
+})();
+</script>
+</body>
+</html>

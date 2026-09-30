@@ -1,0 +1,27 @@
+services:
+  carnet-de-prod:
+    build: .
+    container_name: carnet_de_prod
+    restart: unless-stopped
+    ports:
+      # Port hôte mappé sur le port interne 3000 de Node.js (par défaut 3030)
+      - "${PORT:-3030}:3000"
+    volumes:
+      # Volume persistant pour la base de données SQLite
+      - carnet_data:/data
+    environment:
+      - PORT=3000
+      - DATA_DIR=/data
+      - NODE_ENV=production
+      - TZ=Europe/Paris
+    # Si votre serveur utilise un réseau Docker existant (ex: reverse proxy), décommentez ci-dessous :
+    # networks:
+    #   - proxy_network
+
+volumes:
+  carnet_data:
+    name: carnet_de_prod_data
+
+# networks:
+#   proxy_network:
+#     external: true

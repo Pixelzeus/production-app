@@ -1,0 +1,7 @@
+.git
+.gitignore
+.agents
+node_modules
+data
+*.log
+*.md
