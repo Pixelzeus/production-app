@@ -3333,7 +3333,7 @@ function newTask(fields) {
 }
 
 /* ================== CLICS ================== */
-document.addEventListener('click', e => {
+document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled) return;
   const act = el.dataset.act;

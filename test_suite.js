@@ -164,6 +164,18 @@ async function runTests() {
     assert(htmlText.includes('artistBtn'), 'Badge du sélecteur d’artiste présent dans l’en-tête');
     assert(htmlText.includes('data-page="teams"'), 'Lien de navigation Équipes & Admin présent dans l’en-tête');
 
+    // Audit de validité syntaxique du code JavaScript client
+    const scriptMatch = htmlText.match(/<script>([\s\S]*?)<\/script>/);
+    assert(scriptMatch && scriptMatch[1], 'Balise script principale présente dans la page');
+    let syntaxValid = false;
+    try {
+      new Function(scriptMatch[1]);
+      syntaxValid = true;
+    } catch (e) {
+      console.error('Erreur de syntaxe JS client:', e.message);
+    }
+    assert(syntaxValid, 'Code JavaScript client 100 % valide (aucune erreur de syntaxe/await)');
+
     console.log('\n--- 6. TEST GESTION D’ÉQUIPES, PROJETS MULTI-ARTISTES & VUE GLOBALE ---');
     // Vérification du statut admin (libre par défaut)
     const adminStatusRes = await fetch(`${BASE_URL}/api/admin/status`);
