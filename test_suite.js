@@ -49,7 +49,23 @@ async function wait(ms) {
 }
 
 async function runTests() {
-  await wait(1500); // Laisse le serveur démarrer
+  // Attente résiliente du démarrage effectif du serveur (jusqu'à 10s)
+  let serverReady = false;
+  for (let i = 0; i < 30; i++) {
+    try {
+      const ping = await fetch(`${BASE_URL}/api/health`);
+      if (ping.ok) {
+        serverReady = true;
+        break;
+      }
+    } catch (_) {}
+    await wait(300);
+  }
+  if (!serverReady) {
+    console.error('❌ Le serveur de test n’a pas démarré dans les temps impartis.');
+    serverProcess.kill();
+    process.exit(1);
+  }
 
   try {
     console.log('--- 1. AUDIT SÉCURITÉ RÉSEAU & EN-TÊTES HTTP ---');
@@ -146,6 +162,153 @@ async function runTests() {
     assert(htmlText.includes('<!DOCTYPE html>'), 'Le document retourné est bien la page HTML');
     assert(htmlText.includes('Carnet de Prod'), 'Titre de l’application présent dans la page');
     assert(htmlText.includes('artistBtn'), 'Badge du sélecteur d’artiste présent dans l’en-tête');
+    assert(htmlText.includes('data-page="teams"'), 'Lien de navigation Équipes & Admin présent dans l’en-tête');
+
+    console.log('\n--- 6. TEST GESTION D’ÉQUIPES, PROJETS MULTI-ARTISTES & VUE GLOBALE ---');
+    // Vérification du statut admin (libre par défaut)
+    const adminStatusRes = await fetch(`${BASE_URL}/api/admin/status`);
+    assert(adminStatusRes.status === 200, 'Endpoint /api/admin/status retourne HTTP 200');
+    const adminStatus = await adminStatusRes.json();
+    assert(adminStatus.protected === false, 'Protection admin désactivée par défaut');
+
+    // Création d’une équipe
+    const createTeamRes = await fetch(`${BASE_URL}/api/teams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Équipe Cyberpunk', description: 'Projet de fin d’année' })
+    });
+    assert(createTeamRes.status === 200, 'Création réussie de l’équipe "Équipe Cyberpunk"');
+    const teamData = await createTeamRes.json();
+    const teamId = teamData.id;
+    assert(teamId === 'equipe-cyberpunk', 'Slug d’équipe généré correctement ("equipe-cyberpunk")');
+
+    // Création d'un second artiste
+    const artist2Res = await fetch(`${BASE_URL}/api/artists`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Alex Texture' })
+    });
+    assert(artist2Res.status === 200, 'Création du 2e artiste "Alex Texture"');
+    const artist2 = await artist2Res.json();
+
+    // Ajout des artistes à l'équipe
+    const addLeadRes = await fetch(`${BASE_URL}/api/teams/${teamId}/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artistId: 'camille-3d', role: 'lead' })
+    });
+    assert(addLeadRes.status === 200, 'Camille ajoutée comme Lead de l’équipe');
+
+    const addMemberRes = await fetch(`${BASE_URL}/api/teams/${teamId}/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ artistId: artist2.artist.id, role: 'member' })
+    });
+    assert(addMemberRes.status === 200, 'Alex ajouté comme Membre de l’équipe');
+
+    // Vérification de la liste des membres dans l'équipe
+    const getTeamRes = await fetch(`${BASE_URL}/api/teams/${teamId}`);
+    assert(getTeamRes.status === 200, 'Récupération de l’équipe réussie');
+    const fullTeam = await getTeamRes.json();
+    assert(fullTeam.members.length === 2, 'L’équipe contient bien 2 membres');
+    assert(fullTeam.members.some(m => m.artistId === 'camille-3d' && m.role === 'lead'), 'Camille est bien Lead');
+
+    // Création d'un projet partagé multi-artistes
+    const createProjectRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Véhicule Blindé Sci-Fi',
+        brief: 'Asset principal pour le jeu',
+        status: 'wip',
+        tasks: [
+          { id: 't-sculpt', name: 'High Poly Carrosserie', cat: 'sculpt', est: 240, spent: 180 * 60000, conf: 4, status: 'done', assigneeId: 'camille-3d' },
+          { id: 't-text', name: 'Textures PBR & Shaders', cat: 'texture', est: 180, spent: 60 * 60000, conf: 3, status: 'wip', assigneeId: artist2.artist.id },
+          { id: 't-rig', name: 'Rigging des roues & suspensions', cat: 'rig', est: 120, spent: 0, conf: 2, status: 'todo', assigneeId: null }
+        ]
+      })
+    });
+    assert(createProjectRes.status === 200, 'Création du projet collaboratif d’équipe réussie');
+    const teamProj = await createProjectRes.json();
+    assert(teamProj.tasks.length === 3, 'Le projet d’équipe contient 3 tâches partagées');
+
+    // Test de la Vue Globale du projet à plusieurs (/api/teams/:id/overview)
+    const overviewRes = await fetch(`${BASE_URL}/api/teams/${teamId}/overview`);
+    assert(overviewRes.status === 200, 'Endpoint de la vue globale /api/teams/:id/overview répond HTTP 200');
+    const overview = await overviewRes.json();
+    assert(overview.summary.totalTasks === 3, 'Vue globale : 3 tâches au total');
+    assert(overview.summary.doneTasks === 1, 'Vue globale : 1 tâche terminée');
+    assert(overview.summary.progressPct === 33, 'Vue globale : 33 % de progression');
+    assert(overview.summary.totalPlannedMin === 540, 'Vue globale : 540 minutes prévues');
+    assert(overview.summary.totalActualSpentMin === 240, 'Vue globale : 240 minutes passées');
+
+    // Vérification des statistiques par membre
+    const camilleStats = overview.members.find(m => m.artistId === 'camille-3d');
+    assert(camilleStats && camilleStats.doneTasks === 1 && camilleStats.plannedMin === 240, 'Stats individuelles de Camille exactes');
+    const alexStats = overview.members.find(m => m.artistId === artist2.artist.id);
+    assert(alexStats && alexStats.wipTasks === 1 && alexStats.plannedMin === 180, 'Stats individuelles d’Alex exactes');
+
+    // Test des statistiques admin globales
+    const adminStatsRes = await fetch(`${BASE_URL}/api/admin/stats`);
+    assert(adminStatsRes.status === 200, 'Endpoint /api/admin/stats répond HTTP 200');
+    const adminStats = await adminStatsRes.json();
+    assert(adminStats.teamsCount >= 1, 'Admin stats : au moins 1 équipe comptabilisée');
+    assert(adminStats.teamProjectsCount >= 1, 'Admin stats : au moins 1 projet d’équipe comptabilisé');
+
+    // Mise à jour du projet d'équipe (modification de tâche & statut)
+    teamProj.tasks[1].status = 'done';
+    teamProj.tasks[1].spent = 175 * 60000;
+    const updateProjRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(teamProj)
+    });
+    assert(updateProjRes.status === 200, 'Mise à jour du projet d’équipe (PUT) réussie');
+    const updatedProj = await updateProjRes.json();
+    assert(updatedProj.tasks[1].status === 'done', 'Tâche collaborative 2 marquée comme terminée');
+
+    // Vérification de la mise à jour dans l'overview
+    const updatedOverviewRes = await fetch(`${BASE_URL}/api/teams/${teamId}/overview`);
+    const updatedOverview = await updatedOverviewRes.json();
+    assert(updatedOverview.summary.doneTasks === 2, 'Overview actualisé : 2 tâches terminées');
+    assert(updatedOverview.summary.progressPct === 67, 'Overview actualisé : 67 % de progression');
+
+    // Vérification de la présence des composants frontend collaboratifs dans le HTML
+    assert(htmlText.includes('team-overview-hero'), 'UI: Baromètre Global présent dans le template');
+    assert(htmlText.includes('team-members-workload'), 'UI: Grille de charge par artiste présente');
+    assert(htmlText.includes('data-act="reassign-team-task"'), 'UI: Réassignation collaborative en 1-clic présente');
+    assert(htmlText.includes('data-act="toggle-team-timer"'), 'UI: Chronométrage des tâches d’équipe présent');
+    assert(htmlText.includes('data-form="add-team-task"'), 'UI: Formulaire d’ajout de tâche collaborative présent');
+
+    // Suppression d'un projet d'équipe
+    const deleteProjRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}`, {
+      method: 'DELETE'
+    });
+    assert(deleteProjRes.status === 200, 'Suppression d’un projet d’équipe (DELETE) réussie');
+    const checkTeamRes = await fetch(`${BASE_URL}/api/teams/${teamId}`);
+    const checkTeam = await checkTeamRes.json();
+    assert(checkTeam.projects.length === 0, 'Le projet a bien été retiré de l’équipe');
+
+    // Test de sauvegarde et restauration incluant les équipes
+    const backupFullRes = await fetch(`${BASE_URL}/api/backup`);
+    const backupFull = await backupFullRes.json();
+    assert(Array.isArray(backupFull.teams) && backupFull.teams.some(t => t.id === teamId), 'Sauvegarde globale contient l’équipe créée');
+    assert(Array.isArray(backupFull.teamMembers) && backupFull.teamMembers.length >= 2, 'Sauvegarde globale contient les membres de l’équipe');
+
+    const restoreRes = await fetch(`${BASE_URL}/api/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(backupFull)
+    });
+    assert(restoreRes.status === 200, 'Restauration complète de la base de données réussie');
+
+    // Test de l'endpoint /api/admin/verify
+    const verifyUnprotectedRes = await fetch(`${BASE_URL}/api/admin/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: 'anything' })
+    });
+    assert(verifyUnprotectedRes.status === 200, '/api/admin/verify accepte sans mot de passe quand non protégé');
 
   } catch (err) {
     console.error('Erreur inattendue durant les tests:', err);

@@ -521,6 +521,222 @@ table.dt td.r, table.dt th.r { text-align: right; }
 
 .print-only { display: none; }
 
+/* ============ Équipes & Admin ============ */
+.admin-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.stat-box {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 2px 2px 0 var(--shadow-c);
+}
+.stat-box .sb-val {
+  font-size: 1.8rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.stat-box .sb-lbl {
+  font-size: .82rem;
+  color: var(--ink-2);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+.team-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: transform .1s, box-shadow .1s;
+}
+.team-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 var(--shadow-c);
+}
+.tc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.tc-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tc-members {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 28px;
+}
+.member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card-2);
+  border: 1px solid var(--line-hair);
+  border-radius: 999px;
+  padding: 2px 8px 2px 3px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.member-chip.is-lead {
+  border-color: var(--hl);
+  background: var(--hl-soft);
+}
+.avatar.mini {
+  width: 20px;
+  height: 20px;
+  font-size: .7rem;
+}
+.tc-foot {
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line-hair);
+}
+.members-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line-hair);
+  background: var(--card-2);
+}
+.team-projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.team-proj-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line-hair);
+  background: var(--card-2);
+}
+.badge-ok {
+  background: var(--ok);
+  color: #fff;
+}
+
+/* ============ Projet d'Équipe & Vue Globale ============ */
+.team-overview-hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.hero-metric {
+  background: var(--card);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 2px 2px 0 var(--shadow-c);
+}
+.hero-metric .hm-val {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.hero-metric .hm-lbl {
+  font-size: .85rem;
+  color: var(--ink-2);
+  margin-top: 4px;
+  font-weight: 600;
+}
+.proj-progress-bar {
+  height: 8px;
+  background: var(--card-2);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 10px;
+  border: 1px solid var(--line-hair);
+}
+.ppb-fill {
+  height: 100%;
+  background: var(--ok);
+  border-radius: 999px;
+  transition: width .25s ease;
+}
+.team-members-workload {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.workload-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 2px solid var(--line-hair);
+  background: var(--card);
+  transition: border-color .15s, transform .15s;
+  cursor: pointer;
+}
+.workload-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line);
+}
+.workload-card.is-active-filter {
+  border-color: var(--hl);
+  background: var(--card-2);
+  box-shadow: 3px 3px 0 var(--hl);
+}
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 16px 0 12px;
+}
+.add-task-form {
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 2px dashed var(--line-soft);
+}
+.add-task-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.2fr 1.5fr auto;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .add-task-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 520px) {
+  .add-task-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.text-ok { color: var(--ok); }
+.text-miss { color: var(--miss); }
+
 /* ============ Mobile ============ */
 @media (max-width: 640px) {
   .topbar-in { gap: 8px 10px; padding: 8px 14px; }
@@ -675,6 +891,7 @@ table.dt td.r, table.dt th.r { text-align: right; }
     <nav class="nav" aria-label="Navigation principale">
       <a href="#/projets" data-page="projects">Projets</a>
       <a href="#/tableau" data-page="dashboard">Tableau de bord</a>
+      <a href="#/equipes" data-page="teams">Équipes & Admin</a>
     </nav>
     <div class="top-spacer"></div>
     <div class="timer-pill" id="timerPill" aria-live="off">
@@ -895,6 +1112,248 @@ async function selectArtist(artist, stateData = null) {
   closeModal();
   render();
   saveNow();
+}
+
+/* ================== API ÉQUIPES & ADMINISTRATION ================== */
+let teamsCache = [];
+let teamsLoaded = false;
+let currentTeam = null;
+let adminStatsCache = null;
+let adminKey = sessionStorage.getItem('carnet:admin_key') || '';
+let adminProtected = false;
+
+function adminHeaders(base = {}) {
+  const h = { ...base };
+  if (adminKey) {
+    h['x-admin-key'] = adminKey;
+  }
+  return h;
+}
+
+async function checkAdminAuth() {
+  try {
+    const res = await fetch('/api/admin/status');
+    if (!res.ok) return false;
+    const data = await res.json();
+    adminProtected = !!data.protected;
+    return adminProtected;
+  } catch (_) {
+    return false;
+  }
+}
+
+function promptAdminUnlock(onSuccess) {
+  openModal({
+    title: '🔐 Déverrouillage Administrateur',
+    body: `
+      <p class="muted">La protection administrative est activée sur ce serveur. Entre ton mot de passe ou code PIN administrateur pour accéder à ces fonctionnalités.</p>
+      <form data-form="admin-unlock" class="stack" style="margin-top:10px">
+        <div class="field">
+          <label for="adminUnlockKey" style="font-weight:700">Mot de passe ou Code PIN :</label>
+          <input id="adminUnlockKey" class="input" type="password" name="key" placeholder="Code admin..." autofocus required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Déverrouiller</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+  window._adminUnlockCallback = onSuccess;
+}
+
+async function fetchTeams(force = false) {
+  if (teamsLoaded && !force && teamsCache.length) return teamsCache;
+  try {
+    const res = await fetch('/api/teams', { headers: adminHeaders() });
+    if (!res.ok) throw new Error();
+    teamsCache = await res.json();
+    teamsLoaded = true;
+    return teamsCache;
+  } catch (_) { return []; }
+}
+
+async function fetchTeam(teamId) {
+  try {
+    const res = await fetch('/api/teams/' + encodeURIComponent(teamId), { headers: adminHeaders() });
+    if (!res.ok) throw new Error();
+    currentTeam = await res.json();
+    return currentTeam;
+  } catch (_) { return null; }
+}
+
+async function fetchAdminStats() {
+  try {
+    const res = await fetch('/api/admin/stats', { headers: adminHeaders() });
+    if (!res.ok) throw new Error();
+    adminStatsCache = await res.json();
+    return adminStatsCache;
+  } catch (_) { return null; }
+}
+
+async function apiCreateTeam(name, description) {
+  const res = await fetch('/api/teams', {
+    method: 'POST',
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ name, description })
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiCreateTeam(name, description));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Erreur lors de la création de l’équipe');
+  }
+  const created = await res.json();
+  await fetchTeams(true);
+  return created;
+}
+
+async function apiUpdateTeam(teamId, data) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId), {
+    method: 'PUT',
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(data)
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiUpdateTeam(teamId, data));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Erreur lors de la mise à jour');
+  }
+  const updated = await res.json();
+  await fetchTeams(true);
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return updated;
+}
+
+async function apiDeleteTeam(teamId) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId), {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiDeleteTeam(teamId));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) throw new Error('Erreur lors de la suppression');
+  await fetchTeams(true);
+  return true;
+}
+
+async function apiAddTeamMember(teamId, artistId, role = 'member') {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/members', {
+    method: 'POST',
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ artistId, role })
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiAddTeamMember(teamId, artistId, role));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Impossible d’ajouter ce membre');
+  }
+  const member = await res.json();
+  await fetchTeams(true);
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return member;
+}
+
+async function apiRemoveTeamMember(teamId, artistId) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/members/' + encodeURIComponent(artistId), {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiRemoveTeamMember(teamId, artistId));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) throw new Error('Impossible de retirer ce membre');
+  await fetchTeams(true);
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return true;
+}
+
+/* ================== PROJETS D'ÉQUIPE & VUE GLOBALE (API) ================== */
+let currentTeamProject = null;
+let currentTeamOverview = null;
+let teamFilterArtist = 'all';
+let teamFilterStatus = 'all';
+let teamFilterCat = 'all';
+
+async function fetchTeamProject(teamId, projectId) {
+  try {
+    const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/projects/' + encodeURIComponent(projectId));
+    if (!res.ok) throw new Error();
+    currentTeamProject = await res.json();
+    return currentTeamProject;
+  } catch (_) { return null; }
+}
+
+async function apiSaveTeamProject(teamId, projectData) {
+  const isNew = !projectData.id;
+  const method = isNew ? 'POST' : 'PUT';
+  const url = isNew
+    ? '/api/teams/' + encodeURIComponent(teamId) + '/projects'
+    : '/api/teams/' + encodeURIComponent(teamId) + '/projects/' + encodeURIComponent(projectData.id);
+  const res = await fetch(url, {
+    method,
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(projectData)
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiSaveTeamProject(teamId, projectData));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Erreur lors de la sauvegarde du projet d’équipe');
+  }
+  currentTeamProject = await res.json();
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return currentTeamProject;
+}
+
+async function apiDeleteTeamProject(teamId, projectId) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/projects/' + encodeURIComponent(projectId), {
+    method: 'DELETE',
+    headers: adminHeaders()
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiDeleteTeamProject(teamId, projectId));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) throw new Error('Erreur lors de la suppression du projet');
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return true;
+}
+
+async function fetchTeamOverview(teamId, projectId = null) {
+  try {
+    let url = '/api/teams/' + encodeURIComponent(teamId) + '/overview';
+    if (projectId) url += '?projectId=' + encodeURIComponent(projectId);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error();
+    currentTeamOverview = await res.json();
+    return currentTeamOverview;
+  } catch (_) { return null; }
 }
 
 async function openArtistModal(forced = false) {
@@ -1252,6 +1711,9 @@ const ICONS = {
   bulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z"/>',
   up: '<path d="M12 19V5M6 11l6-6 6 6"/>',
   down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  crown: '<path d="M3 6l3 11h12l3-11-5.5 5.5L12 3l-3.5 8.5z"/>',
+  shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
 };
 const ic = (n, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 
@@ -1822,6 +2284,638 @@ function viewDashboard() {
   </div>`;
 }
 
+/* ================== VUES : ÉQUIPES & ADMINISTRATION ================== */
+function viewTeams(teamId) {
+  if (teamId) {
+    if (!currentTeam || currentTeam.id !== teamId) {
+      fetchTeam(teamId).then(() => renderSoon());
+      return `<div class="card empty"><p class="muted">Chargement de l’équipe...</p></div>`;
+    }
+    return viewTeamDetail(teamId);
+  }
+  if (!teamsLoaded) {
+    Promise.all([checkAdminAuth(), fetchTeams(), fetchAdminStats()]).then(() => renderSoon());
+  }
+  return viewTeamsIndex();
+}
+
+function viewTeamsIndex() {
+  const teams = teamsCache || [];
+  const stats = adminStatsCache || { artistsCount: '—', teamsCount: '—', teamProjectsCount: '—', active7Days: '—' };
+
+  const head = `
+    <div class="page-head">
+      <div>
+        <h1><span class="mark">Équipes & Administration</span></h1>
+        <p class="muted" style="margin:6px 0 0">Gère les équipes d'artistes, les projets collectifs et supervise l'activité globale.</p>
+      </div>
+      <div class="row" style="gap:8px">
+        ${adminProtected ? (adminKey ? `
+          <button class="btn btn-sm btn-ghost" data-act="admin-lock" title="Verrouiller la session admin">
+            🔒 Admin déverrouillé · Verrouiller
+          </button>
+        ` : `
+          <button class="btn btn-sm btn-soft" data-act="admin-unlock-modal">
+            🔐 Déverrouiller le mode Admin
+          </button>
+        `) : `
+          <span class="badge" title="Mode libre sans mot de passe" style="opacity:.85">
+            🔓 Accès admin libre
+          </span>
+        `}
+        <button class="btn btn-primary btn-big" data-act="open-create-team">${ic('plus')} Nouvelle équipe</button>
+      </div>
+    </div>
+  `;
+
+  // Métriques
+  const statsBox = `
+    <section class="admin-stats-bar">
+      <div class="stat-box">
+        <div class="sb-val">${stats.teamsCount}</div>
+        <div class="sb-lbl">Équipe(s) de production</div>
+      </div>
+      <div class="stat-box">
+        <div class="sb-val">${stats.artistsCount}</div>
+        <div class="sb-lbl">Artiste(s) enregistré(s)</div>
+      </div>
+      <div class="stat-box">
+        <div class="sb-val">${stats.teamProjectsCount}</div>
+        <div class="sb-lbl">Projet(s) collectif(s)</div>
+      </div>
+      <div class="stat-box">
+        <div class="sb-val">${stats.active7Days}</div>
+        <div class="sb-lbl">Actif(s) ces 7 derniers jours</div>
+      </div>
+    </section>
+  `;
+
+  // Grille des équipes
+  let teamsHtml = '';
+  if (!teams.length && teamsLoaded) {
+    teamsHtml = `
+      <section class="card empty" style="margin-top:20px">
+        ${DOODLE_EMPTY}
+        <h2>Aucune équipe créée pour l’instant</h2>
+        <p class="muted">Regroupe plusieurs Game Artists au sein d'une équipe pour découper et suivre des projets à plusieurs.</p>
+        <div class="row" style="justify-content:center">
+          <button class="btn btn-primary" data-act="open-create-team">${ic('plus')} Créer une première équipe</button>
+        </div>
+      </section>
+    `;
+  } else {
+    const cards = teams.map(t => {
+      const memberChips = (t.members || []).slice(0, 6).map(m => `
+        <span class="member-chip ${m.role === 'lead' ? 'is-lead' : ''}" title="${esc(m.artistName)} (${m.role === 'lead' ? 'Lead' : 'Artiste'})">
+          <span class="avatar mini">${esc(m.artistName.slice(0, 1).toUpperCase())}</span>
+          <span>${esc(m.artistName)}</span>
+          ${m.role === 'lead' ? '<span>👑</span>' : ''}
+        </span>
+      `).join('');
+      const moreCount = (t.members || []).length > 6 ? `<span class="faint small">+${(t.members.length - 6)}</span>` : '';
+
+      return `
+        <article class="card team-card">
+          <div class="tc-head">
+            <div>
+              <h2 style="margin:0"><a href="#/equipe/${esc(t.id)}">${esc(t.name)}</a></h2>
+              <p class="small muted" style="margin:4px 0 0">${esc(t.description || 'Aucune description fournie.')}</p>
+            </div>
+            <div class="row" style="gap:4px">
+              <button class="btn btn-ghost icon-btn btn-sm" data-act="edit-team" data-tid="${esc(t.id)}" title="Modifier l’équipe">${ic('pencil')}</button>
+              <button class="btn btn-ghost icon-btn btn-sm btn-danger" data-act="del-team" data-tid="${esc(t.id)}" data-tname="${esc(t.name)}" title="Supprimer l’équipe">${ic('trash')}</button>
+            </div>
+          </div>
+          <div class="tc-meta">
+            <span class="badge">${plural(t.memberCount, 'artiste', 'artistes')}</span>
+            <span class="badge">${plural(t.projectCount, 'projet', 'projets')}</span>
+          </div>
+          <div class="tc-members">
+            ${memberChips || '<span class="faint small">Aucun artiste assigné</span>'}
+            ${moreCount}
+          </div>
+          <div class="tc-foot">
+            <a class="btn btn-sm btn-primary" href="#/equipe/${esc(t.id)}">Ouvrir l’espace d’équipe →</a>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    teamsHtml = `
+      <div style="margin-top:28px">
+        <h2 style="font-size:1.15rem;margin-bottom:12px">Équipes de production (${teams.length})</h2>
+        <div class="team-grid">${cards}</div>
+      </div>
+    `;
+  }
+
+  // Section Administration
+  const adminSec = `
+    <section class="card" style="margin-top:32px">
+      <div class="row" style="margin-bottom:14px;align-items:flex-start">
+        <div>
+          <h2 style="margin:0">Supervision du serveur & Artistes</h2>
+          <p class="small muted" style="margin:2px 0 0">Tous les profils enregistrés sur SQLite et sauvegardes complètes.</p>
+        </div>
+        <span class="spacer"></span>
+        <div class="row">
+          <a class="btn btn-sm" href="/api/backup" download>${ic('download')} Sauvegarde globale (.json)</a>
+        </div>
+      </div>
+      <div id="adminArtistsListContainer">
+        <p class="faint small">Chargement des profils du serveur...</p>
+      </div>
+    </section>
+  `;
+
+  return head + statsBox + teamsHtml + adminSec;
+}
+
+function viewTeamDetail(teamId) {
+  const t = currentTeam;
+  if (!t || t.id !== teamId) {
+    return `<div class="card empty"><p class="muted">Chargement...</p></div>`;
+  }
+
+  const head = `
+    <div style="margin-bottom:16px">
+      <a class="back no-print" href="#/equipes">${ic('left')} Toutes les équipes</a>
+    </div>
+    <div class="page-head">
+      <div>
+        <h1><span class="mark">${esc(t.name)}</span></h1>
+        <p class="muted" style="margin:6px 0 0">${esc(t.description || 'Espace d’équipe de production multi-artistes.')}</p>
+      </div>
+      <div class="row">
+        <button class="btn btn-sm" data-act="edit-team" data-tid="${esc(t.id)}">${ic('pencil')} Modifier l'équipe</button>
+        <button class="btn btn-sm btn-ghost btn-danger" data-act="del-team" data-tid="${esc(t.id)}" data-tname="${esc(t.name)}">${ic('trash')} Supprimer</button>
+      </div>
+    </div>
+  `;
+
+  // Membres
+  const membersRows = (t.members || []).map(m => `
+    <div class="member-item">
+      <div class="row" style="gap:10px">
+        <span class="avatar">${esc(m.artistName.slice(0, 1).toUpperCase())}</span>
+        <div>
+          <div style="font-weight:700">${esc(m.artistName)}</div>
+          <div class="small faint">${m.role === 'lead' ? '👑 Lead d’équipe' : '🎨 Artiste membre'}</div>
+        </div>
+      </div>
+      <div class="row" style="gap:6px">
+        <button class="btn btn-sm btn-ghost" data-act="toggle-member-role" data-tid="${esc(t.id)}" data-aid="${esc(m.artistId)}" data-role="${m.role === 'lead' ? 'member' : 'lead'}" title="${m.role === 'lead' ? 'Passer Artiste' : 'Nommer Lead'}">
+          ${m.role === 'lead' ? 'Rétrograder Artiste' : '👑 Nommer Lead'}
+        </button>
+        <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="remove-team-member" data-tid="${esc(t.id)}" data-aid="${esc(m.artistId)}" data-aname="${esc(m.artistName)}" title="Retirer de l’équipe">
+          ${ic('trash')}
+        </button>
+      </div>
+    </div>
+  `).join('');
+
+  const membersSec = `
+    <section class="card" style="margin-top:16px">
+      <div class="row" style="margin-bottom:12px">
+        <div>
+          <h2 style="margin:0">Membres de l’équipe (${(t.members || []).length})</h2>
+          <p class="small muted" style="margin:2px 0 0">Ces artistes peuvent être assignés aux tâches collaboratives.</p>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn btn-sm btn-primary" data-act="open-add-member" data-tid="${esc(t.id)}">${ic('plus')} Ajouter un artiste</button>
+      </div>
+      <div class="members-grid">
+        ${membersRows || '<p class="faint small" style="margin:8px 0">Aucun artiste dans cette équipe pour le moment. Cliquez sur "Ajouter un artiste".</p>'}
+      </div>
+    </section>
+  `;
+
+  // Projets collaboratifs
+  const projectsRows = (t.projects || []).map(p => `
+    <div class="team-proj-row">
+      <div>
+        <div style="font-weight:700;font-size:1.05rem">${esc(p.name)}</div>
+        <div class="small muted">${esc(p.brief || 'Pas de brief')}</div>
+      </div>
+      <div class="row" style="gap:8px">
+        <span class="badge ${p.status === 'done' ? 'badge-ok' : ''}">${p.status === 'done' ? 'Terminé' : p.status === 'wip' ? 'En cours' : 'Planification'}</span>
+        <a class="btn btn-sm btn-primary" href="#/equipe/${esc(t.id)}/projet/${esc(p.id)}">Vue d’ensemble & Tâches →</a>
+      </div>
+    </div>
+  `).join('');
+
+  const projectsSec = `
+    <section class="card" style="margin-top:20px">
+      <div class="row" style="margin-bottom:12px">
+        <div>
+          <h2 style="margin:0">Projets collectifs (${(t.projects || []).length})</h2>
+          <p class="small muted" style="margin:2px 0 0">Projets multi-artistes avec vue globale d'avancement et découpage collaboratif.</p>
+        </div>
+        <span class="spacer"></span>
+        <button class="btn btn-sm btn-primary" data-act="open-create-team-project" data-tid="${esc(t.id)}">${ic('plus')} Nouveau projet partagé</button>
+      </div>
+      <div class="team-projects-list">
+        ${projectsRows || '<p class="faint small" style="margin:8px 0">Aucun projet collectif créé pour cette équipe. Cliquez sur "Nouveau projet partagé".</p>'}
+      </div>
+    </section>
+  `;
+
+  return head + membersSec + projectsSec;
+}
+
+function viewTeamProject(teamId, projectId) {
+  const tp = currentTeamProject;
+  if (!tp || tp.id !== projectId || tp.teamId !== teamId) {
+    Promise.all([
+      fetchTeam(teamId),
+      fetchTeamProject(teamId, projectId),
+      fetchTeamOverview(teamId, projectId)
+    ]).then(() => renderSoon());
+    return `<div class="card empty"><p class="muted">Chargement du projet collaboratif...</p></div>`;
+  }
+
+  const team = currentTeam || { id: teamId, name: 'Équipe', members: [] };
+  const teamMembers = team.members || [];
+  const tasks = Array.isArray(tp.tasks) ? tp.tasks : [];
+
+  let totalEstMin = 0;
+  let totalSpentMs = 0;
+  let doneCount = 0;
+  let wipCount = 0;
+  let todoCount = 0;
+
+  const memberWorkload = {};
+  teamMembers.forEach(m => {
+    memberWorkload[m.artistId] = {
+      artistId: m.artistId,
+      name: m.artistName,
+      role: m.role,
+      tasks: [],
+      done: 0,
+      wip: 0,
+      todo: 0,
+      estMin: 0,
+      spentMs: 0
+    };
+  });
+  const unassignedWorkload = {
+    artistId: 'unassigned',
+    name: 'Non assignée(s)',
+    role: 'none',
+    tasks: [],
+    done: 0,
+    wip: 0,
+    todo: 0,
+    estMin: 0,
+    spentMs: 0
+  };
+
+  tasks.forEach(t => {
+    const est = Number(t.est) || 0;
+    const spent = spentMs(t);
+    totalEstMin += est;
+    totalSpentMs += spent;
+
+    if (t.status === 'done') doneCount++;
+    else if (t.status === 'wip') wipCount++;
+    else todoCount++;
+
+    const target = (t.assigneeId && memberWorkload[t.assigneeId])
+      ? memberWorkload[t.assigneeId]
+      : unassignedWorkload;
+
+    target.tasks.push(t);
+    target.estMin += est;
+    target.spentMs += spent;
+    if (t.status === 'done') target.done++;
+    else if (t.status === 'wip') target.wip++;
+    else target.todo++;
+  });
+
+  const totalSpentMin = Math.round(totalSpentMs / 60000);
+  const progressPct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const ratio = (totalEstMin > 0 && totalSpentMin > 0)
+    ? +(totalSpentMin / totalEstMin).toFixed(2)
+    : null;
+
+  // En-tête
+  const head = `
+    <div style="margin-bottom:14px">
+      <a class="back no-print" href="#/equipe/${esc(teamId)}">${ic('left')} Équipe ${esc(team.name)}</a>
+    </div>
+    <div class="page-head" style="align-items:flex-start">
+      <div>
+        <div class="row" style="gap:8px">
+          <h1><span class="mark">${esc(tp.name)}</span></h1>
+          <span class="badge ${tp.status === 'done' ? 'badge-ok' : ''}" style="vertical-align:middle">
+            ${tp.status === 'done' ? 'Terminé' : tp.status === 'wip' ? 'En production' : 'Planification'}
+          </span>
+        </div>
+        <p class="muted" style="margin:6px 0 0">
+          ${esc(tp.brief || 'Projet collaboratif de l’équipe.')}
+        </p>
+      </div>
+      <div class="row">
+        ${tp.status === 'plan' ? `
+          <button class="btn btn-primary" data-act="start-team-prod" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}">
+            🚀 Lancer la production
+          </button>
+        ` : tp.status === 'wip' ? `
+          <button class="btn btn-soft" data-act="finish-team-prod" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}">
+            🏁 Marquer comme Terminé
+          </button>
+        ` : `
+          <button class="btn btn-ghost" data-act="reopen-team-prod" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}">
+            Rouvrir la production
+          </button>
+        `}
+        <button class="btn btn-sm btn-ghost icon-btn" data-act="edit-team-project" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}" title="Modifier le brief ou le nom">
+          ${ic('pencil')}
+        </button>
+        <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="del-team-project" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}" data-pname="${esc(tp.name)}" title="Supprimer ce projet">
+          ${ic('trash')}
+        </button>
+      </div>
+    </div>
+  `;
+
+  // Baromètre Global
+  let ratioComment = 'Non démarré';
+  if (ratio) {
+    if (ratio > 1.15) ratioComment = `Dépassement (+${Math.round((ratio - 1) * 100)} %)`;
+    else if (ratio >= 0.9) ratioComment = 'Dans les prévisions';
+    else ratioComment = `En avance (-${Math.round((1 - ratio) * 100)} %)`;
+  }
+
+  const heroBar = `
+    <section class="team-overview-hero">
+      <div class="hero-metric">
+        <div class="hm-val">${progressPct} %</div>
+        <div class="hm-lbl">Progression globale (${doneCount}/${tasks.length} tâches)</div>
+        <div class="proj-progress-bar"><div class="ppb-fill" style="width:${progressPct}%"></div></div>
+      </div>
+      <div class="hero-metric">
+        <div class="hm-val">${fmtMin(totalEstMin)}</div>
+        <div class="hm-lbl">Temps estimé total</div>
+      </div>
+      <div class="hero-metric">
+        <div class="hm-val">${fmtMin(totalSpentMin)}</div>
+        <div class="hm-lbl">Temps passé réel (cumulé)</div>
+      </div>
+      <div class="hero-metric">
+        <div class="hm-val ${ratio && ratio > 1.15 ? 'text-miss' : ratio ? 'text-ok' : ''}">
+          ${ratio ? '×' + ratio : '—'}
+        </div>
+        <div class="hm-lbl">${ratioComment}</div>
+      </div>
+    </section>
+  `;
+
+  // Workload Cards
+  const allWorkloads = Object.values(memberWorkload);
+  if (unassignedWorkload.tasks.length > 0) {
+    allWorkloads.push(unassignedWorkload);
+  }
+
+  const workloadCards = allWorkloads.map(w => {
+    const wSpentMin = Math.round(w.spentMs / 60000);
+    const wPct = w.tasks.length ? Math.round((w.done / w.tasks.length) * 100) : 0;
+    const wRatio = (w.estMin > 0 && wSpentMin > 0) ? +(wSpentMin / w.estMin).toFixed(2) : null;
+    const isFiltered = teamFilterArtist === w.artistId;
+
+    return `
+      <div class="workload-card ${isFiltered ? 'is-active-filter' : ''}" data-act="set-team-filter-artist" data-aid="${esc(w.artistId)}">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div class="row" style="gap:8px">
+            <span class="avatar mini">${w.artistId === 'unassigned' ? '?' : esc(w.name.slice(0, 1).toUpperCase())}</span>
+            <div style="font-weight:700">${esc(w.name)}</div>
+          </div>
+          <span class="faint small">${w.role === 'lead' ? '👑 Lead' : w.role === 'member' ? 'Artiste' : ''}</span>
+        </div>
+        <div class="small muted" style="margin-bottom:8px">
+          <b>${w.done}</b> finie(s) / <b>${w.tasks.length}</b> tâche(s) · <b>${fmtMin(wSpentMin)}</b> passées
+        </div>
+        <div class="proj-progress-bar"><div class="ppb-fill" style="width:${wPct}%"></div></div>
+        <div class="row" style="justify-content:space-between;margin-top:6px;font-size:.78rem">
+          <span class="faint">Prévu: ${fmtMin(w.estMin)}</span>
+          <span class="${wRatio && wRatio > 1.15 ? 'text-miss' : 'text-ok'}"><b>${wRatio ? '×' + wRatio : '—'}</b></span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const workloadSec = `
+    <section class="card" style="margin-top:20px">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h2 style="margin:0">Répartition du travail par artiste</h2>
+          <p class="small muted" style="margin:2px 0 0">Clique sur un artiste pour filtrer ses tâches ci-dessous.</p>
+        </div>
+        ${teamFilterArtist !== 'all' ? `
+          <button class="btn btn-sm btn-soft" data-act="set-team-filter-artist" data-aid="all">
+            Afficher toute l’équipe
+          </button>
+        ` : ''}
+      </div>
+      <div class="team-members-workload">
+        ${workloadCards}
+      </div>
+    </section>
+  `;
+
+  // Filtrage
+  let filteredTasks = tasks;
+  if (teamFilterArtist !== 'all') {
+    if (teamFilterArtist === 'unassigned') {
+      filteredTasks = filteredTasks.filter(t => !t.assigneeId);
+    } else {
+      filteredTasks = filteredTasks.filter(t => t.assigneeId === teamFilterArtist);
+    }
+  }
+  if (teamFilterStatus !== 'all') {
+    filteredTasks = filteredTasks.filter(t => t.status === teamFilterStatus);
+  }
+  if (teamFilterCat !== 'all') {
+    filteredTasks = filteredTasks.filter(t => t.cat === teamFilterCat);
+  }
+
+  const memberSelectOptions = teamMembers.map(m => `
+    <option value="${esc(m.artistId)}">${esc(m.artistName)}</option>
+  `).join('');
+
+  const catSelectOptions = state.categories.map(c => `
+    <option value="${esc(c.id)}">${esc(c.name)}</option>
+  `).join('');
+
+  const taskRows = filteredTasks.map(t => {
+    const isDone = t.status === 'done';
+    const running = isRunning(t);
+    const spentM = actualMin(t);
+    const est = t.est || 0;
+
+    const assignOptions = `
+      <option value="" ${!t.assigneeId ? 'selected' : ''}>— Non assignée —</option>
+      ${teamMembers.map(m => `
+        <option value="${esc(m.artistId)}" ${t.assigneeId === m.artistId ? 'selected' : ''}>${esc(m.artistName)}</option>
+      `).join('')}
+    `;
+
+    return `
+      <div class="card-2" style="padding:12px 14px;border-radius:10px;margin-bottom:8px;border:1.5px solid ${running ? 'var(--hl)' : 'var(--line-hair)'};background:${running ? 'var(--hl-soft)' : 'var(--card-2)'}">
+        <div class="row" style="align-items:center;justify-content:space-between;gap:10px">
+          <div class="row" style="gap:10px;flex:1;min-width:240px">
+            <button class="btn btn-sm icon-btn ${isDone ? 'btn-primary' : 'btn-ghost'}" data-act="toggle-team-task-done" data-tid="${esc(t.id)}" title="${isDone ? 'Marquer comme à faire' : 'Marquer comme terminée'}">
+              ${ic('check')}
+            </button>
+            <div style="flex:1">
+              <div style="font-weight:700;${isDone ? 'text-decoration:line-through;opacity:.7' : ''}">${esc(t.name)}</div>
+              <div class="row" style="gap:6px;margin-top:2px">
+                <span class="chip" style="font-size:.72rem;padding:1px 6px">${esc(catName(t.cat))}</span>
+                <span class="faint small">Confiance : ${CONF[t.conf] ? CONF[t.conf].label : t.conf}</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="min-width:160px">
+            <select class="input input-sm" data-act="reassign-team-task" data-tid="${esc(t.id)}" style="font-size:.82rem;padding:3px 8px;width:100%" title="Assigner à un membre">
+              ${assignOptions}
+            </select>
+          </div>
+
+          <div class="row" style="gap:8px">
+            <div style="text-align:right;min-width:90px" class="num small">
+              <div><b data-live-time="${t.id}">${running ? fmtClock(spentMs(t)) : fmtMin(spentM)}</b></div>
+              <div class="faint">/ ${fmtMin(est)}</div>
+            </div>
+            <button class="btn btn-sm ${running ? 'btn-primary' : 'btn-soft'} icon-btn" data-act="toggle-team-timer" data-tid="${esc(t.id)}" title="${running ? 'Mettre en pause' : 'Lancer le chrono'}">
+              ${running ? ic('pause') : ic('play')}
+            </button>
+            <button class="btn btn-sm btn-ghost" data-act="adj-team-task" data-tid="${esc(t.id)}" data-v="15" title="+15 minutes">+15m</button>
+            <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="del-team-task" data-tid="${esc(t.id)}" title="Supprimer la tâche">
+              ${ic('trash')}
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const filterBar = `
+    <div class="filter-bar">
+      <span class="small faint">Filtres :</span>
+      <select class="input input-sm" data-act="filter-artist-change" style="font-size:.82rem">
+        <option value="all" ${teamFilterArtist === 'all' ? 'selected' : ''}>Tous les artistes (${tasks.length})</option>
+        ${teamMembers.map(m => `
+          <option value="${esc(m.artistId)}" ${teamFilterArtist === m.artistId ? 'selected' : ''}>${esc(m.artistName)}</option>
+        `).join('')}
+        <option value="unassigned" ${teamFilterArtist === 'unassigned' ? 'selected' : ''}>Non assignée(s)</option>
+      </select>
+
+      <select class="input input-sm" data-act="filter-status-change" style="font-size:.82rem">
+        <option value="all" ${teamFilterStatus === 'all' ? 'selected' : ''}>Tous les statuts</option>
+        <option value="todo" ${teamFilterStatus === 'todo' ? 'selected' : ''}>À faire (${todoCount})</option>
+        <option value="wip" ${teamFilterStatus === 'wip' ? 'selected' : ''}>En cours (${wipCount})</option>
+        <option value="done" ${teamFilterStatus === 'done' ? 'selected' : ''}>Terminées (${doneCount})</option>
+      </select>
+
+      <select class="input input-sm" data-act="filter-cat-change" style="font-size:.82rem">
+        <option value="all" ${teamFilterCat === 'all' ? 'selected' : ''}>Toutes catégories</option>
+        ${state.categories.map(c => `
+          <option value="${esc(c.id)}" ${teamFilterCat === c.id ? 'selected' : ''}>${esc(c.name)}</option>
+        `).join('')}
+      </select>
+
+      <span class="spacer"></span>
+      <span class="small faint">${plural(filteredTasks.length, 'tâche affichée', 'tâches affichées')}</span>
+    </div>
+  `;
+
+  const addForm = `
+    <form data-form="add-team-task" class="add-task-form card-2">
+      <div style="font-weight:700;margin-bottom:8px;font-size:.88rem">➕ Ajouter une tâche au projet d’équipe :</div>
+      <div class="add-task-grid">
+        <input class="input" name="name" placeholder="Nom de la tâche (ex: High poly sculpt armure)" required autocomplete="off">
+        <select class="input" name="cat">${catSelectOptions}</select>
+        <input class="input" name="est" placeholder="Est. (ex: 2h, 45m)" required autocomplete="off">
+        <select class="input" name="conf">
+          <option value="4">4 · À l'aise</option>
+          <option value="5">5 · Je maîtrise</option>
+          <option value="3" selected>3 · Déjà fait</option>
+          <option value="2">2 · Pas sûr(e)</option>
+          <option value="1">1 · Jamais fait</option>
+        </select>
+        <select class="input" name="assigneeId">
+          <option value="">— Non assignée —</option>
+          ${memberSelectOptions}
+        </select>
+        <button type="submit" class="btn btn-primary">${ic('plus')} Ajouter</button>
+      </div>
+    </form>
+  `;
+
+  const tasksSec = `
+    <section class="card" style="margin-top:20px">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <h2 style="margin:0">Tâches collaboratives (${tasks.length})</h2>
+          <p class="small muted" style="margin:2px 0 0">Chaque membre peut chronométrer son travail et cocher ses réalisations.</p>
+        </div>
+      </div>
+      ${addForm}
+      ${filterBar}
+      <div class="team-tasks-list">
+        ${taskRows || '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche ne correspond aux filtres sélectionnés.</p>'}
+      </div>
+    </section>
+  `;
+
+  return head + heroBar + workloadSec + tasksSec;
+}
+
+async function loadAdminArtistsTable() {
+  const container = $('#adminArtistsListContainer');
+  if (!container) return;
+  const list = await fetchArtists() || [];
+  if (!list.length) {
+    container.innerHTML = '<p class="faint small">Aucun artiste enregistré sur le serveur.</p>';
+    return;
+  }
+  container.innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="dt" style="margin-top:6px">
+        <thead>
+          <tr>
+            <th>Artiste</th>
+            <th>Dernière activité</th>
+            <th>Persistance serveur</th>
+            <th class="r">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(a => `
+            <tr>
+              <td>
+                <div class="row" style="gap:8px">
+                  <span class="avatar mini">${esc(a.name.slice(0, 1).toUpperCase())}</span>
+                  <b>${esc(a.name)}</b>
+                  ${currentArtist && currentArtist.id === a.id ? '<span class="badge badge-ok" style="font-size:.7rem">Profil actif</span>' : ''}
+                </div>
+              </td>
+              <td class="small faint">${a.lastActive ? fmtDate(a.lastActive, true) : 'Nouveau'}</td>
+              <td class="small faint">${a.hasData ? '<span style="color:var(--ok)">✓ Données synchronisées</span>' : 'Vide'}</td>
+              <td class="r">
+                <button class="btn btn-sm btn-soft" data-act="choose-artist" data-aid="${esc(a.id)}" data-aname="${esc(a.name)}">
+                  Utiliser ce profil
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 /* ================== GRAPHIQUES SVG ================== */
 function colPath(x, y0, y1, w, r) {
   const h = y0 - y1; if (h <= 0.5) return '';
@@ -1946,9 +3040,13 @@ const ui = { adding: false, editTime: null, draft: null, focusKey: null, selectA
 
 function route() {
   const h = location.hash.replace(/^#\/?/, '');
-  const [page, id] = h.split('/');
+  const [page, id, sub, subId] = h.split('/');
   if (page === 'projet' && getProject(id)) return { page: 'project', id };
   if (page === 'tableau') return { page: 'dashboard' };
+  if ((page === 'equipe' || page === 'equipes') && sub === 'projet' && subId) {
+    return { page: 'team-project', teamId: id, projectId: subId };
+  }
+  if (page === 'equipes' || page === 'equipe') return { page: 'teams', id, sub, subId };
   return { page: 'projects' };
 }
 function currentProject() { const r = route(); return r.page === 'project' ? getProject(r.id) : null; }
@@ -1980,16 +3078,21 @@ function render() {
   let html;
   if (r.page === 'project') html = viewProject(getProject(r.id));
   else if (r.page === 'dashboard') html = viewDashboard();
+  else if (r.page === 'team-project') html = viewTeamProject(r.teamId, r.projectId);
+  else if (r.page === 'teams') html = viewTeams(r.id, r.sub, r.subId);
   else html = viewProjects();
   app.innerHTML = banners() + html;
-  const navKey = r.page === 'project' ? 'projects' : r.page;
+  const navKey = r.page === 'project' ? 'projects' : (r.page === 'team-project' || r.page === 'teams') ? 'teams' : r.page;
   $$('.nav a').forEach(a => a.dataset.page === navKey ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   const p = currentProject();
-  document.title = (p ? (p.name || 'Projet') + ' — ' : r.page === 'dashboard' ? 'Tableau de bord — ' : '') + 'Carnet de Prod';
+  document.title = (p ? (p.name || 'Projet') + ' — ' : r.page === 'dashboard' ? 'Tableau de bord — ' : (r.page === 'teams' || r.page === 'team-project') ? 'Équipes & Admin — ' : '') + 'Carnet de Prod';
   drawCharts();
   updateTimerPill();
   $$('.title-input').forEach(autoGrow);
   restoreFocus(f);
+  if (r.page === 'teams' && !r.id) {
+    loadAdminArtistsTable();
+  }
 }
 function autoGrow(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
 let renderQueued = false;
@@ -1999,6 +3102,33 @@ function commit() { save(); render(); }
 /* ================== CHRONO ================== */
 function stopTimer() {
   if (!state.timer) return;
+  if (state.timer.teamId) {
+    const tid = state.timer.tid;
+    const pid = state.timer.pid;
+    const teamId = state.timer.teamId;
+    const elapsed = now() - state.timer.since;
+    state.timer = null;
+    if (currentTeamProject && currentTeamProject.id === pid) {
+      const t = currentTeamProject.tasks.find(x => x.id === tid);
+      if (t) {
+        t.spent = (t.spent || 0) + elapsed;
+        apiSaveTeamProject(teamId, currentTeamProject);
+      }
+    } else {
+      fetchTeam(teamId).then(team => {
+        if (!team) return;
+        const p = (team.projects || []).find(x => x.id === pid);
+        if (p) {
+          const t = (p.tasks || []).find(x => x.id === tid);
+          if (t) {
+            t.spent = (t.spent || 0) + elapsed;
+            apiSaveTeamProject(teamId, p);
+          }
+        }
+      }).catch(() => {});
+    }
+    return;
+  }
   const t = findTask(state, state.timer.pid, state.timer.tid);
   if (t) t.spent += now() - state.timer.since;
   state.timer = null;
@@ -2008,18 +3138,58 @@ function toggleTimer(p, t) {
   else { stopTimer(); state.timer = { pid: p.id, tid: t.id, since: now() }; }
   commit();
 }
+function toggleTeamTimer(tp, t) {
+  if (isRunning(t)) {
+    stopTimer();
+  } else {
+    stopTimer();
+    state.timer = { pid: tp.id, tid: t.id, since: now(), teamId: tp.teamId, name: t.name, spent: t.spent || 0 };
+  }
+  render();
+}
 function updateTimerPill() {
   const pill = $('#timerPill');
   if (!state.timer) { pill.classList.remove('on'); return; }
-  const t = findTask(state, state.timer.pid, state.timer.tid);
-  if (!t) { state.timer = null; pill.classList.remove('on'); return; }
+  let t = null;
+  let href = '#/projet/' + state.timer.pid;
+  let taskName = '';
+  let displaySpent = 0;
+
+  if (state.timer.teamId) {
+    if (currentTeamProject && currentTeamProject.id === state.timer.pid) {
+      t = currentTeamProject.tasks.find(x => x.id === state.timer.tid);
+    }
+    taskName = t ? t.name : (state.timer.name || 'Tâche d’équipe');
+    displaySpent = t ? spentMs(t) : ((state.timer.spent || 0) + (now() - state.timer.since));
+    href = '#/equipe/' + state.timer.teamId + '/projet/' + state.timer.pid;
+  } else {
+    t = findTask(state, state.timer.pid, state.timer.tid);
+    if (!t) { state.timer = null; pill.classList.remove('on'); return; }
+    taskName = t.name;
+    displaySpent = spentMs(t);
+  }
+
   pill.classList.add('on');
-  const a = $('#tpName'); a.textContent = t.name; a.href = '#/projet/' + state.timer.pid;
-  $('#tpTime').textContent = fmtClock(spentMs(t));
+  const a = $('#tpName'); a.textContent = taskName; a.href = href;
+  $('#tpTime').textContent = fmtClock(displaySpent);
 }
 function tick() {
   if (!state.timer) return;
-  const t = findTask(state, state.timer.pid, state.timer.tid);
+  let t = null;
+  if (state.timer.teamId) {
+    if (currentTeamProject && currentTeamProject.id === state.timer.pid) {
+      t = currentTeamProject.tasks.find(x => x.id === state.timer.tid);
+    }
+    const runningSpent = t ? spentMs(t) : ((state.timer.spent || 0) + (now() - state.timer.since));
+    const runningName = t ? t.name : (state.timer.name || 'Tâche');
+    if (t) {
+      $$(`[data-live-time="${t.id}"]`).forEach(el => el.textContent = fmtClock(runningSpent));
+    }
+    updateTimerPill();
+    document.title = `${fmtClock(runningSpent)} · ${runningName} — Carnet de Prod`;
+    return;
+  }
+  t = findTask(state, state.timer.pid, state.timer.tid);
   const p = getProject(state.timer.pid);
   if (!t || !p) return;
   $$(`[data-live-time="${t.id}"]`).forEach(el => el.textContent = fmtClock(spentMs(t)));
@@ -2205,8 +3375,349 @@ document.addEventListener('click', e => {
     }
     case 'pill-pause': stopTimer(); commit(); break;
     case 'timer-keep': if (state.timer) state.timer.ack = true; commit(); break;
-    case 'timer-discard': state.timer = null; commit(); toast('Session non comptée.'); break;
     case 'print': window.print(); break;
+    case 'admin-unlock-modal': promptAdminUnlock(() => render()); break;
+    case 'admin-lock':
+      adminKey = '';
+      sessionStorage.removeItem('carnet:admin_key');
+      render();
+      toast('Mode administrateur reverrouillé.');
+      break;
+
+    /* --- Équipes & Admin --- */
+    case 'open-create-team': {
+      openModal({
+        title: '👥 Nouvelle équipe de production',
+        body: `
+          <form data-form="create-team" class="stack">
+            <div class="field">
+              <label for="tmName" style="font-weight:700">Nom de l’équipe *</label>
+              <input id="tmName" class="input" name="name" placeholder="Ex: Équipe Mech Arena, Groupe 3D..." required autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="tmDesc" style="font-weight:700">Description ou objectif</label>
+              <textarea id="tmDesc" class="input" name="description" rows="3" placeholder="Ex: Projet de fin d’études - Production des assets et de l’environnement..."></textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">${ic('plus')} Créer l’équipe</button>
+            </div>
+          </form>
+        `,
+        cancelLabel: null,
+        okLabel: null
+      });
+      break;
+    }
+    case 'close-modal': closeModal(); break;
+    case 'edit-team': {
+      const tid = el.dataset.tid;
+      const t = (teamsCache || []).find(x => x.id === tid) || currentTeam;
+      if (!t) break;
+      openModal({
+        title: '✏️ Modifier l’équipe',
+        body: `
+          <form data-form="edit-team" data-tid="${esc(t.id)}" class="stack">
+            <div class="field">
+              <label for="editTmName" style="font-weight:700">Nom de l’équipe *</label>
+              <input id="editTmName" class="input" name="name" value="${esc(t.name)}" required autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="editTmDesc" style="font-weight:700">Description</label>
+              <textarea id="editTmDesc" class="input" name="description" rows="3">${esc(t.description || '')}</textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+            </div>
+          </form>
+        `,
+        cancelLabel: null,
+        okLabel: null
+      });
+      break;
+    }
+    case 'del-team': {
+      const tid = el.dataset.tid;
+      const tname = el.dataset.tname || 'cette équipe';
+      confirmBox('Supprimer cette équipe ?', `L’équipe « ${esc(tname)} » sera supprimée du serveur. Les comptes et projets personnels des artistes resteront intacts.`, 'Supprimer définitivement', async () => {
+        closeModal();
+        try {
+          await apiDeleteTeam(tid);
+          toast('Équipe supprimée.');
+          teamsCache = (teamsCache || []).filter(x => x.id !== tid);
+          if (location.hash.startsWith('#/equipe/' + tid)) {
+            location.hash = '#/equipes';
+          } else {
+            render();
+          }
+        } catch (err) {
+          toast(err.message || 'Erreur lors de la suppression.');
+        }
+      }, true);
+      break;
+    }
+    case 'open-add-member': {
+      const tid = el.dataset.tid;
+      const allArtists = await fetchArtists() || [];
+      const currentMemberIds = new Set(((currentTeam && currentTeam.members) || []).map(m => m.artistId));
+      const available = allArtists.filter(a => !currentMemberIds.has(a.id));
+      const options = available.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+
+      openModal({
+        title: '➕ Ajouter un artiste à l’équipe',
+        wide: true,
+        body: `
+          <form data-form="add-team-member" data-tid="${esc(tid)}" class="stack">
+            <div class="field">
+              <label for="memberArtistId" style="font-weight:700">Artiste enregistré sur le serveur :</label>
+              ${available.length ? `
+                <select id="memberArtistId" name="artistId" class="input" style="width:100%" required>
+                  ${options}
+                </select>
+              ` : `
+                <p class="faint small" style="margin:4px 0">Tous les artistes existants font déjà partie de cette équipe.</p>
+              `}
+            </div>
+            <div class="field">
+              <label for="memberRole" style="font-weight:700">Rôle dans l’équipe :</label>
+              <select id="memberRole" name="role" class="input" style="width:100%">
+                <option value="member">🎨 Artiste membre</option>
+                <option value="lead">👑 Lead d’équipe / Référent</option>
+              </select>
+            </div>
+            <div class="settings-sec" style="margin-top:14px;padding-top:14px">
+              <label style="font-weight:700">Ou créer et ajouter directement un nouvel artiste :</label>
+              <div class="row" style="margin-top:6px">
+                <input id="fastNewArtistName" class="input" placeholder="Ex: Sarah Rigging..." autocomplete="off">
+                <button type="button" class="btn" data-act="fast-create-add-member" data-tid="${esc(tid)}">${ic('plus')} Créer & Associer</button>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+              ${available.length ? `<button type="submit" class="btn btn-primary">Ajouter à l’équipe</button>` : ''}
+            </div>
+          </form>
+        `,
+        cancelLabel: null,
+        okLabel: null
+      });
+      break;
+    }
+    case 'fast-create-add-member': {
+      const tid = el.dataset.tid;
+      const inp = $('#fastNewArtistName');
+      const name = inp ? inp.value.trim() : '';
+      if (!name) { toast('Entrez un prénom ou pseudo.'); return; }
+      try {
+        const createRes = await fetch('/api/artists', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+        const cData = await createRes.json();
+        if (!cData.artist) throw new Error('Impossible de créer l’artiste');
+        await apiAddTeamMember(tid, cData.artist.id, 'member');
+        closeModal();
+        await fetchTeam(tid);
+        render();
+        toast(`${cData.artist.name} a été créé(e) et ajouté(e) à l’équipe !`);
+      } catch (err) {
+        toast(err.message || 'Erreur lors de la création');
+      }
+      break;
+    }
+    case 'toggle-member-role': {
+      const tid = el.dataset.tid;
+      const aid = el.dataset.aid;
+      const newRole = el.dataset.role;
+      try {
+        await apiAddTeamMember(tid, aid, newRole);
+        await fetchTeam(tid);
+        render();
+        toast('Rôle mis à jour.');
+      } catch (err) {
+        toast(err.message || 'Erreur');
+      }
+      break;
+    }
+    case 'remove-team-member': {
+      const tid = el.dataset.tid;
+      const aid = el.dataset.aid;
+      const aname = el.dataset.aname || 'cet artiste';
+      confirmBox('Retirer ce membre ?', `Retirer « ${esc(aname)} » de cette équipe ? Ses projets personnels restent inchangés.`, 'Retirer', async () => {
+        closeModal();
+        try {
+          await apiRemoveTeamMember(tid, aid);
+          await fetchTeam(tid);
+          render();
+          toast(`${aname} retiré(e) de l’équipe.`);
+        } catch (err) {
+          toast(err.message || 'Erreur');
+        }
+      }, true);
+      break;
+    }
+
+    /* --- Projets d'équipe & Vue Globale --- */
+    case 'open-create-team-project': {
+      const tid = el.dataset.tid;
+      openModal({
+        title: '📁 Nouveau projet d’équipe partagé',
+        body: `
+          <form data-form="create-team-project" data-tid="${esc(tid)}" class="stack">
+            <div class="field">
+              <label for="tpName" style="font-weight:700">Nom du projet d’équipe *</label>
+              <input id="tpName" class="input" name="name" placeholder="Ex: Véhicule Blindé, Environnement Temple..." required autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="tpBrief" style="font-weight:700">Brief ou consignes de production</label>
+              <textarea id="tpBrief" class="input" name="brief" rows="3" placeholder="Ex: Réaliser le pack d'assets en collaboration : modélisation, texturing PBR, intégration moteur..."></textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">${ic('plus')} Créer le projet d’équipe</button>
+            </div>
+          </form>
+        `,
+        cancelLabel: null,
+        okLabel: null
+      });
+      break;
+    }
+    case 'edit-team-project': {
+      const tid = el.dataset.tid;
+      const pid = el.dataset.pid;
+      const tp = currentTeamProject;
+      if (!tp) break;
+      openModal({
+        title: '✏️ Modifier le projet d’équipe',
+        body: `
+          <form data-form="edit-team-project" data-tid="${esc(tid)}" data-pid="${esc(pid)}" class="stack">
+            <div class="field">
+              <label for="editTpName" style="font-weight:700">Nom du projet *</label>
+              <input id="editTpName" class="input" name="name" value="${esc(tp.name)}" required autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="editTpBrief" style="font-weight:700">Brief ou consignes</label>
+              <textarea id="editTpBrief" class="input" name="brief" rows="3">${esc(tp.brief || '')}</textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+            </div>
+          </form>
+        `,
+        cancelLabel: null,
+        okLabel: null
+      });
+      break;
+    }
+    case 'del-team-project': {
+      const tid = el.dataset.tid;
+      const pid = el.dataset.pid;
+      const pname = el.dataset.pname || 'ce projet';
+      confirmBox('Supprimer ce projet partagé ?', `Le projet « ${esc(pname)} » et ses tâches d'équipe seront supprimés définitivement.`, 'Supprimer', async () => {
+        closeModal();
+        try {
+          if (state.timer && state.timer.pid === pid) state.timer = null;
+          await apiDeleteTeamProject(tid, pid);
+          location.hash = '#/equipe/' + tid;
+          toast('Projet supprimé.');
+        } catch (err) {
+          toast(err.message || 'Erreur');
+        }
+      }, true);
+      break;
+    }
+    case 'start-team-prod': {
+      const tid = el.dataset.tid;
+      const pid = el.dataset.pid;
+      if (currentTeamProject && currentTeamProject.id === pid) {
+        currentTeamProject.status = 'wip';
+        currentTeamProject.startedAt = now();
+        await apiSaveTeamProject(tid, currentTeamProject);
+        render();
+        toast('Production d’équipe lancée !');
+      }
+      break;
+    }
+    case 'finish-team-prod': {
+      const tid = el.dataset.tid;
+      const pid = el.dataset.pid;
+      if (currentTeamProject && currentTeamProject.id === pid) {
+        if (state.timer && state.timer.pid === pid) stopTimer();
+        currentTeamProject.status = 'done';
+        currentTeamProject.finishedAt = now();
+        await apiSaveTeamProject(tid, currentTeamProject);
+        render();
+        toast('Projet d’équipe marqué comme Terminé !');
+      }
+      break;
+    }
+    case 'reopen-team-prod': {
+      const tid = el.dataset.tid;
+      const pid = el.dataset.pid;
+      if (currentTeamProject && currentTeamProject.id === pid) {
+        currentTeamProject.status = 'wip';
+        await apiSaveTeamProject(tid, currentTeamProject);
+        render();
+        toast('Projet rouvert.');
+      }
+      break;
+    }
+    case 'toggle-team-timer': {
+      const tid = el.dataset.tid;
+      if (currentTeamProject) {
+        const t = currentTeamProject.tasks.find(x => x.id === tid);
+        if (t) toggleTeamTimer(currentTeamProject, t);
+      }
+      break;
+    }
+    case 'adj-team-task': {
+      const tid = el.dataset.tid;
+      const v = Number(el.dataset.v) || 15;
+      if (currentTeamProject) {
+        const t = currentTeamProject.tasks.find(x => x.id === tid);
+        if (t) {
+          if (isRunning(t)) { t.spent += now() - state.timer.since; state.timer.since = now(); }
+          t.spent = Math.max(0, (t.spent || 0) + v * 60000);
+          await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
+          render();
+        }
+      }
+      break;
+    }
+    case 'toggle-team-task-done': {
+      const tid = el.dataset.tid;
+      if (currentTeamProject) {
+        const t = currentTeamProject.tasks.find(x => x.id === tid);
+        if (t) {
+          if (isRunning(t)) stopTimer();
+          t.status = (t.status === 'done') ? 'todo' : 'done';
+          t.doneAt = (t.status === 'done') ? now() : null;
+          await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
+          render();
+        }
+      }
+      break;
+    }
+    case 'del-team-task': {
+      const tid = el.dataset.tid;
+      if (currentTeamProject) {
+        if (state.timer && state.timer.tid === tid) stopTimer();
+        currentTeamProject.tasks = currentTeamProject.tasks.filter(x => x.id !== tid);
+        await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
+        render();
+        toast('Tâche supprimée.');
+      }
+      break;
+    }
+    case 'set-team-filter-artist': {
+      teamFilterArtist = el.dataset.aid || 'all';
+      render();
+      break;
+    }
 
     /* --- projet --- */
     case 'delete-project':
@@ -2301,6 +3812,32 @@ document.addEventListener('submit', async e => {
   if (!form) return;
   e.preventDefault();
   const kind = form.dataset.form;
+  if (kind === 'admin-unlock') {
+    const key = form.elements.key ? form.elements.key.value.trim() : '';
+    if (!key) return;
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key })
+      });
+      if (!res.ok) throw new Error('Code ou mot de passe administrateur incorrect.');
+      adminKey = key;
+      sessionStorage.setItem('carnet:admin_key', key);
+      closeModal();
+      toast('Accès administrateur déverrouillé !');
+      if (typeof window._adminUnlockCallback === 'function') {
+        const cb = window._adminUnlockCallback;
+        window._adminUnlockCallback = null;
+        cb();
+      } else {
+        render();
+      }
+    } catch (err) {
+      toast(err.message || 'Erreur d’authentification');
+    }
+    return;
+  }
   const p = currentProject();
   if (kind === 'create-artist') {
     const name = form.elements.name.value.trim();
@@ -2346,6 +3883,104 @@ document.addEventListener('submit', async e => {
     let id = slug(name) || uid(); if (state.categories.some(c => c.id === id)) id += '-' + uid().slice(0, 3);
     state.categories.splice(Math.max(0, state.categories.length - 1), 0, { id, name });
     save(); openSettings(); const x = $('#modalBg input[name="name"]'); if (x) x.focus();
+  } else if (kind === 'create-team') {
+    const name = form.elements.name.value.trim();
+    const desc = form.elements.description.value.trim();
+    if (!name) return;
+    try {
+      const created = await apiCreateTeam(name, desc);
+      closeModal();
+      location.hash = '#/equipe/' + created.id;
+      toast(`Équipe « ${created.name} » créée avec succès !`);
+    } catch (err) {
+      toast(err.message || 'Erreur lors de la création');
+    }
+  } else if (kind === 'edit-team') {
+    const tid = form.dataset.tid;
+    const name = form.elements.name.value.trim();
+    const desc = form.elements.description.value.trim();
+    if (!name || !tid) return;
+    try {
+      await apiUpdateTeam(tid, { name, description: desc });
+      closeModal();
+      render();
+      toast('Équipe mise à jour.');
+    } catch (err) {
+      toast(err.message || 'Erreur');
+    }
+  } else if (kind === 'add-team-member') {
+    const tid = form.dataset.tid;
+    const artistId = form.elements.artistId ? form.elements.artistId.value : null;
+    const role = form.elements.role ? form.elements.role.value : 'member';
+    if (!tid || !artistId) return;
+    try {
+      await apiAddTeamMember(tid, artistId, role);
+      closeModal();
+      render();
+      toast('Artiste ajouté(e) à l’équipe.');
+    } catch (err) {
+      toast(err.message || 'Erreur');
+    }
+  } else if (kind === 'create-team-project') {
+    const tid = form.dataset.tid;
+    const name = form.elements.name.value.trim();
+    const brief = form.elements.brief.value.trim();
+    if (!name || !tid) return;
+    try {
+      const created = await apiSaveTeamProject(tid, { name, brief, status: 'plan', tasks: [] });
+      closeModal();
+      location.hash = `#/equipe/${tid}/projet/${created.id}`;
+      toast(`Projet d'équipe « ${created.name} » créé !`);
+    } catch (err) {
+      toast(err.message || 'Erreur');
+    }
+  } else if (kind === 'edit-team-project') {
+    const tid = form.dataset.tid;
+    const pid = form.dataset.pid;
+    const name = form.elements.name.value.trim();
+    const brief = form.elements.brief.value.trim();
+    if (!name || !currentTeamProject) return;
+    try {
+      currentTeamProject.name = name;
+      currentTeamProject.brief = brief;
+      await apiSaveTeamProject(tid, currentTeamProject);
+      closeModal();
+      render();
+      toast('Projet d’équipe mis à jour.');
+    } catch (err) {
+      toast(err.message || 'Erreur');
+    }
+  } else if (kind === 'add-team-task') {
+    if (!currentTeamProject) return;
+    const name = form.elements.name.value.trim();
+    if (!name) return;
+    const cat = form.elements.cat.value;
+    const est = parseDur(form.elements.est.value);
+    const conf = Number(form.elements.conf.value) || 3;
+    const assigneeId = form.elements.assigneeId.value || null;
+    const member = (currentTeam && currentTeam.members || []).find(m => m.artistId === assigneeId);
+
+    const newTaskObj = {
+      id: 't-' + uid(),
+      name,
+      cat,
+      est: est || 60,
+      conf,
+      spent: 0,
+      status: 'todo',
+      assigneeId,
+      assigneeName: member ? member.artistName : null,
+      planned: currentTeamProject.status === 'plan',
+      reasons: [],
+      doneAt: null
+    };
+
+    currentTeamProject.tasks.push(newTaskObj);
+    form.elements.name.value = '';
+    form.elements.est.value = '';
+    await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
+    render();
+    toast('Tâche ajoutée au projet d’équipe.');
   }
 });
 
@@ -2381,7 +4016,36 @@ document.addEventListener('input', e => {
   }
 });
 document.addEventListener('change', e => {
-  const el = e.target; const f = el.dataset && el.dataset.field;
+  const el = e.target;
+  const act = el.dataset && el.dataset.act;
+  if (act === 'reassign-team-task') {
+    const tid = el.dataset.tid;
+    const newArtistId = el.value;
+    if (currentTeamProject) {
+      const t = currentTeamProject.tasks.find(x => x.id === tid);
+      if (t) {
+        t.assigneeId = newArtistId || null;
+        const member = (currentTeam && currentTeam.members || []).find(m => m.artistId === newArtistId);
+        t.assigneeName = member ? member.artistName : null;
+        apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject).then(() => render());
+      }
+    }
+    return;
+  } else if (act === 'filter-artist-change') {
+    teamFilterArtist = el.value;
+    render();
+    return;
+  } else if (act === 'filter-status-change') {
+    teamFilterStatus = el.value;
+    render();
+    return;
+  } else if (act === 'filter-cat-change') {
+    teamFilterCat = el.value;
+    render();
+    return;
+  }
+
+  const f = el.dataset && el.dataset.field;
   if (el.id === 'importFile' && el.files && el.files[0]) { importFile(el.files[0]); return; }
   if (!f) return;
   const p = currentProject();

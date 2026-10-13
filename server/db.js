@@ -31,7 +31,38 @@ db.exec(`
     FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS teams (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS team_members (
+    team_id TEXT NOT NULL,
+    artist_id TEXT NOT NULL,
+    role TEXT DEFAULT 'member',
+    joined_at INTEGER NOT NULL,
+    PRIMARY KEY (team_id, artist_id),
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    FOREIGN KEY (artist_id) REFERENCES artists(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS team_projects (
+    id TEXT PRIMARY KEY,
+    team_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    brief TEXT DEFAULT '',
+    status TEXT DEFAULT 'plan',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    data TEXT NOT NULL,
+    FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+  );
+
   CREATE INDEX IF NOT EXISTS idx_artists_last_active ON artists(last_active DESC);
+  CREATE INDEX IF NOT EXISTS idx_team_members_artist ON team_members(artist_id);
+  CREATE INDEX IF NOT EXISTS idx_team_projects_team ON team_projects(team_id);
 `);
 
 function slug(s) {
@@ -144,6 +175,434 @@ const dbOps = {
     return { success: true };
   },
 
+  // --- ÉQUIPES ---
+  listTeams() {
+    const stmt = db.prepare(`
+      SELECT t.id, t.name, t.description, t.created_at,
+             COUNT(DISTINCT tm.artist_id) as member_count,
+             COUNT(DISTINCT tp.id) as project_count
+      FROM teams t
+      LEFT JOIN team_members tm ON t.id = tm.team_id
+      LEFT JOIN team_projects tp ON t.id = tp.team_id
+      GROUP BY t.id
+      ORDER BY t.name ASC
+    `);
+    const rows = stmt.all();
+
+    // Membres par équipe
+    const membersStmt = db.prepare(`
+      SELECT tm.team_id, tm.artist_id, tm.role, tm.joined_at, a.name as artist_name
+      FROM team_members tm
+      JOIN artists a ON tm.artist_id = a.id
+      ORDER BY tm.role DESC, a.name ASC
+    `);
+    const allMembers = membersStmt.all();
+    const membersByTeam = {};
+    for (const m of allMembers) {
+      if (!membersByTeam[m.team_id]) membersByTeam[m.team_id] = [];
+      membersByTeam[m.team_id].push({
+        artistId: m.artist_id,
+        artistName: m.artist_name,
+        role: m.role,
+        joinedAt: m.joined_at
+      });
+    }
+
+    return rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      description: r.description || '',
+      createdAt: r.created_at,
+      memberCount: Number(r.member_count) || 0,
+      projectCount: Number(r.project_count) || 0,
+      members: membersByTeam[r.id] || []
+    }));
+  },
+
+  getTeam(teamId) {
+    const team = db.prepare('SELECT id, name, description, created_at FROM teams WHERE id = ?').get(teamId);
+    if (!team) return null;
+
+    const members = db.prepare(`
+      SELECT tm.artist_id, tm.role, tm.joined_at, a.name as artist_name
+      FROM team_members tm
+      JOIN artists a ON tm.artist_id = a.id
+      WHERE tm.team_id = ?
+      ORDER BY tm.role DESC, a.name ASC
+    `).all(teamId);
+
+    const projects = db.prepare(`
+      SELECT id, team_id, name, brief, status, created_at, updated_at
+      FROM team_projects
+      WHERE team_id = ?
+      ORDER BY updated_at DESC
+    `).all(teamId);
+
+    return {
+      id: team.id,
+      name: team.name,
+      description: team.description || '',
+      createdAt: team.created_at,
+      members: members.map(m => ({
+        artistId: m.artist_id,
+        artistName: m.artist_name,
+        role: m.role,
+        joinedAt: m.joined_at
+      })),
+      projects
+    };
+  },
+
+  createTeam(rawName, rawDesc) {
+    const name = String(rawName || '').trim();
+    if (!name) throw new Error('Le nom de l’équipe ne peut pas être vide.');
+    const desc = String(rawDesc || '').trim();
+
+    let id = slug(name);
+    const checkId = db.prepare('SELECT id FROM teams WHERE id = ?');
+    if (checkId.get(id)) {
+      id = `${id}-${uid().slice(0, 4)}`;
+    }
+
+    const now = Date.now();
+    db.prepare('INSERT INTO teams (id, name, description, created_at) VALUES (?, ?, ?, ?)').run(id, name, desc, now);
+    return { id, name, description: desc, createdAt: now, members: [], projects: [] };
+  },
+
+  updateTeam(teamId, { name, description }) {
+    const existing = db.prepare('SELECT id, name, description FROM teams WHERE id = ?').get(teamId);
+    if (!existing) throw new Error('Équipe introuvable.');
+
+    const newName = name !== undefined ? String(name).trim() : existing.name;
+    const newDesc = description !== undefined ? String(description).trim() : (existing.description || '');
+    if (!newName) throw new Error('Le nom de l’équipe ne peut pas être vide.');
+
+    db.prepare('UPDATE teams SET name = ?, description = ? WHERE id = ?').run(newName, newDesc, teamId);
+    return { id: teamId, name: newName, description: newDesc };
+  },
+
+  deleteTeam(teamId) {
+    db.exec('BEGIN TRANSACTION;');
+    try {
+      db.prepare('DELETE FROM team_projects WHERE team_id = ?').run(teamId);
+      db.prepare('DELETE FROM team_members WHERE team_id = ?').run(teamId);
+      db.prepare('DELETE FROM teams WHERE id = ?').run(teamId);
+      db.exec('COMMIT;');
+    } catch (err) {
+      db.exec('ROLLBACK;');
+      throw err;
+    }
+    return { success: true };
+  },
+
+  // --- MEMBRES D'ÉQUIPE ---
+  addTeamMember(teamId, artistId, role = 'member') {
+    const team = db.prepare('SELECT id FROM teams WHERE id = ?').get(teamId);
+    if (!team) throw new Error('Équipe introuvable.');
+    const artist = db.prepare('SELECT id, name FROM artists WHERE id = ?').get(artistId);
+    if (!artist) throw new Error('Artiste introuvable.');
+
+    const validRole = role === 'lead' ? 'lead' : 'member';
+    const now = Date.now();
+    db.prepare(`
+      INSERT INTO team_members (team_id, artist_id, role, joined_at)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(team_id, artist_id) DO UPDATE SET role = excluded.role
+    `).run(teamId, artistId, validRole, now);
+
+    return { teamId, artistId, artistName: artist.name, role: validRole, joinedAt: now };
+  },
+
+  removeTeamMember(teamId, artistId) {
+    db.prepare('DELETE FROM team_members WHERE team_id = ? AND artist_id = ?').run(teamId, artistId);
+    return { success: true };
+  },
+
+  updateTeamMemberRole(teamId, artistId, role) {
+    const validRole = role === 'lead' ? 'lead' : 'member';
+    db.prepare('UPDATE team_members SET role = ? WHERE team_id = ? AND artist_id = ?').run(validRole, teamId, artistId);
+    return { success: true, role: validRole };
+  },
+
+  // --- PROJETS D'ÉQUIPE ---
+  listTeamProjects(teamId) {
+    const rows = db.prepare(`
+      SELECT id, team_id, name, brief, status, created_at, updated_at, data
+      FROM team_projects
+      WHERE team_id = ?
+      ORDER BY updated_at DESC
+    `).all(teamId);
+
+    return rows.map(r => {
+      let data = {};
+      try { data = JSON.parse(r.data); } catch (_) {}
+      return {
+        id: r.id,
+        teamId: r.team_id,
+        name: r.name,
+        brief: r.brief || '',
+        status: r.status,
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+        tasksCount: Array.isArray(data.tasks) ? data.tasks.length : 0,
+        data
+      };
+    });
+  },
+
+  getTeamProject(teamId, projectId) {
+    const row = db.prepare(`
+      SELECT id, team_id, name, brief, status, created_at, updated_at, data
+      FROM team_projects
+      WHERE team_id = ? AND id = ?
+    `).get(teamId, projectId);
+    if (!row) return null;
+
+    let data = {};
+    try { data = JSON.parse(row.data); } catch (_) {}
+    return {
+      id: row.id,
+      teamId: row.team_id,
+      name: row.name,
+      brief: row.brief || '',
+      status: row.status,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      ...data
+    };
+  },
+
+  saveTeamProject(teamId, projectObj) {
+    const team = db.prepare('SELECT id FROM teams WHERE id = ?').get(teamId);
+    if (!team) throw new Error('Équipe introuvable.');
+
+    const name = String(projectObj.name || 'Projet d’équipe sans titre').trim();
+    const brief = String(projectObj.brief || '').trim();
+    const status = projectObj.status || 'plan';
+    const now = Date.now();
+    let id = projectObj.id ? String(projectObj.id).trim() : null;
+
+    if (!id) {
+      id = `tp-${uid()}`;
+    }
+
+    const dataObj = {
+      brief,
+      available: projectObj.available != null ? projectObj.available : null,
+      startedAt: projectObj.startedAt || null,
+      finishedAt: projectObj.finishedAt || null,
+      categories: Array.isArray(projectObj.categories) ? projectObj.categories : [],
+      tasks: Array.isArray(projectObj.tasks) ? projectObj.tasks : []
+    };
+
+    const jsonStr = JSON.stringify(dataObj);
+
+    db.prepare(`
+      INSERT INTO team_projects (id, team_id, name, brief, status, created_at, updated_at, data)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        brief = excluded.brief,
+        status = excluded.status,
+        updated_at = excluded.updated_at,
+        data = excluded.data
+    `).run(id, teamId, name, brief, status, projectObj.createdAt || now, now, jsonStr);
+
+    return {
+      id,
+      teamId,
+      name,
+      brief,
+      status,
+      createdAt: projectObj.createdAt || now,
+      updatedAt: now,
+      ...dataObj
+    };
+  },
+
+  deleteTeamProject(teamId, projectId) {
+    db.prepare('DELETE FROM team_projects WHERE team_id = ? AND id = ?').run(teamId, projectId);
+    return { success: true };
+  },
+
+  // --- VUE GLOBALE & ANALYTICS DU PROJET D'ÉQUIPE ---
+  getTeamOverview(teamId, projectId = null) {
+    const team = db.prepare('SELECT id, name, description, created_at FROM teams WHERE id = ?').get(teamId);
+    if (!team) return null;
+
+    const members = db.prepare(`
+      SELECT tm.artist_id, tm.role, a.name as artist_name, a.last_active
+      FROM team_members tm
+      JOIN artists a ON tm.artist_id = a.id
+      WHERE tm.team_id = ?
+    `).all(teamId);
+
+    let projectsQuery = 'SELECT id, team_id, name, status, created_at, updated_at, data FROM team_projects WHERE team_id = ?';
+    const params = [teamId];
+    if (projectId) {
+      projectsQuery += ' AND id = ?';
+      params.push(projectId);
+    }
+    const projects = db.prepare(projectsQuery).all(...params);
+
+    const memberStats = {};
+    for (const m of members) {
+      memberStats[m.artist_id] = {
+        artistId: m.artist_id,
+        artistName: m.artist_name,
+        role: m.role,
+        lastActive: m.last_active,
+        totalTasks: 0,
+        doneTasks: 0,
+        wipTasks: 0,
+        todoTasks: 0,
+        plannedMin: 0,
+        actualSpentMs: 0,
+        actualSpentMin: 0,
+        progressPct: 0,
+        ratio: null
+      };
+    }
+
+    const unassignedStats = {
+      artistId: null,
+      artistName: 'Non assigné(e)',
+      role: 'none',
+      totalTasks: 0,
+      doneTasks: 0,
+      wipTasks: 0,
+      todoTasks: 0,
+      plannedMin: 0,
+      actualSpentMs: 0,
+      actualSpentMin: 0,
+      progressPct: 0,
+      ratio: null
+    };
+
+    let totalTasksCount = 0;
+    let totalDoneCount = 0;
+    let totalPlannedMin = 0;
+    let totalActualSpentMs = 0;
+    const catStats = {};
+
+    const projectOverviews = projects.map(p => {
+      let data = {};
+      try { data = JSON.parse(p.data); } catch (_) {}
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+
+      let pPlannedMin = 0;
+      let pSpentMs = 0;
+      let pDone = 0;
+
+      for (const t of tasks) {
+        const estMin = Number(t.est) || 0;
+        const spentMs = Number(t.spent) || 0;
+        const status = t.status || 'todo';
+        const assignee = t.assigneeId;
+
+        pPlannedMin += estMin;
+        pSpentMs += spentMs;
+        totalPlannedMin += estMin;
+        totalActualSpentMs += spentMs;
+        totalTasksCount++;
+
+        if (status === 'done') {
+          pDone++;
+          totalDoneCount++;
+        }
+
+        const cat = t.cat || 'autre';
+        if (!catStats[cat]) {
+          catStats[cat] = { cat, plannedMin: 0, spentMin: 0, tasksCount: 0 };
+        }
+        catStats[cat].plannedMin += estMin;
+        catStats[cat].spentMin += Math.round(spentMs / 60000);
+        catStats[cat].tasksCount++;
+
+        const target = (assignee && memberStats[assignee]) ? memberStats[assignee] : unassignedStats;
+        target.totalTasks++;
+        target.plannedMin += estMin;
+        target.actualSpentMs += spentMs;
+        if (status === 'done') target.doneTasks++;
+        else if (status === 'wip') target.wipTasks++;
+        else target.todoTasks++;
+      }
+
+      return {
+        id: p.id,
+        name: p.name,
+        status: p.status,
+        tasksCount: tasks.length,
+        doneTasks: pDone,
+        progressPct: tasks.length ? Math.round((pDone / tasks.length) * 100) : 0,
+        plannedMin: pPlannedMin,
+        actualSpentMin: Math.round(pSpentMs / 60000)
+      };
+    });
+
+    for (const key of Object.keys(memberStats)) {
+      const ms = memberStats[key];
+      ms.actualSpentMin = Math.round(ms.actualSpentMs / 60000);
+      if (ms.plannedMin > 0 && ms.actualSpentMin > 0) {
+        ms.ratio = +(ms.actualSpentMin / ms.plannedMin).toFixed(2);
+      }
+      ms.progressPct = ms.totalTasks ? Math.round((ms.doneTasks / ms.totalTasks) * 100) : 0;
+    }
+    unassignedStats.actualSpentMin = Math.round(unassignedStats.actualSpentMs / 60000);
+    unassignedStats.progressPct = unassignedStats.totalTasks ? Math.round((unassignedStats.doneTasks / unassignedStats.totalTasks) * 100) : 0;
+
+    const membersList = Object.values(memberStats);
+    if (unassignedStats.totalTasks > 0) {
+      membersList.push(unassignedStats);
+    }
+
+    const totalActualSpentMin = Math.round(totalActualSpentMs / 60000);
+    const globalRatio = (totalPlannedMin > 0 && totalActualSpentMin > 0)
+      ? +(totalActualSpentMin / totalPlannedMin).toFixed(2)
+      : null;
+
+    return {
+      team: {
+        id: team.id,
+        name: team.name,
+        description: team.description || '',
+        createdAt: team.created_at
+      },
+      summary: {
+        totalProjects: projects.length,
+        totalMembers: members.length,
+        totalTasks: totalTasksCount,
+        doneTasks: totalDoneCount,
+        progressPct: totalTasksCount ? Math.round((totalDoneCount / totalTasksCount) * 100) : 0,
+        totalPlannedMin,
+        totalActualSpentMin,
+        globalRatio
+      },
+      members: membersList,
+      projects: projectOverviews,
+      categories: Object.values(catStats)
+    };
+  },
+
+  getAdminStats() {
+    const artistsCount = db.prepare('SELECT COUNT(*) as count FROM artists').get().count;
+    const teamsCount = db.prepare('SELECT COUNT(*) as count FROM teams').get().count;
+    const teamProjectsCount = db.prepare('SELECT COUNT(*) as count FROM team_projects').get().count;
+    const active7Days = db.prepare(`
+      SELECT COUNT(*) as count FROM artists
+      WHERE last_active >= ?
+    `).get(Date.now() - 7 * 24 * 3600 * 1000).count;
+
+    return {
+      artistsCount: Number(artistsCount),
+      teamsCount: Number(teamsCount),
+      teamProjectsCount: Number(teamProjectsCount),
+      active7Days: Number(active7Days),
+      uptime: Math.floor(process.uptime()),
+      timestamp: Date.now()
+    };
+  },
+
   // Exporte toutes les données pour sauvegarde serveur
   exportAll() {
     const artists = db.prepare('SELECT * FROM artists ORDER BY name ASC').all();
@@ -155,13 +614,24 @@ const dbOps = {
       } catch (_) {}
     }
 
+    const teams = db.prepare('SELECT * FROM teams ORDER BY name ASC').all();
+    const teamMembers = db.prepare('SELECT * FROM team_members').all();
+    const teamProjects = db.prepare('SELECT * FROM team_projects').all().map(tp => {
+      let parsed = {};
+      try { parsed = JSON.parse(tp.data); } catch (_) {}
+      return { ...tp, data: parsed };
+    });
+
     return {
-      version: 1,
+      version: 2,
       exportedAt: Date.now(),
       artists: artists.map(a => ({
         ...a,
         state: stateMap[a.id] || null
-      }))
+      })),
+      teams,
+      teamMembers,
+      teamProjects
     };
   },
 
@@ -193,6 +663,48 @@ const dbOps = {
           `).run(item.id, JSON.stringify(item.state), Date.now());
         }
       }
+
+      if (Array.isArray(backup.teams)) {
+        for (const t of backup.teams) {
+          if (!t.id || !t.name) continue;
+          db.prepare(`
+            INSERT INTO teams (id, name, description, created_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              description = excluded.description
+          `).run(t.id, t.name, t.description || '', t.created_at || Date.now());
+        }
+      }
+
+      if (Array.isArray(backup.teamMembers)) {
+        for (const m of backup.teamMembers) {
+          if (!m.team_id || !m.artist_id) continue;
+          db.prepare(`
+            INSERT INTO team_members (team_id, artist_id, role, joined_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(team_id, artist_id) DO UPDATE SET role = excluded.role
+          `).run(m.team_id, m.artist_id, m.role || 'member', m.joined_at || Date.now());
+        }
+      }
+
+      if (Array.isArray(backup.teamProjects)) {
+        for (const tp of backup.teamProjects) {
+          if (!tp.id || !tp.team_id || !tp.name) continue;
+          const dataStr = typeof tp.data === 'string' ? tp.data : JSON.stringify(tp.data || {});
+          db.prepare(`
+            INSERT INTO team_projects (id, team_id, name, brief, status, created_at, updated_at, data)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              brief = excluded.brief,
+              status = excluded.status,
+              updated_at = excluded.updated_at,
+              data = excluded.data
+          `).run(tp.id, tp.team_id, tp.name, tp.brief || '', tp.status || 'plan', tp.created_at || Date.now(), tp.updated_at || Date.now(), dataStr);
+        }
+      }
+
       db.exec('COMMIT;');
     } catch (err) {
       db.exec('ROLLBACK;');
