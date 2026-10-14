@@ -2856,11 +2856,14 @@ function viewKanbanHome() {
           </div>
         ` : ''}
 
-        <div class="row" style="justify-content:center;gap:12px">
+        <div class="row" style="justify-content:center;gap:12px;flex-wrap:wrap">
           <button class="btn btn-primary" data-act="open-create-team">
             ${ic('plus')} Créer un nouveau groupe
           </button>
-          <a class="btn btn-soft" href="#/groupes">
+          <button class="btn btn-soft" data-act="demo-load">
+            ✨ Découvrir un exemple complet (Kanban & Projets)
+          </button>
+          <a class="btn btn-ghost" href="#/groupes">
             Administration des groupes
           </a>
         </div>
@@ -3114,7 +3117,7 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
           </div>
         </div>
         <div class="kanban-cards">
-          ${todoTasks.length ? todoTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche à faire.<br><span style="font-size:.78rem">Glisse une tâche ici pour la planifier</span></p>'}
+          ${todoTasks.length ? todoTasks.map(renderCard).join('') : `<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche à faire.<br><span style="font-size:.78rem">Glisse une tâche ici pour la planifier</span>${taskList.length === 0 ? `<br><button class="btn btn-sm btn-soft" data-act="demo-load" style="margin-top:10px">✨ Charger un exemple de production</button>` : ''}</p>`}
         </div>
         <button class="kanban-add-col-btn" data-act="open-create-kanban-task" data-status="todo">${ic('plus')} Ajouter une tâche</button>
       </div>
@@ -4045,7 +4048,7 @@ function toast(msg) {
 /* ================== RÉGLAGES / SAUVEGARDE ================== */
 function openSettings() {
   const used = new Set(state.projects.flatMap(p => p.tasks.map(t => t.cat)));
-  const hasDemo = state.projects.some(p => p.demo);
+  const hasDemo = state.projects.some(p => p.demo) || (teamsCache || []).some(t => t.name === 'Studio Cyberpunk Odyssey' || (t.description && t.description.includes('DÉMO')));
   openModal({
     title: 'Réglages', wide: true, cancelLabel: null, okLabel: 'Fermer',
     body: `
@@ -4071,9 +4074,9 @@ function openSettings() {
       <div class="cat-list">${state.categories.map(c => `<div class="cat-item"><input class="input" data-field="s.cat" data-cid="${esc(c.id)}" value="${esc(c.name)}" aria-label="Nom de la catégorie" autocomplete="off"><button class="btn btn-ghost icon-btn btn-sm" data-act="cat-del" data-cid="${esc(c.id)}" ${used.has(c.id) ? 'disabled title="Utilisée dans un projet"' : 'title="Supprimer"'} aria-label="Supprimer la catégorie">${ic('trash')}</button></div>`).join('')}</div>
       <form data-form="cat-add" class="add-row"><input class="input" name="name" placeholder="Nouvelle catégorie (ex : VFX, UI, Hard surface…)" autocomplete="off" aria-label="Nouvelle catégorie"><button class="btn" type="submit">${ic('plus')} Ajouter</button></form>
     </div>
-    <div class="settings-sec"><h3>Projets d’exemple</h3>
-      <p class="small muted">Des projets fictifs pour découvrir le bilan et le tableau de bord.</p>
-      ${hasDemo ? '<button class="btn" data-act="demo-remove">Retirer les exemples</button>' : '<button class="btn" data-act="demo-load">Charger les exemples</button>'}
+    <div class="settings-sec"><h3>Exemples de production & Démonstration</h3>
+      <p class="small muted">Des données complètes pour explorer le Tableau Kanban (Sprints & Stories), les projets d’équipe et le tableau de bord.</p>
+      ${hasDemo ? '<button class="btn" data-act="demo-remove">Retirer tous les exemples</button>' : '<button class="btn btn-primary" data-act="demo-load">✨ Charger les exemples complets</button>'}
     </div>
     <div class="settings-sec"><h3>Tout recommencer</h3><button class="btn btn-danger" data-act="reset-all">${ic('trash')} Effacer toutes mes données</button></div>`,
   });
@@ -4728,11 +4731,35 @@ document.addEventListener('click', async e => {
       location.hash = '#/projet/' + np.id;
       break;
     }
-    case 'demo-load': closeModal(); loadDemo(); save(); location.hash = '#/projets'; render(); toast('Projets d’exemple chargés.'); break;
+    case 'demo-load': {
+      closeModal();
+      await loadDemo();
+      save();
+      location.hash = '#/kanban';
+      render();
+      toast('Exemples de production chargés (Kanban, Sprints, Stories & Projets) !');
+      break;
+    }
     case 'demo-remove': {
       if (state.timer && (getProject(state.timer.pid) || {}).demo) state.timer = null;
       state.projects = state.projects.filter(x => !x.demo);
-      closeModal(); save(); if (!currentProject()) location.hash = '#/projets'; render(); toast('Exemples retirés.'); break;
+      const demoTeams = (teamsCache || []).filter(t => t.name === 'Studio Cyberpunk Odyssey' || (t.description && t.description.includes('DÉMO')));
+      for (const dt of demoTeams) {
+        try { await apiDeleteTeam(dt.id); } catch (_) {}
+      }
+      try {
+        const savedGid = localStorage.getItem('carnet-de-prod:active-group');
+        if (demoTeams.some(dt => dt.id === savedGid)) {
+          localStorage.removeItem('carnet-de-prod:active-group');
+        }
+      } catch (_) {}
+      await Promise.all([fetchTeams(true), fetchAllTasks(true)]).catch(() => {});
+      closeModal();
+      save();
+      if (!currentProject()) location.hash = '#/kanban';
+      render();
+      toast('Exemples de production retirés.');
+      break;
     }
     case 'settings': openSettings(); break;
     case 'switch-artist': openArtistModal(false); break;
@@ -5900,8 +5927,8 @@ async function handleKanbanStatusChange(teamId, projectId, taskId, newStatus) {
 }
 
 
-/* ================== PROJETS D'EXEMPLE ================== */
-function loadDemo() {
+/* ================== PROJETS & DONNÉES D'EXEMPLE ================== */
+async function loadDemo() {
   state.projects = state.projects.filter(p => !p.demo);
   const D = 86400000, t0 = now();
   const mk = (name, startAgo, endAgo, tasks, extra = {}) => {
@@ -5914,68 +5941,290 @@ function loadDemo() {
     p.tasks = tasks.map(([n, cat, est, conf, act, o = {}]) => newTask({
       name: n, cat, est, conf, spent: (act || 0) * 60000, planned: !o.unplanned, reasons: o.r || [],
       status: o.status || 'done', doneAt: wip ? (o.status === 'done' ? t0 - D : null) : p.finishedAt,
+      sprint: o.sprint || extra.sprint || 'Sprint 1',
+      story: o.story || extra.story || (name.includes(':') ? name.split(':')[0].trim() : 'Production Solo'),
     }));
     state.projects.push(p);
   };
   mk('Props : tonneau & caisse stylisés', 66, 62, [
-    ['Références & moodboard', 'refs', 30, 4, 45],
-    ['Blocking', 'blocking', 60, 3, 70],
-    ['Modélisation low poly', 'model', 120, 3, 150],
-    ['UV unwrap', 'retopo', 45, 2, 110, { r: ['new'] }],
-    ['Texturing Substance', 'texture', 120, 3, 240, { r: ['complex', 'polish'] }],
-    ['Rendu Marmoset', 'pres', 30, 4, 50, { r: ['tech'] }],
-    ['Export & correction des normales', 'integ', 20, 3, 60, { unplanned: true, r: ['tech'] }],
+    ['Références & moodboard', 'refs', 30, 4, 45, { sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['Blocking', 'blocking', 60, 3, 70, { sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['Modélisation low poly', 'model', 120, 3, 150, { sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['UV unwrap', 'retopo', 45, 2, 110, { r: ['new'], sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['Texturing Substance', 'texture', 120, 3, 240, { r: ['complex', 'polish'], sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['Rendu Marmoset', 'pres', 30, 4, 50, { r: ['tech'], sprint: 'Sprint 1', story: 'Props Taverne' }],
+    ['Export & correction des normales', 'integ', 20, 3, 60, { unplanned: true, r: ['tech'], sprint: 'Sprint 1', story: 'Props Taverne' }],
   ], { available: 480, reflection: 'J’ai passé beaucoup trop de temps sur les textures, je voulais que tout soit parfait. Et je n’avais jamais fait d’UV proprement.' });
   mk('Arme sci-fi low poly', 50, 46, [
-    ['Concept rapide', 'concept', 60, 3, 75],
-    ['Blocking', 'blocking', 45, 4, 50],
-    ['Modélisation', 'model', 180, 3, 210],
-    ['Retopo & UV', 'retopo', 90, 2, 140],
-    ['Texturing', 'texture', 150, 3, 260, { r: ['complex'] }],
-    ['Planche de présentation', 'pres', 45, 4, 70, { r: ['polish'] }],
-    ['Retours du prof', 'retours', 60, 3, 60, { unplanned: true }],
+    ['Concept rapide', 'concept', 60, 3, 75, { sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Blocking', 'blocking', 45, 4, 50, { sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Modélisation', 'model', 180, 3, 210, { sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Retopo & UV', 'retopo', 90, 2, 140, { sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Texturing', 'texture', 150, 3, 260, { r: ['complex'], sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Planche de présentation', 'pres', 45, 4, 70, { r: ['polish'], sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
+    ['Retours du prof', 'retours', 60, 3, 60, { unplanned: true, sprint: 'Sprint 2', story: 'Armes Sci-Fi' }],
   ]);
   mk('Buste de personnage (sculpt)', 36, 31, [
-    ['Références anatomie', 'refs', 50, 5, 50],
-    ['Sculpt : formes primaires', 'sculpt', 180, 3, 200],
-    ['Sculpt : détails', 'sculpt', 240, 2, 330, { r: ['complex'] }],
-    ['Retopo', 'retopo', 120, 3, 150],
-    ['Baking & texturing', 'texture', 180, 3, 290, { r: ['iter'] }],
-    ['Rendu', 'pres', 60, 4, 70],
-    ['Retours & corrections', 'retours', 90, 3, 100, { unplanned: true }],
+    ['Références anatomie', 'refs', 50, 5, 50, { sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Sculpt : formes primaires', 'sculpt', 180, 3, 200, { sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Sculpt : détails', 'sculpt', 240, 2, 330, { r: ['complex'], sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Retopo', 'retopo', 120, 3, 150, { sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Baking & texturing', 'texture', 180, 3, 290, { r: ['iter'], sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Rendu', 'pres', 60, 4, 70, { sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
+    ['Retours & corrections', 'retours', 90, 3, 100, { unplanned: true, sprint: 'Sprint 2', story: 'Sculpt Personnage' }],
   ]);
   mk('Coin de taverne (environnement)', 22, 16, [
-    ['Moodboard', 'refs', 45, 5, 45],
-    ['Blocking de la scène', 'blocking', 120, 4, 130],
-    ['Modélisation des props', 'model', 300, 4, 320],
-    ['UV & trim sheet', 'retopo', 120, 3, 150],
-    ['Texturing', 'texture', 240, 3, 300],
-    ['Lighting', 'light', 90, 2, 130],
-    ['Intégration Unreal', 'integ', 90, 3, 100],
-    ['Retours & corrections', 'retours', 60, 3, 70],
-    ['Rendu & planche', 'pres', 60, 4, 90, { r: ['polish'] }],
-    ['Collisions & LODs', 'integ', 60, 2, 75, { unplanned: true }],
+    ['Moodboard', 'refs', 45, 5, 45, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Blocking de la scène', 'blocking', 120, 4, 130, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Modélisation des props', 'model', 300, 4, 320, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['UV & trim sheet', 'retopo', 120, 3, 150, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Texturing', 'texture', 240, 3, 300, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Lighting', 'light', 90, 2, 130, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Intégration Unreal', 'integ', 90, 3, 100, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Retours & corrections', 'retours', 60, 3, 70, { sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Rendu & planche', 'pres', 60, 4, 90, { r: ['polish'], sprint: 'Sprint 3', story: 'Environnement Taverne' }],
+    ['Collisions & LODs', 'integ', 60, 2, 75, { unplanned: true, sprint: 'Sprint 3', story: 'Environnement Taverne' }],
   ], { available: 1500 });
   mk('Créature : du concept à la 3D', 12, 5, [
-    ['Recherche & références', 'refs', 60, 5, 55],
-    ['Concept (3 propositions)', 'concept', 180, 4, 190],
-    ['Blocking 3D', 'blocking', 90, 4, 95],
-    ['Sculpt', 'sculpt', 360, 3, 400],
-    ['Retopo & UV', 'retopo', 180, 3, 200],
-    ['Texturing', 'texture', 300, 3, 330],
-    ['Retours & corrections', 'retours', 120, 3, 110],
-    ['Présentation ArtStation', 'pres', 60, 4, 75],
+    ['Recherche & références', 'refs', 60, 5, 55, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Concept (3 propositions)', 'concept', 180, 4, 190, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Blocking 3D', 'blocking', 90, 4, 95, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Sculpt', 'sculpt', 360, 3, 400, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Retopo & UV', 'retopo', 180, 3, 200, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Texturing', 'texture', 300, 3, 330, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Retours & corrections', 'retours', 120, 3, 110, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
+    ['Présentation ArtStation', 'pres', 60, 4, 75, { sprint: 'Sprint 4', story: 'Bestiaire & Créatures' }],
   ], { available: 1680, reflection: 'Premier projet où j’ai prévu les retours dès le début. Ça change tout !' });
   mk('Diorama : forêt stylisée', 2, 0, [
-    ['Moodboard & palette', 'refs', 45, 5, 43, { status: 'done' }],
-    ['Blocking du diorama', 'blocking', 90, 4, 100, { status: 'done' }],
-    ['Modélisation arbres & rochers', 'model', 240, 3, 85, { status: 'todo' }],
-    ['Sculpt des rochers', 'sculpt', 120, 3, 0, { status: 'todo' }],
-    ['Texturing', 'texture', 240, 3, 0, { status: 'todo' }],
-    ['Lighting & rendu', 'light', 90, 2, 0, { status: 'todo' }],
-    ['Retours & corrections', 'retours', 90, 3, 0, { status: 'todo' }],
-    ['Planche de présentation', 'pres', 60, 4, 0, { status: 'todo' }],
+    ['Moodboard & palette', 'refs', 45, 5, 43, { status: 'done', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Blocking du diorama', 'blocking', 90, 4, 100, { status: 'done', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Modélisation arbres & rochers', 'model', 240, 3, 85, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Sculpt des rochers', 'sculpt', 120, 3, 0, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Texturing', 'texture', 240, 3, 0, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Lighting & rendu', 'light', 90, 2, 0, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Retours & corrections', 'retours', 90, 3, 0, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
+    ['Planche de présentation', 'pres', 60, 4, 0, { status: 'todo', sprint: 'Sprint Beta', story: 'Diorama Forêt' }],
   ], { status: 'wip', available: 1200, brief: 'Diorama stylisé 30×30 cm, rendu temps réel dans Unreal. Rendu dans 2 semaines.' });
+
+  // --- NOUVEAUTÉ : GÉNÉRATION DU GROUPE DE PRODUCTION DÉMO & TABLEAU KANBAN ---
+  let artist = currentArtist;
+  if (!artist) {
+    try {
+      const res = await fetch('/api/artists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Camille (Lead Art)' })
+      });
+      const data = await res.json();
+      artist = data.artist;
+      if (artist) {
+        currentArtist = artist;
+        try { localStorage.setItem(ARTIST_KEY, JSON.stringify(artist)); } catch (_) {}
+        updateArtistBadge();
+      }
+    } catch (_) {}
+  }
+
+  // Créer ou récupérer les coéquipiers de démo
+  let alex = null, sam = null;
+  try {
+    const r1 = await fetch('/api/artists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Alex (Texturing & PBR)' })
+    });
+    alex = (await r1.json()).artist;
+    const r2 = await fetch('/api/artists', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'Sam (Rigging & VFX)' })
+    });
+    sam = (await r2.json()).artist;
+  } catch (_) {}
+
+  // Groupe d'exemple
+  let demoTeam = (teamsCache || []).find(t => t.name === 'Studio Cyberpunk Odyssey' || (t.description && t.description.includes('DÉMO')));
+  if (!demoTeam) {
+    try {
+      demoTeam = await apiCreateTeam('Studio Cyberpunk Odyssey', 'Groupe de production DÉMO — Vertical Slice 3D multi-artistes.');
+    } catch (_) {}
+  }
+
+  if (demoTeam) {
+    if (artist) {
+      try { await apiAddTeamMember(demoTeam.id, artist.id, 'lead'); } catch (_) {}
+    }
+    if (alex) {
+      try { await apiAddTeamMember(demoTeam.id, alex.id, 'member'); } catch (_) {}
+    }
+    if (sam) {
+      try { await apiAddTeamMember(demoTeam.id, sam.id, 'member'); } catch (_) {}
+    }
+
+    const demoProj = {
+      name: 'Cyberpunk Odyssey — Vertical Slice',
+      brief: 'Production collective des assets 3D pour la vertical slice du jeu : mécha de reconnaissance, cockpit et base militaire.',
+      status: 'wip',
+      tasks: [
+        // === SPRINT BETA ===
+        // Story: HUD & Interface
+        {
+          id: uid(),
+          name: 'Minimap & radar tactique',
+          sprint: 'Sprint Beta',
+          story: 'HUD & Interface',
+          cat: 'integ',
+          est: 90,
+          conf: 4,
+          status: 'todo',
+          spent: 0,
+          assigneeId: artist ? artist.id : null,
+          assigneeName: artist ? artist.name : 'Camille (Lead Art)'
+        },
+        {
+          id: uid(),
+          name: 'Barre de santé & Shield gauge',
+          sprint: 'Sprint Beta',
+          story: 'HUD & Interface',
+          cat: 'pres',
+          est: 120,
+          conf: 3,
+          status: 'wip',
+          spent: 45 * 60000,
+          assigneeId: artist ? artist.id : null,
+          assigneeName: artist ? artist.name : 'Camille (Lead Art)'
+        },
+        {
+          id: uid(),
+          name: 'Menu pause & Settings UI',
+          sprint: 'Sprint Beta',
+          story: 'HUD & Interface',
+          cat: 'integ',
+          est: 150,
+          conf: 4,
+          status: 'done',
+          spent: 140 * 60000,
+          assigneeId: artist ? artist.id : null,
+          assigneeName: artist ? artist.name : 'Camille (Lead Art)'
+        },
+        // Story: Véhicule Mech Scout
+        {
+          id: uid(),
+          name: 'Armement tourelle & canon laser',
+          sprint: 'Sprint Beta',
+          story: 'Véhicule Mech Scout',
+          cat: 'model',
+          est: 150,
+          conf: 3,
+          status: 'todo',
+          spent: 0,
+          assigneeId: alex ? alex.id : null,
+          assigneeName: alex ? alex.name : 'Alex (Texturing & PBR)'
+        },
+        {
+          id: uid(),
+          name: 'Texturing PBR armure cabine',
+          sprint: 'Sprint Beta',
+          story: 'Véhicule Mech Scout',
+          cat: 'texture',
+          est: 180,
+          conf: 4,
+          status: 'wip',
+          spent: 120 * 60000,
+          assigneeId: alex ? alex.id : null,
+          assigneeName: alex ? alex.name : 'Alex (Texturing & PBR)'
+        },
+        // Story: Environnement Salle des Commandes
+        {
+          id: uid(),
+          name: 'Props tuyaux & ventilation modular',
+          sprint: 'Sprint Beta',
+          story: 'Environnement Salle des Commandes',
+          cat: 'model',
+          est: 60,
+          conf: 5,
+          status: 'todo',
+          spent: 0,
+          assigneeId: null,
+          assigneeName: null
+        },
+        {
+          id: uid(),
+          name: 'Shader écran holographique',
+          sprint: 'Sprint Beta',
+          story: 'Environnement Salle des Commandes',
+          cat: 'integ',
+          est: 120,
+          conf: 3,
+          status: 'wip',
+          spent: 60 * 60000,
+          assigneeId: sam ? sam.id : null,
+          assigneeName: sam ? sam.name : 'Sam (Rigging & VFX)'
+        },
+
+        // === SPRINT ALPHA ===
+        {
+          id: uid(),
+          name: 'Cockpit High Poly sculpt',
+          sprint: 'Sprint Alpha',
+          story: 'Véhicule Mech Scout',
+          cat: 'sculpt',
+          est: 240,
+          conf: 3,
+          status: 'done',
+          spent: 270 * 60000,
+          assigneeId: artist ? artist.id : null,
+          assigneeName: artist ? artist.name : 'Camille (Lead Art)'
+        },
+        {
+          id: uid(),
+          name: 'Retopologie low poly & UV unwrap',
+          sprint: 'Sprint Alpha',
+          story: 'Véhicule Mech Scout',
+          cat: 'retopo',
+          est: 120,
+          conf: 4,
+          status: 'done',
+          spent: 110 * 60000,
+          assigneeId: alex ? alex.id : null,
+          assigneeName: alex ? alex.name : 'Alex (Texturing & PBR)'
+        },
+        {
+          id: uid(),
+          name: 'Blocking architecture modular walls',
+          sprint: 'Sprint Alpha',
+          story: 'Environnement Salle des Commandes',
+          cat: 'blocking',
+          est: 180,
+          conf: 5,
+          status: 'done',
+          spent: 180 * 60000,
+          assigneeId: sam ? sam.id : null,
+          assigneeName: sam ? sam.name : 'Sam (Rigging & VFX)'
+        },
+        {
+          id: uid(),
+          name: 'Lighting & post-process ambiance',
+          sprint: 'Sprint Alpha',
+          story: 'Environnement Salle des Commandes',
+          cat: 'light',
+          est: 90,
+          conf: 4,
+          status: 'done',
+          spent: 90 * 60000,
+          assigneeId: sam ? sam.id : null,
+          assigneeName: sam ? sam.name : 'Sam (Rigging & VFX)'
+        }
+      ]
+    };
+
+    try {
+      await apiSaveTeamProject(demoTeam.id, demoProj);
+      setActiveGroupId(demoTeam.id);
+    } catch (_) {}
+  }
+
+  await Promise.all([fetchTeams(true), fetchAllTasks(true)]).catch(() => {});
 }
 
 /* ================== FICHE BILAN IMPRIMABLE (A4) ================== */
