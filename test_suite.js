@@ -285,12 +285,55 @@ async function runTests() {
     assert(updatedOverview.summary.doneTasks === 2, 'Overview actualisé : 2 tâches terminées');
     assert(updatedOverview.summary.progressPct === 67, 'Overview actualisé : 67 % de progression');
 
+    // Test des nouveaux endpoints Kanban & Tâches d’équipe directes
+    const teamTasksRes = await fetch(`${BASE_URL}/api/teams/${teamId}/tasks`);
+    assert(teamTasksRes.status === 200, 'Endpoint /api/teams/:id/tasks répond HTTP 200');
+    const teamTasks = await teamTasksRes.json();
+    assert(Array.isArray(teamTasks) && teamTasks.length === 3, 'Récupération de toutes les tâches d’équipe (Kanban global) réussie (3 tâches)');
+
+    // Ajout direct d'une tâche d'équipe (depuis la vue solo ou la vue équipe)
+    const addTaskDirectRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Concept Art Props',
+        cat: 'concept',
+        est: 90,
+        conf: 4,
+        assigneeId: 'camille-3d',
+        assigneeName: 'Camille 3D'
+      })
+    });
+    assert(addTaskDirectRes.status === 200, 'Ajout direct d’une tâche d’équipe (POST .../tasks) réussi');
+    const directTaskResult = await addTaskDirectRes.json();
+    assert(directTaskResult.task && directTaskResult.task.name === 'Concept Art Props', 'Tâche d’équipe créée avec attributs valides');
+
+    // Mise à jour de statut / Drag & Drop Kanban (PATCH .../tasks/:tid)
+    const updateTaskDirectRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}/tasks/${directTaskResult.task.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status: 'wip',
+        spent: 30 * 60000
+      })
+    });
+    assert(updateTaskDirectRes.status === 200, 'Mise à jour statut Kanban (PATCH .../tasks/:tid) réussie');
+    const patchedTaskResult = await updateTaskDirectRes.json();
+    assert(patchedTaskResult.task.status === 'wip' && patchedTaskResult.task.spent === 1800000, 'Tâche d’équipe passée en cours avec temps enregistré');
+
     // Vérification de la présence des composants frontend collaboratifs dans le HTML
     assert(htmlText.includes('team-overview-hero'), 'UI: Baromètre Global présent dans le template');
     assert(htmlText.includes('team-members-workload'), 'UI: Grille de charge par artiste présente');
     assert(htmlText.includes('data-act="reassign-team-task"'), 'UI: Réassignation collaborative en 1-clic présente');
     assert(htmlText.includes('data-act="toggle-team-timer"'), 'UI: Chronométrage des tâches d’équipe présent');
     assert(htmlText.includes('data-form="add-team-task"'), 'UI: Formulaire d’ajout de tâche collaborative présent');
+    assert(htmlText.includes('kanban-board'), 'UI: Tableau Kanban complet présent dans le template');
+    assert(htmlText.includes('kanban-col'), 'UI: Colonnes Kanban (À faire, En cours, Terminé) présentes');
+    assert(htmlText.includes('kanban-card'), 'UI: Cartes Kanban interactives présentes');
+    assert(htmlText.includes('data-act="open-solo-to-team"'), 'UI: Bouton création vers équipe depuis le solo présent');
+    assert(htmlText.includes('data-act="open-push-to-team"'), 'UI: Bouton transfert tâche solo vers équipe présent');
+    assert(htmlText.includes('data-act="set-team-tab"'), 'UI: Onglets de navigation d’équipe présents');
+    assert(htmlText.includes('data-act="open-create-team-task"'), 'UI: Bouton nouvelle tâche d’équipe présent');
 
     // Suppression d'un projet d'équipe
     const deleteProjRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}`, {

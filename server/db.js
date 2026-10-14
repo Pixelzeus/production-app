@@ -425,6 +425,78 @@ const dbOps = {
     return { success: true };
   },
 
+  getTeamTasks(teamId) {
+    const projects = db.prepare('SELECT id, name, data FROM team_projects WHERE team_id = ?').all(teamId);
+    const allTasks = [];
+    for (const p of projects) {
+      let data = {};
+      try { data = JSON.parse(p.data); } catch (_) {}
+      const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+      for (const t of tasks) {
+        allTasks.push({
+          ...t,
+          teamId,
+          projectId: p.id,
+          projectName: p.name
+        });
+      }
+    }
+    return allTasks;
+  },
+
+  addTeamTask(teamId, projectId, taskObj) {
+    const p = this.getTeamProject(teamId, projectId);
+    if (!p) throw new Error('Projet d’équipe introuvable.');
+    const newTask = {
+      id: taskObj.id || `t-${uid()}`,
+      name: String(taskObj.name || 'Tâche sans titre').trim(),
+      cat: taskObj.cat || 'autre',
+      est: Number(taskObj.est) || 60,
+      conf: Number(taskObj.conf) || 3,
+      spent: Number(taskObj.spent) || 0,
+      status: taskObj.status || 'todo',
+      assigneeId: taskObj.assigneeId || null,
+      assigneeName: taskObj.assigneeName || null,
+      planned: taskObj.planned !== undefined ? !!taskObj.planned : (p.status === 'plan'),
+      reasons: Array.isArray(taskObj.reasons) ? taskObj.reasons : [],
+      doneAt: taskObj.status === 'done' ? (taskObj.doneAt || Date.now()) : null,
+      createdAt: taskObj.createdAt || Date.now()
+    };
+    p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    p.tasks.push(newTask);
+    this.saveTeamProject(teamId, p);
+    return { task: newTask, project: p };
+  },
+
+  updateTeamTask(teamId, projectId, taskId, updates) {
+    const p = this.getTeamProject(teamId, projectId);
+    if (!p) throw new Error('Projet d’équipe introuvable.');
+    p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    const t = p.tasks.find(x => x.id === taskId);
+    if (!t) throw new Error('Tâche introuvable.');
+    if (updates.name !== undefined) t.name = String(updates.name).trim();
+    if (updates.cat !== undefined) t.cat = updates.cat;
+    if (updates.est !== undefined) t.est = Number(updates.est);
+    if (updates.conf !== undefined) t.conf = Number(updates.conf);
+    if (updates.spent !== undefined) t.spent = Number(updates.spent);
+    if (updates.status !== undefined) {
+      t.status = updates.status;
+      if (updates.status === 'done' && !t.doneAt) t.doneAt = Date.now();
+      else if (updates.status !== 'done') t.doneAt = null;
+    }
+    if (updates.assigneeId !== undefined) {
+      t.assigneeId = updates.assigneeId || null;
+      if (updates.assigneeName !== undefined) {
+        t.assigneeName = updates.assigneeName;
+      } else if (!t.assigneeId) {
+        t.assigneeName = null;
+      }
+    }
+    if (updates.reasons !== undefined) t.reasons = updates.reasons;
+    this.saveTeamProject(teamId, p);
+    return { task: t, project: p };
+  },
+
   // --- VUE GLOBALE & ANALYTICS DU PROJET D'ÉQUIPE ---
   getTeamOverview(teamId, projectId = null) {
     const team = db.prepare('SELECT id, name, description, created_at FROM teams WHERE id = ?').get(teamId);

@@ -44,72 +44,72 @@
 /* ============ Tokens ============ */
 :root {
   color-scheme: light;
-  --paper: #f4eee2;
-  --paper-dot: #d9cfbc;
-  --card: #fffcf5;
-  --card-2: #f8f1e3;
-  --ink: #1d1a16;
-  --ink-2: #57504a;
-  --ink-3: #857d72;
-  --line: #1d1a16;
-  --line-soft: rgba(29, 26, 22, .16);
-  --line-hair: rgba(29, 26, 22, .10);
-  --hl: #ffd35c;
-  --hl-soft: #ffeeb8;
-  --band: #ffe08a;
-  --ok: #2a78d6;
-  --miss: #eb6834;
-  --run: #1d1a16;
-  --shadow-c: #1d1a16;
-  --focus: #2a78d6;
-  --overlay: rgba(29, 26, 22, .45);
-  --radius: 14px;
+  --paper: #f8fafc;
+  --paper-dot: #e2e8f0;
+  --card: #ffffff;
+  --card-2: #f1f5f9;
+  --ink: #0f172a;
+  --ink-2: #334155;
+  --ink-3: #64748b;
+  --line: #0f172a;
+  --line-soft: #cbd5e1;
+  --line-hair: #e2e8f0;
+  --hl: #f59e0b;
+  --hl-soft: #fef3c7;
+  --band: #fde68a;
+  --ok: #2563eb;
+  --miss: #dc2626;
+  --run: #0f172a;
+  --shadow-c: #0f172a;
+  --focus: #2563eb;
+  --overlay: rgba(15, 23, 42, .6);
+  --radius: 12px;
   --font: "Bricolage Grotesque", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --paper: #171512;
-    --paper-dot: #2d2a25;
-    --card: #221f1b;
-    --card-2: #2a2621;
-    --ink: #f2ebdd;
-    --ink-2: #c9c0ae;
-    --ink-3: #958c7d;
-    --line: #d9d0bf;
-    --line-soft: rgba(242, 235, 221, .18);
-    --line-hair: rgba(242, 235, 221, .10);
-    --hl: #ffd35c;
-    --hl-soft: rgba(255, 211, 92, .16);
-    --band: rgba(255, 211, 92, .34);
-    --ok: #3987e5;
-    --miss: #d95926;
-    --run: #f2ebdd;
+    --paper: #0b0f17;
+    --paper-dot: #1e293b;
+    --card: #131b2e;
+    --card-2: #1e293b;
+    --ink: #f8fafc;
+    --ink-2: #cbd5e1;
+    --ink-3: #94a3b8;
+    --line: #334155;
+    --line-soft: rgba(248, 250, 252, .18);
+    --line-hair: rgba(248, 250, 252, .10);
+    --hl: #f59e0b;
+    --hl-soft: rgba(245, 158, 11, .20);
+    --band: rgba(245, 158, 11, .36);
+    --ok: #3b82f6;
+    --miss: #ef4444;
+    --run: #f8fafc;
     --shadow-c: #000;
-    --overlay: rgba(0, 0, 0, .6);
+    --overlay: rgba(0, 0, 0, .75);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --paper: #171512;
-  --paper-dot: #2d2a25;
-  --card: #221f1b;
-  --card-2: #2a2621;
-  --ink: #f2ebdd;
-  --ink-2: #c9c0ae;
-  --ink-3: #958c7d;
-  --line: #d9d0bf;
-  --line-soft: rgba(242, 235, 221, .18);
-  --line-hair: rgba(242, 235, 221, .10);
-  --hl: #ffd35c;
-  --hl-soft: rgba(255, 211, 92, .16);
-  --band: rgba(255, 211, 92, .34);
-  --ok: #3987e5;
-  --miss: #d95926;
-  --run: #f2ebdd;
+  --paper: #0b0f17;
+  --paper-dot: #1e293b;
+  --card: #131b2e;
+  --card-2: #1e293b;
+  --ink: #f8fafc;
+  --ink-2: #cbd5e1;
+  --ink-3: #94a3b8;
+  --line: #334155;
+  --line-soft: rgba(248, 250, 252, .18);
+  --line-hair: rgba(248, 250, 252, .10);
+  --hl: #f59e0b;
+  --hl-soft: rgba(245, 158, 11, .20);
+  --band: rgba(245, 158, 11, .36);
+  --ok: #3b82f6;
+  --miss: #ef4444;
+  --run: #f8fafc;
   --shadow-c: #000;
-  --overlay: rgba(0, 0, 0, .6);
+  --overlay: rgba(0, 0, 0, .75);
 }
 
 /* ============ Base ============ */
@@ -122,8 +122,8 @@ body {
   line-height: 1.45;
   color: var(--ink);
   background-color: var(--paper);
-  background-image: radial-gradient(var(--paper-dot) 1.1px, transparent 1.4px);
-  background-size: 22px 22px;
+  background-image: radial-gradient(var(--paper-dot) 1px, transparent 1px);
+  background-size: 20px 20px;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -737,6 +737,159 @@ table.dt td.r, table.dt th.r { text-align: right; }
 .text-ok { color: var(--ok); }
 .text-miss { color: var(--miss); }
 
+/* ============ Tabs & Kanban ============ */
+.segmented-tabs {
+  display: inline-flex;
+  background: var(--card-2);
+  border: 1.5px solid var(--line-hair);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+.segmented-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-weight: 700;
+  font-size: .88rem;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.segmented-tab:hover {
+  color: var(--ink);
+}
+.segmented-tab.is-active {
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 960px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+}
+.kanban-col {
+  background: var(--card-2);
+  border: 1.5px solid var(--line-hair);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  min-height: 480px;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+}
+.kanban-col.drag-over {
+  background: var(--hl-soft);
+  border-color: var(--hl);
+  box-shadow: 0 0 0 2px var(--hl);
+}
+.kanban-col-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 12px;
+  border-bottom: 1px solid var(--line-hair);
+  margin-bottom: 12px;
+}
+.kanban-col-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: .92rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.kanban-col-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+  background: var(--card);
+  border: 1px solid var(--line-hair);
+  color: var(--ink);
+}
+.kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.kanban-card {
+  background: var(--card);
+  border: 1.5px solid var(--line-hair);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: grab;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  border-color: var(--line-soft);
+}
+.kanban-card:active {
+  cursor: grabbing;
+}
+.kanban-card.is-running {
+  border-color: var(--hl);
+  box-shadow: 0 0 0 2px var(--hl-soft), 0 4px 10px rgba(0,0,0,0.08);
+}
+.kanban-card.is-dragging {
+  opacity: .35;
+  transform: scale(.97);
+}
+.kanban-card-title {
+  font-weight: 700;
+  font-size: .94rem;
+  line-height: 1.35;
+  color: var(--ink);
+}
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: .78rem;
+}
+.kanban-card-time {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: .8rem;
+  padding-top: 6px;
+  border-top: 1px solid var(--line-hair);
+}
+.kanban-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding-top: 4px;
+}
+
 /* ============ Mobile ============ */
 @media (max-width: 640px) {
   .topbar-in { gap: 8px 10px; padding: 8px 14px; }
@@ -1290,9 +1443,81 @@ async function apiRemoveTeamMember(teamId, artistId) {
 /* ================== PROJETS D'ÉQUIPE & VUE GLOBALE (API) ================== */
 let currentTeamProject = null;
 let currentTeamOverview = null;
+let currentTeamTasks = [];
+let currentTeamTasksTeamId = null;
+let teamDetailTab = 'kanban';
+let teamProjectTab = 'kanban';
+let kanbanFilterProject = 'all';
+let kanbanFilterMember = 'all';
+let kanbanFilterCat = 'all';
+let kanbanFilterSearch = '';
 let teamFilterArtist = 'all';
 let teamFilterStatus = 'all';
 let teamFilterCat = 'all';
+
+async function fetchTeamTasks(teamId, force = false) {
+  if (!force && currentTeamTasksTeamId === teamId && currentTeamTasks && currentTeamTasks.length) {
+    return currentTeamTasks;
+  }
+  try {
+    const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/tasks', { headers: adminHeaders() });
+    if (!res.ok) throw new Error();
+    currentTeamTasks = await res.json();
+    currentTeamTasksTeamId = teamId;
+    return currentTeamTasks;
+  } catch (_) { return []; }
+}
+
+async function apiAddTeamTaskDirect(teamId, projectId, taskData) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/projects/' + encodeURIComponent(projectId) + '/tasks', {
+    method: 'POST',
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(taskData)
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiAddTeamTaskDirect(teamId, projectId, taskData));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Erreur lors de l’ajout de la tâche d’équipe');
+  }
+  const result = await res.json();
+  await fetchTeamTasks(teamId, true);
+  if (currentTeamProject && currentTeamProject.id === projectId) {
+    currentTeamProject.tasks = result.project.tasks;
+  }
+  if (currentTeam && currentTeam.id === teamId) {
+    await fetchTeam(teamId);
+  }
+  return result;
+}
+
+async function apiUpdateTeamTaskDirect(teamId, projectId, taskId, updates) {
+  const res = await fetch('/api/teams/' + encodeURIComponent(teamId) + '/projects/' + encodeURIComponent(projectId) + '/tasks/' + encodeURIComponent(taskId), {
+    method: 'PATCH',
+    headers: adminHeaders({ 'Content-Type': 'application/json' }),
+    body: JSON.stringify(updates)
+  });
+  if (res.status === 401) {
+    promptAdminUnlock(() => apiUpdateTeamTaskDirect(teamId, projectId, taskId, updates));
+    throw new Error('Authentification administrateur requise');
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Erreur lors de la mise à jour de la tâche');
+  }
+  const result = await res.json();
+  if (currentTeamTasks && currentTeamTasks.length) {
+    const t = currentTeamTasks.find(x => x.id === taskId);
+    if (t) Object.assign(t, result.task);
+  }
+  if (currentTeamProject && currentTeamProject.id === projectId) {
+    const t = (currentTeamProject.tasks || []).find(x => x.id === taskId);
+    if (t) Object.assign(t, result.task);
+  }
+  return result;
+}
 
 async function fetchTeamProject(teamId, projectId) {
   try {
@@ -1326,6 +1551,7 @@ async function apiSaveTeamProject(teamId, projectData) {
   if (currentTeam && currentTeam.id === teamId) {
     await fetchTeam(teamId);
   }
+  await fetchTeamTasks(teamId, true);
   return currentTeamProject;
 }
 
@@ -1342,6 +1568,7 @@ async function apiDeleteTeamProject(teamId, projectId) {
   if (currentTeam && currentTeam.id === teamId) {
     await fetchTeam(teamId);
   }
+  await fetchTeamTasks(teamId, true);
   return true;
 }
 
@@ -1903,6 +2130,7 @@ function planRow(t, hist) {
     <select class="input t-cat" data-key="c-${t.id}" data-field="t.cat" data-tid="${t.id}" aria-label="Catégorie">${catOptions(t.cat)}</select>
     <div class="t-est"><input class="input" data-key="e-${t.id}" data-field="t.est" data-tid="${t.id}" value="${t.est ? fmtMin(t.est) : ''}" placeholder="ex : 1h30" aria-label="Estimation de durée" autocomplete="off"><div class="small faint range-txt" data-range="${t.id}" style="margin-top:3px;padding-left:3px">${t.est ? fmtMin(lo) + ' – ' + fmtMin(hi) : 'combien de temps ?'}</div></div>
     <div class="t-conf" title="À quel point es-tu sûr·e de ton estimation ?">${confPicker(t)}</div>
+    <button class="btn btn-ghost icon-btn btn-sm" data-act="open-push-to-team" data-tid="${t.id}" title="Envoyer ou copier vers une équipe" aria-label="Envoyer à une équipe">👥</button>
     <button class="btn btn-ghost icon-btn btn-sm t-del" data-act="del-task" data-tid="${t.id}" title="Supprimer la tâche" aria-label="Supprimer la tâche">${ic('trash')}</button>
     <div class="hintline" data-hint="${t.id}">${planRowHint(t, hist)}</div>
   </div>`;
@@ -1924,6 +2152,7 @@ function viewPlan(p) {
       <form class="add-row" data-form="add-task">
         <input class="input" name="name" data-key="add-name" placeholder="Nouvelle tâche, ex : Blocking du personnage" aria-label="Nouvelle tâche" autocomplete="off">
         <button class="btn" type="submit">${ic('plus')} Ajouter</button>
+        <button class="btn btn-soft" type="button" data-act="open-solo-to-team" title="Créer et assigner cette tâche dans un projet d’équipe">👥 Créer pour l’équipe</button>
       </form>
       ${sugg.length ? `<div class="suggest"><span class="faint">Souvent oubliées :</span>${sugg.map(f => `<button class="chip" data-act="add-suggest" data-name="${esc(f.name)}" data-cat="${f.cat}">+ ${esc(f.name)}</button>`).join('')}</div>` : ''}
     </section>
@@ -1995,11 +2224,12 @@ function prodCard(p, t) {
     actions = `<button class="btn btn-sm btn-soft" data-act="adj" data-tid="${t.id}" data-v="-15" data-key="m-${t.id}" ${t.spent <= 0 && !run ? 'disabled' : ''}>−15 min</button>
       <button class="btn btn-sm btn-soft" data-act="adj" data-tid="${t.id}" data-v="15" data-key="p-${t.id}">+15 min</button>
       <button class="btn btn-sm btn-ghost" data-act="edit-time" data-tid="${t.id}">${ic('pencil')} Corriger</button>
+      <button class="btn btn-sm btn-ghost" data-act="open-push-to-team" data-tid="${t.id}" title="Transférer vers une équipe">👥 Vers équipe</button>
       <span class="spacer"></span>
       <button class="btn btn-sm btn-ghost" data-act="cut" data-tid="${t.id}" title="Retirer cette tâche du projet (manque de temps, changement de plan…)">${ic('cut')} Couper du scope</button>
       <button class="btn btn-sm ${started ? 'btn-primary' : 'btn-soft'}" data-act="done" data-tid="${t.id}" data-key="d-${t.id}">${ic('check')} Terminé</button>`;
   } else if (t.status === 'done') {
-    actions = `${resultBadge(t)}<span class="spacer"></span><button class="btn btn-sm btn-ghost" data-act="reopen-task" data-tid="${t.id}">${ic('undo')} Rouvrir</button>`;
+    actions = `${resultBadge(t)}<button class="btn btn-sm btn-ghost" data-act="open-push-to-team" data-tid="${t.id}" title="Transférer vers une équipe">👥 Vers équipe</button><span class="spacer"></span><button class="btn btn-sm btn-ghost" data-act="reopen-task" data-tid="${t.id}">${ic('undo')} Rouvrir</button>`;
   } else {
     actions = `<span class="tc-note">Coupée du scope</span><span class="spacer"></span><button class="btn btn-sm btn-ghost" data-act="reopen-task" data-tid="${t.id}">${ic('undo')} Remettre</button>`;
   }
@@ -2057,7 +2287,10 @@ function viewProd(p) {
         <div style="margin-top:10px">${trackLegend(false)}</div>
       </div>
       <div class="tcards">${p.tasks.map(t => prodCard(p, t)).join('')}</div>
-      ${ui.adding ? addUnplannedForm() : `<button class="btn" data-act="open-add" style="align-self:flex-start">${ic('plus')} J’ai oublié une tâche</button>`}
+      <div class="row" style="gap:8px">
+        ${ui.adding ? addUnplannedForm() : `<button class="btn" data-act="open-add">${ic('plus')} J’ai oublié une tâche</button>`}
+        <button class="btn btn-soft" data-act="open-solo-to-team">👥 Créer pour l’équipe</button>
+      </div>
     </section>
     <aside class="stack">
       <section class="card">
@@ -2431,10 +2664,181 @@ function viewTeamsIndex() {
   return head + statsBox + teamsHtml + adminSec;
 }
 
+/* ============ TABLEAU KANBAN DE L’ÉQUIPE ============ */
+function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject = false) {
+  const taskList = Array.isArray(allTasks) ? allTasks : [];
+  const teamMembers = Array.isArray(members) ? members : [];
+  const teamProjects = Array.isArray(projects) ? projects : [];
+
+  // Filtrage interactif
+  let filtered = taskList;
+  if (!isSingleProject && kanbanFilterProject !== 'all') {
+    filtered = filtered.filter(t => t.projectId === kanbanFilterProject);
+  }
+  if (kanbanFilterMember !== 'all') {
+    if (kanbanFilterMember === 'unassigned') {
+      filtered = filtered.filter(t => !t.assigneeId);
+    } else {
+      filtered = filtered.filter(t => t.assigneeId === kanbanFilterMember);
+    }
+  }
+  if (kanbanFilterCat !== 'all') {
+    filtered = filtered.filter(t => t.cat === kanbanFilterCat);
+  }
+  if (kanbanFilterSearch && kanbanFilterSearch.trim()) {
+    const q = kanbanFilterSearch.trim().toLowerCase();
+    filtered = filtered.filter(t => (t.name && t.name.toLowerCase().includes(q)) || (t.assigneeName && t.assigneeName.toLowerCase().includes(q)));
+  }
+
+  const todoTasks = filtered.filter(t => t.status === 'todo' || !t.status);
+  const wipTasks = filtered.filter(t => t.status === 'wip');
+  const doneTasks = filtered.filter(t => t.status === 'done');
+
+  const filterBar = `
+    <div class="row" style="gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;justify-content:space-between">
+      <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
+        <input class="input input-sm" style="width:200px" data-act="kanban-search-input" value="${esc(kanbanFilterSearch)}" placeholder="🔍 Filtrer les tâches..." autocomplete="off">
+        ${!isSingleProject && teamProjects.length > 1 ? `
+          <select class="input input-sm" data-act="kanban-filter-project" style="font-size:.84rem">
+            <option value="all" ${kanbanFilterProject === 'all' ? 'selected' : ''}>Tous les projets (${teamProjects.length})</option>
+            ${teamProjects.map(p => `<option value="${esc(p.id)}" ${kanbanFilterProject === p.id ? 'selected' : ''}>📁 ${esc(p.name)}</option>`).join('')}
+          </select>
+        ` : ''}
+        <select class="input input-sm" data-act="kanban-filter-member" style="font-size:.84rem">
+          <option value="all" ${kanbanFilterMember === 'all' ? 'selected' : ''}>Tous les artistes (${teamMembers.length})</option>
+          <option value="unassigned" ${kanbanFilterMember === 'unassigned' ? 'selected' : ''}>👤 Non assignée(s)</option>
+          ${teamMembers.map(m => `<option value="${esc(m.artistId)}" ${kanbanFilterMember === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+        </select>
+        <select class="input input-sm" data-act="kanban-filter-cat" style="font-size:.84rem">
+          <option value="all" ${kanbanFilterCat === 'all' ? 'selected' : ''}>Toutes catégories</option>
+          ${state.categories.map(c => `<option value="${esc(c.id)}" ${kanbanFilterCat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
+        </select>
+        ${(kanbanFilterSearch || (!isSingleProject && kanbanFilterProject !== 'all') || kanbanFilterMember !== 'all' || kanbanFilterCat !== 'all') ? `
+          <button class="btn btn-sm btn-ghost" data-act="kanban-reset-filters">Réinitialiser filtres</button>
+        ` : ''}
+      </div>
+      <div>
+        <button class="btn btn-sm btn-primary" data-act="open-create-team-task" data-tid="${esc(teamId)}" ${isSingleProject && teamProjects[0] ? `data-pid="${esc(teamProjects[0].id)}"` : ''}>
+          ${ic('plus')} Nouvelle tâche d’équipe
+        </button>
+      </div>
+    </div>
+  `;
+
+  const renderCard = (t) => {
+    const running = isRunning(t);
+    const spentM = actualMin(t);
+    const estM = t.est || 0;
+    const projName = t.projectName || (teamProjects.find(p => p.id === t.projectId) || {}).name || '';
+
+    return `
+      <div class="kanban-card ${running ? 'is-running' : ''}" draggable="true" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(teamId)}" data-status="${esc(t.status || 'todo')}">
+        <div class="kanban-card-meta">
+          <div class="row" style="gap:5px;flex-wrap:wrap">
+            ${!isSingleProject && projName ? `<span class="badge" style="font-size:.72rem;padding:1px 7px" title="Projet: ${esc(projName)}">📁 ${esc(projName)}</span>` : ''}
+            <span class="chip" style="font-size:.72rem;padding:1px 7px">${esc(catName(t.cat))}</span>
+          </div>
+          <span class="faint small" title="Niveau de confiance">${CONF[t.conf] ? CONF[t.conf].label : t.conf}</span>
+        </div>
+
+        <div class="kanban-card-title">${esc(t.name)}</div>
+
+        <div class="row" style="justify-content:space-between;align-items:center;gap:6px;font-size:.8rem">
+          <span class="member-chip mini ${t.assigneeId ? '' : 'faint'}" style="font-size:.75rem;padding:2px 7px;cursor:pointer" data-act="open-edit-team-task" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(teamId)}" title="Clique pour réassigner ou modifier">
+            <span class="avatar mini">${t.assigneeName ? esc(t.assigneeName.slice(0, 1).toUpperCase()) : '?'}</span>
+            <span>${esc(t.assigneeName || 'Non assignée')}</span>
+          </span>
+          <div class="num small" style="text-align:right">
+            <b data-live-time="${t.id}">${running ? fmtClock(spentMs(t)) : fmtMin(spentM)}</b>
+            <span class="faint">/ ${fmtMin(estM)}</span>
+          </div>
+        </div>
+
+        <div class="kanban-card-actions">
+          <div class="row" style="gap:4px">
+            ${t.status === 'todo' || !t.status ? `
+              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip">
+                ▶ Commencer
+              </button>
+            ` : t.status === 'wip' ? `
+              <button class="btn btn-sm ${running ? 'btn-primary' : 'btn-soft'} icon-btn" data-act="toggle-team-timer-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="${running ? 'Pause' : 'Lancer le chrono'}">
+                ${running ? ic('pause') : ic('play')}
+              </button>
+              <button class="btn btn-sm btn-ghost" data-act="adj-team-task-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-v="15" title="+15 min">+15m</button>
+              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="done">
+                ✓ Finir
+              </button>
+            ` : `
+              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip" title="Remettre en cours">↩ En cours</button>
+              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="todo" title="Remettre à faire">↩ À faire</button>
+            `}
+          </div>
+          <div class="row" style="gap:2px">
+            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-edit-team-task" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Modifier la tâche">${ic('pencil')}</button>
+            <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="del-team-task-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Supprimer la tâche">${ic('trash')}</button>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  const boardHtml = `
+    <div class="kanban-board">
+      <!-- Colonne 1 : À faire -->
+      <div class="kanban-col" data-col="todo" data-teamid="${esc(teamId)}">
+        <div class="kanban-col-head">
+          <div class="kanban-col-title">
+            <span>⏳</span>
+            <span>À faire</span>
+          </div>
+          <span class="kanban-col-badge">${todoTasks.length}</span>
+        </div>
+        <div class="kanban-cards">
+          ${todoTasks.length ? todoTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche à faire.<br><span style="font-size:.78rem">Glisse une tâche ici pour la planifier</span></p>'}
+        </div>
+      </div>
+
+      <!-- Colonne 2 : En cours -->
+      <div class="kanban-col" data-col="wip" data-teamid="${esc(teamId)}">
+        <div class="kanban-col-head">
+          <div class="kanban-col-title">
+            <span>⚡</span>
+            <span>En cours</span>
+          </div>
+          <span class="kanban-col-badge" style="background:var(--hl-soft);border-color:var(--hl);color:var(--ink)">${wipTasks.length}</span>
+        </div>
+        <div class="kanban-cards">
+          ${wipTasks.length ? wipTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche en cours.<br><span style="font-size:.78rem">Glisse une tâche ici pour démarrer</span></p>'}
+        </div>
+      </div>
+
+      <!-- Colonne 3 : Terminé -->
+      <div class="kanban-col" data-col="done" data-teamid="${esc(teamId)}">
+        <div class="kanban-col-head">
+          <div class="kanban-col-title">
+            <span>✅</span>
+            <span>Terminé</span>
+          </div>
+          <span class="kanban-col-badge" style="background:rgba(37,99,235,0.12);border-color:var(--ok);color:var(--ok)">${doneTasks.length}</span>
+        </div>
+        <div class="kanban-cards">
+          ${doneTasks.length ? doneTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche terminée.<br><span style="font-size:.78rem">Glisse une tâche ici une fois achevée</span></p>'}
+        </div>
+      </div>
+    </div>
+  `;
+
+  return filterBar + boardHtml;
+}
+
 function viewTeamDetail(teamId) {
   const t = currentTeam;
   if (!t || t.id !== teamId) {
+    Promise.all([fetchTeam(teamId), fetchTeamTasks(teamId)]).then(() => renderSoon());
     return `<div class="card empty"><p class="muted">Chargement...</p></div>`;
+  }
+  if (currentTeamTasksTeamId !== teamId) {
+    fetchTeamTasks(teamId).then(() => renderSoon());
   }
 
   const head = `
@@ -2447,9 +2851,24 @@ function viewTeamDetail(teamId) {
         <p class="muted" style="margin:6px 0 0">${esc(t.description || 'Espace d’équipe de production multi-artistes.')}</p>
       </div>
       <div class="row">
+        <button class="btn btn-sm btn-primary" data-act="open-create-team-task" data-tid="${esc(t.id)}">${ic('plus')} Nouvelle tâche d’équipe</button>
         <button class="btn btn-sm" data-act="edit-team" data-tid="${esc(t.id)}">${ic('pencil')} Modifier l'équipe</button>
         <button class="btn btn-sm btn-ghost btn-danger" data-act="del-team" data-tid="${esc(t.id)}" data-tname="${esc(t.name)}">${ic('trash')} Supprimer</button>
       </div>
+    </div>
+  `;
+
+  const tabsNav = `
+    <div class="segmented-tabs" style="margin-top:10px;margin-bottom:20px">
+      <button class="segmented-tab ${teamDetailTab === 'kanban' ? 'is-active' : ''}" data-act="set-team-tab" data-tab="kanban">
+        📋 Tableau Kanban Global (${(currentTeamTasks || []).length})
+      </button>
+      <button class="segmented-tab ${teamDetailTab === 'projects' ? 'is-active' : ''}" data-act="set-team-tab" data-tab="projects">
+        📁 Projets & Membres (${(t.projects || []).length} proj. / ${(t.members || []).length} art.)
+      </button>
+      <button class="segmented-tab ${teamDetailTab === 'overview' ? 'is-active' : ''}" data-act="set-team-tab" data-tab="overview">
+        📊 Supervision globale
+      </button>
     </div>
   `;
 
@@ -2520,7 +2939,48 @@ function viewTeamDetail(teamId) {
     </section>
   `;
 
-  return head + membersSec + projectsSec;
+  let contentBody = '';
+  if (teamDetailTab === 'kanban') {
+    contentBody = renderKanbanBoard(t.id, currentTeamTasks || [], t.members || [], t.projects || [], false);
+  } else if (teamDetailTab === 'projects') {
+    contentBody = membersSec + projectsSec;
+  } else {
+    // Vue overview globale
+    const allTasks = currentTeamTasks || [];
+    const doneCount = allTasks.filter(x => x.status === 'done').length;
+    const progressPct = allTasks.length ? Math.round((doneCount / allTasks.length) * 100) : 0;
+    const totalEst = allTasks.reduce((acc, x) => acc + (x.est || 0), 0);
+    const totalSpent = allTasks.reduce((acc, x) => acc + (actualMin(x) || 0), 0);
+    const ratio = (totalEst > 0 && totalSpent > 0) ? +(totalSpent / totalEst).toFixed(2) : null;
+
+    contentBody = `
+      <section class="team-overview-hero" style="margin-bottom:20px">
+        <div class="hero-metric">
+          <div class="hm-val">${progressPct} %</div>
+          <div class="hm-lbl">Progression globale (${doneCount}/${allTasks.length} tâches)</div>
+          <div class="proj-progress-bar"><div class="ppb-fill" style="width:${progressPct}%"></div></div>
+        </div>
+        <div class="hero-metric">
+          <div class="hm-val">${fmtMin(totalEst)}</div>
+          <div class="hm-lbl">Estimation totale d’équipe</div>
+        </div>
+        <div class="hero-metric">
+          <div class="hm-val">${fmtMin(totalSpent)}</div>
+          <div class="hm-lbl">Temps réel cumulé</div>
+        </div>
+        <div class="hero-metric">
+          <div class="hm-val ${ratio && ratio > 1.15 ? 'text-miss' : ratio ? 'text-ok' : ''}">
+            ${ratio ? '×' + ratio : '—'}
+          </div>
+          <div class="hm-lbl">${ratio ? (ratio > 1.15 ? 'Dépassement' : 'Dans les prévisions') : 'Non démarré'}</div>
+        </div>
+      </section>
+      ${membersSec}
+      ${projectsSec}
+    `;
+  }
+
+  return head + tabsNav + contentBody;
 }
 
 function viewTeamProject(teamId, projectId) {
@@ -2723,7 +3183,7 @@ function viewTeamProject(teamId, projectId) {
     </section>
   `;
 
-  // Filtrage
+  // Filtrage liste détaillée
   let filteredTasks = tasks;
   if (teamFilterArtist !== 'all') {
     if (teamFilterArtist === 'unassigned') {
@@ -2869,7 +3329,22 @@ function viewTeamProject(teamId, projectId) {
     </section>
   `;
 
-  return head + heroBar + workloadSec + tasksSec;
+  const tabsNav = `
+    <div class="segmented-tabs" style="margin-top:16px;margin-bottom:20px">
+      <button class="segmented-tab ${teamProjectTab === 'kanban' ? 'is-active' : ''}" data-act="set-team-proj-tab" data-tab="kanban">
+        📋 Tableau Kanban (${tasks.length})
+      </button>
+      <button class="segmented-tab ${teamProjectTab === 'list' ? 'is-active' : ''}" data-act="set-team-proj-tab" data-tab="list">
+        📝 Vue détaillée & Chronomètres
+      </button>
+    </div>
+  `;
+
+  if (teamProjectTab === 'kanban') {
+    return head + heroBar + tabsNav + renderKanbanBoard(teamId, tp.tasks, teamMembers, [tp], true);
+  }
+
+  return head + heroBar + tabsNav + workloadSec + tasksSec;
 }
 
 async function loadAdminArtistsTable() {
@@ -3332,6 +3807,306 @@ function newTask(fields) {
   return Object.assign({ id: uid(), name: '', cat: 'autre', est: null, conf: 3, spent: 0, status: 'todo', planned: true, reasons: [], doneAt: null }, fields);
 }
 
+/* ================== MODALES D’ÉQUIPE & KANBAN ================== */
+async function openCreateTeamTaskModal(teamId, defaultProjectId = null) {
+  let team = currentTeam && currentTeam.id === teamId ? currentTeam : await fetchTeam(teamId);
+  if (!team) return;
+  const projects = team.projects || [];
+  if (!projects.length) {
+    confirmBox('Aucun projet collectif', 'Pour ajouter des tâches, crée d’abord un projet collectif dans cette équipe.', 'Nouveau projet partagé', () => {
+      closeModal();
+      document.querySelector('[data-act="open-create-team-project"]')?.click();
+    });
+    return;
+  }
+  const members = team.members || [];
+  const selectedPid = defaultProjectId || (projects[0] ? projects[0].id : '');
+
+  openModal({
+    title: '➕ Nouvelle tâche pour l’équipe',
+    body: `
+      <form data-form="create-team-task-direct" data-tid="${esc(teamId)}" class="stack">
+        <div class="field">
+          <label style="font-weight:700">Projet collectif *</label>
+          <select class="input" name="projectId" required ${defaultProjectId ? 'disabled' : ''}>
+            ${projects.map(p => `<option value="${esc(p.id)}" ${p.id === selectedPid ? 'selected' : ''}>📁 ${esc(p.name)}</option>`).join('')}
+          </select>
+          ${defaultProjectId ? `<input type="hidden" name="projectId" value="${esc(defaultProjectId)}">` : ''}
+        </div>
+        <div class="field">
+          <label style="font-weight:700">Nom de la tâche *</label>
+          <input class="input" name="name" placeholder="Ex: Sculpt armure, Texturing Substance..." required autocomplete="off">
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Catégorie</label>
+            <select class="input" name="cat">${catOptions('model')}</select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Durée estimée *</label>
+            <input class="input" name="est" placeholder="Ex: 2h, 45min" required autocomplete="off">
+          </div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Confiance</label>
+            <select class="input" name="conf">
+              <option value="4">4 · À l'aise</option>
+              <option value="5">5 · Je maîtrise</option>
+              <option value="3" selected>3 · Déjà fait</option>
+              <option value="2">2 · Pas sûr(e)</option>
+              <option value="1">1 · Jamais fait</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à</label>
+            <select class="input" name="assigneeId">
+              <option value="">— Non assignée —</option>
+              ${members.map(m => `<option value="${esc(m.artistId)}">${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Ajouter la tâche d’équipe</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+}
+
+async function openSoloToTeamModal() {
+  const teams = await fetchTeams(true);
+  if (!teams || !teams.length) {
+    confirmBox('Aucune équipe disponible', 'Pour créer une tâche d’équipe, crée d’abord une équipe dans l’espace Équipes.', 'Créer une équipe', () => {
+      closeModal();
+      location.hash = '#/equipes';
+    });
+    return;
+  }
+  const defaultTeam = teams[0];
+  const fullTeam = await fetchTeam(defaultTeam.id);
+  const projects = (fullTeam && fullTeam.projects) || [];
+  const members = (fullTeam && fullTeam.members) || [];
+
+  const soloAddNameInp = $('[data-key="add-name"]');
+  const initialName = soloAddNameInp && soloAddNameInp.value ? soloAddNameInp.value.trim() : '';
+
+  openModal({
+    title: '👥 Créer une tâche pour l’équipe',
+    wide: true,
+    body: `
+      <form data-form="solo-to-team" class="stack">
+        <p class="small muted" style="margin:0 0 10px">Crée une tâche directement dans un projet collectif d’équipe, avec possibilité de la garder aussi dans ton découpage solo.</p>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Équipe destinataire *</label>
+            <select class="input" name="teamId" data-act="solo-team-select-change" required>
+              ${teams.map(t => `<option value="${esc(t.id)}" ${t.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(t.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Projet collectif *</label>
+            <select class="input" name="projectId" id="soloTeamProjSelect" required>
+              ${projects.length ? projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif créé)</option>'}
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Nom de la tâche *</label>
+          <input class="input" name="name" value="${esc(initialName)}" placeholder="Ex: Rigging personnage, High Poly sculpt..." required autocomplete="off">
+        </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Catégorie</label>
+            <select class="input" name="cat">${catOptions(guessCat(initialName) || 'model')}</select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Durée estimée *</label>
+            <input class="input" name="est" placeholder="Ex: 2h, 45min" value="1h30" required autocomplete="off">
+          </div>
+        </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Confiance</label>
+            <select class="input" name="conf">
+              <option value="4">4 · À l'aise</option>
+              <option value="5">5 · Je maîtrise</option>
+              <option value="3" selected>3 · Déjà fait</option>
+              <option value="2">2 · Pas sûr(e)</option>
+              <option value="1">1 · Jamais fait</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à</label>
+            <select class="input" name="assigneeId" id="soloTeamMemberSelect">
+              <option value="">— Non assignée —</option>
+              ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:6px;padding:10px;background:var(--card-2);border-radius:10px;border:1px solid var(--line-hair)">
+          <label class="row" style="gap:8px;font-size:.88rem;cursor:pointer">
+            <input type="checkbox" name="keepSoloCopy" checked>
+            <span><b>Garder également une copie dans mon projet solo actuel</b></span>
+          </label>
+        </div>
+
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Créer la tâche d’équipe</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+}
+
+async function openPushToTeamModal(taskId) {
+  const p = currentProject();
+  if (!p) return;
+  const t = p.tasks.find(x => x.id === taskId);
+  if (!t) return;
+
+  const teams = await fetchTeams(true);
+  if (!teams || !teams.length) {
+    confirmBox('Aucune équipe disponible', 'Pour transférer cette tâche, crée d’abord une équipe.', 'Créer une équipe', () => {
+      closeModal();
+      location.hash = '#/equipes';
+    });
+    return;
+  }
+  const defaultTeam = teams[0];
+  const fullTeam = await fetchTeam(defaultTeam.id);
+  const projects = (fullTeam && fullTeam.projects) || [];
+  const members = (fullTeam && fullTeam.members) || [];
+
+  openModal({
+    title: '👥 Transférer vers une équipe',
+    wide: true,
+    body: `
+      <form data-form="push-to-team" data-tid="${esc(t.id)}" class="stack">
+        <div class="card-2" style="padding:12px;border-radius:10px;margin-bottom:8px">
+          <div style="font-weight:700;font-size:1rem">${esc(t.name)}</div>
+          <div class="small muted" style="margin-top:3px">
+            Catégorie : <b>${esc(catName(t.cat))}</b> · Prévu : <b>${fmtMin(t.est || 0)}</b> · Déjà passé : <b>${fmtMin(actualMin(t))}</b>
+          </div>
+        </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Équipe destinataire *</label>
+            <select class="input" name="teamId" data-act="push-team-select-change" required>
+              ${teams.map(x => `<option value="${esc(x.id)}" ${x.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(x.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Projet collectif *</label>
+            <select class="input" name="projectId" id="pushTeamProjSelect" required>
+              ${projects.length ? projects.map(x => `<option value="${esc(x.id)}">📁 ${esc(x.name)}</option>`).join('') : '<option value="">(Aucun projet collectif)</option>'}
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Assigner à un membre de l’équipe</label>
+          <select class="input" name="assigneeId" id="pushTeamMemberSelect">
+            <option value="">— Non assignée —</option>
+            ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+          </select>
+        </div>
+
+        <div style="margin-top:6px;padding:10px;background:var(--card-2);border-radius:10px;border:1px solid var(--line-hair)">
+          <div style="font-weight:700;font-size:.86rem;margin-bottom:6px">Action sur le projet solo actuel :</div>
+          <label class="row" style="gap:8px;font-size:.86rem;cursor:pointer;margin-bottom:6px">
+            <input type="radio" name="transferMode" value="duplicate" checked>
+            <span><b>Dupliquer</b> (conserver la tâche dans ce projet solo)</span>
+          </label>
+          <label class="row" style="gap:8px;font-size:.86rem;cursor:pointer">
+            <input type="radio" name="transferMode" value="move">
+            <span><b>Déplacer</b> (retirer la tâche de ce projet solo)</span>
+          </label>
+        </div>
+
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Transférer à l’équipe</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+}
+
+async function openEditTeamTaskModal(teamId, projectId, taskId) {
+  let task = null;
+  if (currentTeamTasks && currentTeamTasks.length) {
+    task = currentTeamTasks.find(x => x.id === taskId);
+  }
+  if (!task && currentTeamProject && currentTeamProject.id === projectId) {
+    task = (currentTeamProject.tasks || []).find(x => x.id === taskId);
+  }
+  if (!task) {
+    const tasks = await fetchTeamTasks(teamId);
+    task = tasks.find(x => x.id === taskId);
+  }
+  if (!task) return;
+
+  const team = currentTeam && currentTeam.id === teamId ? currentTeam : await fetchTeam(teamId);
+  const members = team ? (team.members || []) : [];
+
+  openModal({
+    title: '✏️ Modifier la tâche d’équipe',
+    body: `
+      <form data-form="edit-team-task-direct" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}" data-taskid="${esc(taskId)}" class="stack">
+        <div class="field">
+          <label style="font-weight:700">Nom de la tâche *</label>
+          <input class="input" name="name" value="${esc(task.name)}" required autocomplete="off">
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Catégorie</label>
+            <select class="input" name="cat">${catOptions(task.cat)}</select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Durée estimée *</label>
+            <input class="input" name="est" value="${fmtMin(task.est || 0)}" required autocomplete="off">
+          </div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Confiance</label>
+            <select class="input" name="conf">
+              ${[5, 4, 3, 2, 1].map(lvl => `<option value="${lvl}" ${task.conf === lvl ? 'selected' : ''}>${lvl} · ${CONF[lvl].label}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à</label>
+            <select class="input" name="assigneeId">
+              <option value="">— Non assignée —</option>
+              ${members.map(m => `<option value="${esc(m.artistId)}" ${task.assigneeId === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+}
+
 /* ================== CLICS ================== */
 document.addEventListener('click', async e => {
   const el = e.target.closest('[data-act]');
@@ -3718,6 +4493,117 @@ document.addEventListener('click', async e => {
       render();
       break;
     }
+    case 'set-team-tab': {
+      teamDetailTab = el.dataset.tab || 'kanban';
+      render();
+      break;
+    }
+    case 'set-team-proj-tab': {
+      teamProjectTab = el.dataset.tab || 'kanban';
+      render();
+      break;
+    }
+    case 'open-create-team-task': {
+      openCreateTeamTaskModal(el.dataset.tid, el.dataset.pid);
+      break;
+    }
+    case 'open-solo-to-team': {
+      openSoloToTeamModal();
+      break;
+    }
+    case 'open-push-to-team': {
+      openPushToTeamModal(el.dataset.tid);
+      break;
+    }
+    case 'open-edit-team-task': {
+      openEditTeamTaskModal(el.dataset.teamid, el.dataset.pid, el.dataset.tid);
+      break;
+    }
+    case 'kanban-reset-filters': {
+      kanbanFilterSearch = '';
+      kanbanFilterProject = 'all';
+      kanbanFilterMember = 'all';
+      kanbanFilterCat = 'all';
+      render();
+      break;
+    }
+    case 'kanban-set-status': {
+      const teamId = el.dataset.teamid;
+      const pid = el.dataset.pid;
+      const tid = el.dataset.tid;
+      const newStatus = el.dataset.status;
+      if (teamId && pid && tid && newStatus) {
+        await handleKanbanStatusChange(teamId, pid, tid, newStatus);
+      }
+      break;
+    }
+    case 'toggle-team-timer-direct': {
+      const teamId = el.dataset.teamid;
+      const pid = el.dataset.pid;
+      const tid = el.dataset.tid;
+      if (state.timer && state.timer.tid === tid) {
+        stopTimer();
+      } else {
+        stopTimer();
+        let name = 'Tâche d’équipe';
+        let spent = 0;
+        if (currentTeamTasks && currentTeamTasks.length) {
+          const found = currentTeamTasks.find(x => x.id === tid);
+          if (found) { name = found.name; spent = found.spent || 0; }
+        } else if (currentTeamProject) {
+          const found = (currentTeamProject.tasks || []).find(x => x.id === tid);
+          if (found) { name = found.name; spent = found.spent || 0; }
+        }
+        state.timer = { pid, tid, since: now(), teamId, name, spent };
+      }
+      render();
+      break;
+    }
+    case 'adj-team-task-direct': {
+      const teamId = el.dataset.teamid;
+      const pid = el.dataset.pid;
+      const tid = el.dataset.tid;
+      const v = Number(el.dataset.v) || 15;
+      let targetTask = null;
+      if (currentTeamTasks && currentTeamTasks.length) targetTask = currentTeamTasks.find(x => x.id === tid);
+      if (!targetTask && currentTeamProject && currentTeamProject.id === pid) targetTask = (currentTeamProject.tasks || []).find(x => x.id === tid);
+      if (targetTask) {
+        if (isRunning(targetTask)) {
+          targetTask.spent = (targetTask.spent || 0) + (now() - state.timer.since);
+          state.timer.since = now();
+        }
+        const newSpent = Math.max(0, (targetTask.spent || 0) + v * 60000);
+        await apiUpdateTeamTaskDirect(teamId, pid, tid, { spent: newSpent });
+        render();
+      }
+      break;
+    }
+    case 'del-team-task-direct': {
+      const teamId = el.dataset.teamid;
+      const pid = el.dataset.pid;
+      const tid = el.dataset.tid;
+      confirmBox('Supprimer cette tâche d’équipe ?', 'Cette tâche sera définitivement retirée du projet collectif.', 'Supprimer', async () => {
+        closeModal();
+        if (state.timer && state.timer.tid === tid) stopTimer();
+        if (currentTeamTasks) {
+          currentTeamTasks = currentTeamTasks.filter(x => x.id !== tid);
+        }
+        if (currentTeamProject && currentTeamProject.id === pid) {
+          currentTeamProject.tasks = (currentTeamProject.tasks || []).filter(x => x.id !== tid);
+          await apiSaveTeamProject(teamId, currentTeamProject);
+        } else {
+          const p = await fetchTeamProject(teamId, pid);
+          if (p) {
+            p.tasks = (p.tasks || []).filter(x => x.id !== tid);
+            await apiSaveTeamProject(teamId, p);
+          }
+        }
+        await fetchTeamTasks(teamId, true);
+        render();
+        toast('Tâche d’équipe supprimée.');
+      }, true);
+      break;
+    }
 
     /* --- projet --- */
     case 'delete-project':
@@ -3981,12 +4867,135 @@ document.addEventListener('submit', async e => {
     await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
     render();
     toast('Tâche ajoutée au projet d’équipe.');
+  } else if (kind === 'create-team-task-direct') {
+    const tid = form.dataset.tid;
+    const pid = form.elements.projectId.value;
+    const name = form.elements.name.value.trim();
+    if (!name || !tid || !pid) return;
+    const cat = form.elements.cat.value;
+    const est = parseDur(form.elements.est.value) || 60;
+    const conf = Number(form.elements.conf.value) || 3;
+    const assigneeId = form.elements.assigneeId.value || null;
+    let assigneeName = null;
+    if (assigneeId && currentTeam && currentTeam.members) {
+      const m = currentTeam.members.find(x => x.artistId === assigneeId);
+      if (m) assigneeName = m.artistName;
+    }
+    try {
+      await apiAddTeamTaskDirect(tid, pid, { name, cat, est, conf, assigneeId, assigneeName });
+      closeModal();
+      render();
+      toast('Tâche d’équipe créée avec succès !');
+    } catch (err) {
+      toast(err.message || 'Erreur lors de l’ajout de la tâche');
+    }
+  } else if (kind === 'solo-to-team') {
+    const teamId = form.elements.teamId.value;
+    const projectId = form.elements.projectId.value;
+    const name = form.elements.name.value.trim();
+    if (!name || !teamId || !projectId) {
+      toast('Veuillez renseigner un nom, une équipe et un projet.');
+      return;
+    }
+    const cat = form.elements.cat.value;
+    const est = parseDur(form.elements.est.value) || 60;
+    const conf = Number(form.elements.conf.value) || 3;
+    const assigneeId = form.elements.assigneeId.value || null;
+    let assigneeName = null;
+    const targetTeam = (teamsCache || []).find(x => x.id === teamId) || currentTeam;
+    if (assigneeId && targetTeam && targetTeam.members) {
+      const m = targetTeam.members.find(x => x.artistId === assigneeId);
+      if (m) assigneeName = m.artistName;
+    }
+    const keepSoloCopy = form.elements.keepSoloCopy ? form.elements.keepSoloCopy.checked : false;
+
+    try {
+      await apiAddTeamTaskDirect(teamId, projectId, { name, cat, est, conf, assigneeId, assigneeName });
+      if (keepSoloCopy && p) {
+        p.tasks.push(newTask({ name, cat, est, conf, planned: p.status === 'plan' }));
+        commit();
+      }
+      closeModal();
+      toast('Tâche d’équipe créée avec succès !');
+    } catch (err) {
+      toast(err.message || 'Erreur lors de l’envoi à l’équipe');
+    }
+  } else if (kind === 'push-to-team') {
+    const origTid = form.dataset.tid;
+    const teamId = form.elements.teamId.value;
+    const projectId = form.elements.projectId.value;
+    if (!teamId || !projectId) {
+      toast('Sélectionnez une équipe et un projet collectif.');
+      return;
+    }
+    const targetTask = p ? p.tasks.find(x => x.id === origTid) : null;
+    if (!targetTask) return;
+    const assigneeId = form.elements.assigneeId.value || null;
+    let assigneeName = null;
+    const targetTeam = (teamsCache || []).find(x => x.id === teamId) || currentTeam;
+    if (assigneeId && targetTeam && targetTeam.members) {
+      const m = targetTeam.members.find(x => x.artistId === assigneeId);
+      if (m) assigneeName = m.artistName;
+    }
+    const transferMode = form.elements.transferMode.value;
+
+    try {
+      await apiAddTeamTaskDirect(teamId, projectId, {
+        name: targetTask.name,
+        cat: targetTask.cat,
+        est: targetTask.est,
+        conf: targetTask.conf,
+        spent: targetTask.spent,
+        status: targetTask.status,
+        assigneeId,
+        assigneeName
+      });
+      if (transferMode === 'move') {
+        if (isRunning(targetTask)) stopTimer();
+        p.tasks = p.tasks.filter(x => x.id !== origTid);
+        commit();
+      }
+      closeModal();
+      toast(transferMode === 'move' ? 'Tâche déplacée vers l’équipe avec succès !' : 'Tâche dupliquée vers l’équipe avec succès !');
+    } catch (err) {
+      toast(err.message || 'Erreur lors du transfert.');
+    }
+  } else if (kind === 'edit-team-task-direct') {
+    const teamId = form.dataset.tid;
+    const projectId = form.dataset.pid;
+    const taskId = form.dataset.taskid;
+    const name = form.elements.name.value.trim();
+    if (!name || !teamId || !projectId || !taskId) return;
+    const cat = form.elements.cat.value;
+    const est = parseDur(form.elements.est.value) || 60;
+    const conf = Number(form.elements.conf.value) || 3;
+    const assigneeId = form.elements.assigneeId.value || null;
+    let assigneeName = null;
+    const targetTeam = currentTeam && currentTeam.id === teamId ? currentTeam : (teamsCache || []).find(x => x.id === teamId);
+    if (assigneeId && targetTeam && targetTeam.members) {
+      const m = targetTeam.members.find(x => x.artistId === assigneeId);
+      if (m) assigneeName = m.artistName;
+    }
+    try {
+      await apiUpdateTeamTaskDirect(teamId, projectId, taskId, { name, cat, est, conf, assigneeId, assigneeName });
+      closeModal();
+      render();
+      toast('Tâche d’équipe mise à jour.');
+    } catch (err) {
+      toast(err.message || 'Erreur');
+    }
   }
 });
 
 /* ================== SAISIE ================== */
 document.addEventListener('input', e => {
-  const el = e.target; const f = el.dataset && el.dataset.field; if (!f) return;
+  const el = e.target;
+  if (el.dataset && el.dataset.act === 'kanban-search-input') {
+    kanbanFilterSearch = el.value;
+    renderSoon();
+    return;
+  }
+  const f = el.dataset && el.dataset.field; if (!f) return;
   const p = currentProject();
   const t = p && el.dataset.tid ? p.tasks.find(x => x.id === el.dataset.tid) : null;
   switch (f) {
@@ -4043,6 +5052,34 @@ document.addEventListener('change', e => {
     teamFilterCat = el.value;
     render();
     return;
+  } else if (act === 'kanban-filter-project') {
+    kanbanFilterProject = el.value;
+    render();
+    return;
+  } else if (act === 'kanban-filter-member') {
+    kanbanFilterMember = el.value;
+    render();
+    return;
+  } else if (act === 'kanban-filter-cat') {
+    kanbanFilterCat = el.value;
+    render();
+    return;
+  } else if (act === 'solo-team-select-change' || act === 'push-team-select-change') {
+    const chosenTeamId = el.value;
+    fetchTeam(chosenTeamId).then(team => {
+      if (!team) return;
+      const projSelect = act === 'solo-team-select-change' ? $('#soloTeamProjSelect') : $('#pushTeamProjSelect');
+      const memSelect = act === 'solo-team-select-change' ? $('#soloTeamMemberSelect') : $('#pushTeamMemberSelect');
+      if (projSelect) {
+        projSelect.innerHTML = (team.projects || []).length
+          ? (team.projects || []).map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('')
+          : '<option value="">(Aucun projet collectif créé)</option>';
+      }
+      if (memSelect) {
+        memSelect.innerHTML = '<option value="">— Non assignée —</option>' + (team.members || []).map(m => `<option value="${esc(m.artistId)}">${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('');
+      }
+    });
+    return;
   }
 
   const f = el.dataset && el.dataset.field;
@@ -4070,6 +5107,73 @@ document.addEventListener('keydown', e => {
   }
   else if (f === 'p.name') { e.preventDefault(); el.blur(); }
 });
+
+/* ================== DRAG & DROP KANBAN ================== */
+let draggedTaskId = null;
+let draggedProjectId = null;
+let draggedTeamId = null;
+
+document.addEventListener('dragstart', e => {
+  const card = e.target.closest('.kanban-card');
+  if (!card) return;
+  draggedTaskId = card.dataset.tid;
+  draggedProjectId = card.dataset.pid;
+  draggedTeamId = card.dataset.teamid;
+  card.classList.add('is-dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', card.dataset.tid);
+});
+
+document.addEventListener('dragend', e => {
+  const card = e.target.closest('.kanban-card');
+  if (card) card.classList.remove('is-dragging');
+  document.querySelectorAll('.kanban-col.drag-over').forEach(el => el.classList.remove('drag-over'));
+  draggedTaskId = null;
+  draggedProjectId = null;
+  draggedTeamId = null;
+});
+
+document.addEventListener('dragover', e => {
+  const col = e.target.closest('.kanban-col');
+  if (!col) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  col.classList.add('drag-over');
+});
+
+document.addEventListener('dragleave', e => {
+  const col = e.target.closest('.kanban-col');
+  if (!col) return;
+  if (!col.contains(e.relatedTarget)) {
+    col.classList.remove('drag-over');
+  }
+});
+
+document.addEventListener('drop', async e => {
+  const col = e.target.closest('.kanban-col');
+  if (!col) return;
+  e.preventDefault();
+  col.classList.remove('drag-over');
+  const newStatus = col.dataset.col;
+  const tid = draggedTaskId || e.dataTransfer.getData('text/plain');
+  const pid = draggedProjectId;
+  const teamId = draggedTeamId || col.dataset.teamid;
+  if (!tid || !newStatus || !pid || !teamId) return;
+  await handleKanbanStatusChange(teamId, pid, tid, newStatus);
+});
+
+async function handleKanbanStatusChange(teamId, projectId, taskId, newStatus) {
+  try {
+    if (state.timer && state.timer.tid === taskId && newStatus !== 'wip') {
+      stopTimer();
+    }
+    await apiUpdateTeamTaskDirect(teamId, projectId, taskId, { status: newStatus });
+    render();
+    toast(newStatus === 'done' ? 'Tâche marquée comme terminée !' : newStatus === 'wip' ? 'Tâche passée en cours !' : 'Tâche remise à faire.');
+  } catch (err) {
+    toast(err.message || 'Erreur lors du déplacement');
+  }
+}
 
 
 /* ================== PROJETS D'EXEMPLE ================== */

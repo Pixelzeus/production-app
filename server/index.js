@@ -390,6 +390,50 @@ app.delete('/api/teams/:id/projects/:pid', (req, res) => {
   }
 });
 
+// Récupération de toutes les tâches d'une équipe (pour tableau Kanban global)
+app.get('/api/teams/:id/tasks', (req, res) => {
+  try {
+    if (!isValidId(req.params.id)) {
+      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+    }
+    const tasks = dbOps.getTeamTasks(req.params.id);
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des tâches de l’équipe.' });
+  }
+});
+
+// Ajout direct d'une tâche à un projet d'équipe (utilisé en vue solo ou équipe)
+app.post('/api/teams/:id/projects/:pid/tasks', (req, res) => {
+  try {
+    if (!isValidId(req.params.id) || !isValidId(req.params.pid)) {
+      return res.status(400).json({ error: 'Identifiants non valides.' });
+    }
+    const taskObj = req.body;
+    if (!taskObj || !taskObj.name) {
+      return res.status(400).json({ error: 'Le nom de la tâche est obligatoire.' });
+    }
+    const result = dbOps.addTeamTask(req.params.id, req.params.pid, taskObj);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Erreur lors de l’ajout de la tâche d’équipe.' });
+  }
+});
+
+// Mise à jour rapide d'une tâche d'équipe (changement de statut, Kanban drag & drop, réassignation)
+app.patch('/api/teams/:id/projects/:pid/tasks/:tid', (req, res) => {
+  try {
+    if (!isValidId(req.params.id) || !isValidId(req.params.pid) || !isValidId(req.params.tid)) {
+      return res.status(400).json({ error: 'Identifiants non valides.' });
+    }
+    const updates = req.body || {};
+    const result = dbOps.updateTeamTask(req.params.id, req.params.pid, req.params.tid, updates);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour de la tâche.' });
+  }
+});
+
 // Vue globale & Analytics d'une équipe ou d'un projet d'équipe
 app.get('/api/teams/:id/overview', (req, res) => {
   try {
