@@ -425,7 +425,36 @@ const dbOps = {
     return { success: true };
   },
 
+  getAllGroupTasks() {
+    const teams = db.prepare('SELECT id, name FROM teams').all();
+    const allTasks = [];
+    for (const team of teams) {
+      const projects = db.prepare('SELECT id, name, data FROM team_projects WHERE team_id = ?').all(team.id);
+      for (const p of projects) {
+        let data = {};
+        try { data = JSON.parse(p.data); } catch (_) {}
+        const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+        for (const t of tasks) {
+          allTasks.push({
+            ...t,
+            teamId: team.id,
+            teamName: team.name,
+            groupId: team.id,
+            groupName: team.name,
+            projectId: p.id,
+            projectName: p.name,
+            sprint: t.sprint || 'Sprint Beta',
+            story: t.story || 'HUD'
+          });
+        }
+      }
+    }
+    return allTasks;
+  },
+
   getTeamTasks(teamId) {
+    const team = db.prepare('SELECT id, name FROM teams WHERE id = ?').get(teamId);
+    const teamName = team ? team.name : 'Groupe';
     const projects = db.prepare('SELECT id, name, data FROM team_projects WHERE team_id = ?').all(teamId);
     const allTasks = [];
     for (const p of projects) {
@@ -436,8 +465,13 @@ const dbOps = {
         allTasks.push({
           ...t,
           teamId,
+          teamName,
+          groupId: teamId,
+          groupName: teamName,
           projectId: p.id,
-          projectName: p.name
+          projectName: p.name,
+          sprint: t.sprint || 'Sprint Beta',
+          story: t.story || 'HUD'
         });
       }
     }
@@ -446,10 +480,12 @@ const dbOps = {
 
   addTeamTask(teamId, projectId, taskObj) {
     const p = this.getTeamProject(teamId, projectId);
-    if (!p) throw new Error('Projet d’équipe introuvable.');
+    if (!p) throw new Error('Projet de groupe introuvable.');
     const newTask = {
       id: taskObj.id || `t-${uid()}`,
       name: String(taskObj.name || 'Tâche sans titre').trim(),
+      sprint: String(taskObj.sprint || 'Sprint Beta').trim(),
+      story: String(taskObj.story || 'HUD').trim(),
       cat: taskObj.cat || 'autre',
       est: Number(taskObj.est) || 60,
       conf: Number(taskObj.conf) || 3,
@@ -457,6 +493,7 @@ const dbOps = {
       status: taskObj.status || 'todo',
       assigneeId: taskObj.assigneeId || null,
       assigneeName: taskObj.assigneeName || null,
+      assignees: Array.isArray(taskObj.assignees) ? taskObj.assignees : (taskObj.assigneeId ? [{ artistId: taskObj.assigneeId, artistName: taskObj.assigneeName }] : []),
       planned: taskObj.planned !== undefined ? !!taskObj.planned : (p.status === 'plan'),
       reasons: Array.isArray(taskObj.reasons) ? taskObj.reasons : [],
       doneAt: taskObj.status === 'done' ? (taskObj.doneAt || Date.now()) : null,
@@ -470,11 +507,13 @@ const dbOps = {
 
   updateTeamTask(teamId, projectId, taskId, updates) {
     const p = this.getTeamProject(teamId, projectId);
-    if (!p) throw new Error('Projet d’équipe introuvable.');
+    if (!p) throw new Error('Projet de groupe introuvable.');
     p.tasks = Array.isArray(p.tasks) ? p.tasks : [];
     const t = p.tasks.find(x => x.id === taskId);
     if (!t) throw new Error('Tâche introuvable.');
     if (updates.name !== undefined) t.name = String(updates.name).trim();
+    if (updates.sprint !== undefined) t.sprint = String(updates.sprint).trim();
+    if (updates.story !== undefined) t.story = String(updates.story).trim();
     if (updates.cat !== undefined) t.cat = updates.cat;
     if (updates.est !== undefined) t.est = Number(updates.est);
     if (updates.conf !== undefined) t.conf = Number(updates.conf);
@@ -490,6 +529,13 @@ const dbOps = {
         t.assigneeName = updates.assigneeName;
       } else if (!t.assigneeId) {
         t.assigneeName = null;
+      }
+    }
+    if (updates.assignees !== undefined) {
+      t.assignees = Array.isArray(updates.assignees) ? updates.assignees : [];
+      if (t.assignees.length > 0 && !updates.assigneeId) {
+        t.assigneeId = t.assignees[0].artistId;
+        t.assigneeName = t.assignees[0].artistName;
       }
     }
     if (updates.reasons !== undefined) t.reasons = updates.reasons;

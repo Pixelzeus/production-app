@@ -291,6 +291,37 @@ async function runTests() {
     const teamTasks = await teamTasksRes.json();
     assert(Array.isArray(teamTasks) && teamTasks.length === 3, 'Récupération de toutes les tâches d’équipe (Kanban global) réussie (3 tâches)');
 
+    // Test de l'alias /api/groups
+    const groupsRes = await fetch(`${BASE_URL}/api/groups`);
+    assert(groupsRes.status === 200, 'Endpoint /api/groups répond HTTP 200');
+    const groupsData = await groupsRes.json();
+    assert(Array.isArray(groupsData) && groupsData.some(g => g.id === teamId), 'Le groupe créé est accessible via /api/groups');
+
+    // Test de l'endpoint central /api/tasks (Kanban Home principal)
+    const allTasksRes = await fetch(`${BASE_URL}/api/tasks`);
+    assert(allTasksRes.status === 200, 'Endpoint global /api/tasks répond HTTP 200');
+    const allTasksData = await allTasksRes.json();
+    assert(Array.isArray(allTasksData) && allTasksData.length >= 3, 'Récupération de toutes les tâches de tous les groupes via /api/tasks');
+
+    // Ajout direct d'une tâche avec hiérarchie complète : Sprint -> Story -> Task
+    const addHierarchicalTaskRes = await fetch(`${BASE_URL}/api/groups/${teamId}/projects/${teamProj.id}/tasks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sprint: 'Sprint Beta',
+        story: 'HUD',
+        name: 'Level selection',
+        cat: 'ui',
+        est: 75,
+        conf: 4,
+        assigneeId: 'camille-3d',
+        assigneeName: 'Camille 3D'
+      })
+    });
+    assert(addHierarchicalTaskRes.status === 200, 'Ajout d’une tâche avec hiérarchie (Sprint Beta › HUD › Level selection) réussi');
+    const hierTaskData = await addHierarchicalTaskRes.json();
+    assert(hierTaskData.task.sprint === 'Sprint Beta' && hierTaskData.task.story === 'HUD' && hierTaskData.task.name === 'Level selection', 'Hiérarchie Sprint/Story/Task persistée correctement');
+
     // Ajout direct d'une tâche d'équipe (depuis la vue solo ou la vue équipe)
     const addTaskDirectRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}/tasks`, {
       method: 'POST',
@@ -334,6 +365,10 @@ async function runTests() {
     assert(htmlText.includes('data-act="open-push-to-team"'), 'UI: Bouton transfert tâche solo vers équipe présent');
     assert(htmlText.includes('data-act="set-team-tab"'), 'UI: Onglets de navigation d’équipe présents');
     assert(htmlText.includes('data-act="open-create-team-task"'), 'UI: Bouton nouvelle tâche d’équipe présent');
+    assert(htmlText.includes('data-act="open-create-kanban-task"'), 'UI: Bouton nouvelle tâche Kanban présent');
+    assert(htmlText.includes('kanban-hierarchy-badge'), 'UI: Badges de hiérarchie Sprint/Story présents');
+    assert(htmlText.includes('sprint-pill'), 'UI: Sélecteurs de Sprints présents');
+    assert(htmlText.includes('data-act="kanban-filter-story"'), 'UI: Filtre de Stories présent');
 
     // Suppression d'un projet d'équipe
     const deleteProjRes = await fetch(`${BASE_URL}/api/teams/${teamId}/projects/${teamProj.id}`, {

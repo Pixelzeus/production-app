@@ -213,80 +213,90 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
   }
 });
 
-/* ================== ROUTES ÉQUIPES & PROJETS PARTAGÉS ================== */
+/* ================== ROUTES ÉQUIPES / GROUPES & PROJETS PARTAGÉS ================== */
 
-// Liste de toutes les équipes
-app.get('/api/teams', (req, res) => {
+// Liste globale de toutes les tâches (pour le Kanban d'accueil principal)
+app.get('/api/tasks', (req, res) => {
+  try {
+    const tasks = dbOps.getAllGroupTasks();
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des tâches globales.' });
+  }
+});
+
+// Liste de tous les groupes / équipes
+app.get(['/api/teams', '/api/groups'], (req, res) => {
   try {
     const teams = dbOps.listTeams();
     res.json(teams);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la récupération des équipes.' });
+    res.status(500).json({ error: 'Erreur lors de la récupération des groupes.' });
   }
 });
 
-// Création d'une équipe
-app.post('/api/teams', requireAdmin, (req, res) => {
+// Création d'un groupe / équipe
+app.post(['/api/teams', '/api/groups'], requireAdmin, (req, res) => {
   try {
     const name = sanitizeName(req.body && req.body.name, 80);
     if (!name) {
-      return res.status(400).json({ error: 'Le nom de l’équipe doit contenir entre 1 et 80 caractères.' });
+      return res.status(400).json({ error: 'Le nom du groupe doit contenir entre 1 et 80 caractères.' });
     }
     const description = typeof req.body.description === 'string' ? req.body.description.slice(0, 500) : '';
     const team = dbOps.createTeam(name, description);
     res.json(team);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Impossible de créer l’équipe.' });
+    res.status(500).json({ error: err.message || 'Impossible de créer le groupe.' });
   }
 });
 
-// Détails d'une équipe (membres + projets)
-app.get('/api/teams/:id', (req, res) => {
+// Détails d'un groupe / équipe (membres + projets)
+app.get(['/api/teams/:id', '/api/groups/:id'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const team = dbOps.getTeam(req.params.id);
     if (!team) {
-      return res.status(404).json({ error: 'Équipe introuvable.' });
+      return res.status(404).json({ error: 'Groupe introuvable.' });
     }
     res.json(team);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la lecture de l’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la lecture du groupe.' });
   }
 });
 
-// Mise à jour d'une équipe
-app.put('/api/teams/:id', requireAdmin, (req, res) => {
+// Mise à jour d'un groupe / équipe
+app.put(['/api/teams/:id', '/api/groups/:id'], requireAdmin, (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const result = dbOps.updateTeam(req.params.id, req.body || {});
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour de l’équipe.' });
+    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour du groupe.' });
   }
 });
 
-// Suppression d'une équipe
-app.delete('/api/teams/:id', requireAdmin, (req, res) => {
+// Suppression d'un groupe / équipe
+app.delete(['/api/teams/:id', '/api/groups/:id'], requireAdmin, (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     dbOps.deleteTeam(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la suppression de l’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la suppression du groupe.' });
   }
 });
 
-// Ajout / Mise à jour d'un membre dans l'équipe
-app.post('/api/teams/:id/members', (req, res) => {
+// Ajout / Mise à jour d'un membre dans le groupe
+app.post(['/api/teams/:id/members', '/api/groups/:id/members'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const artistId = req.body && req.body.artistId;
     if (!isValidId(artistId)) {
@@ -296,12 +306,12 @@ app.post('/api/teams/:id/members', (req, res) => {
     const member = dbOps.addTeamMember(req.params.id, artistId, role);
     res.json(member);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Impossible d’ajouter le membre à l’équipe.' });
+    res.status(500).json({ error: err.message || 'Impossible d’ajouter le membre au groupe.' });
   }
 });
 
-// Retrait d'un membre de l'équipe
-app.delete('/api/teams/:id/members/:artistId', (req, res) => {
+// Retrait d'un membre du groupe
+app.delete(['/api/teams/:id/members/:artistId', '/api/groups/:id/members/:artistId'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.artistId)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
@@ -313,24 +323,24 @@ app.delete('/api/teams/:id/members/:artistId', (req, res) => {
   }
 });
 
-// Liste des projets d'une équipe
-app.get('/api/teams/:id/projects', (req, res) => {
+// Liste des projets d'un groupe
+app.get(['/api/teams/:id/projects', '/api/groups/:id/projects'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const projects = dbOps.listTeamProjects(req.params.id);
     res.json(projects);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la récupération des projets d’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la récupération des projets du groupe.' });
   }
 });
 
-// Création / Enregistrement d'un projet d'équipe
-app.post('/api/teams/:id/projects', (req, res) => {
+// Création / Enregistrement d'un projet de groupe
+app.post(['/api/teams/:id/projects', '/api/groups/:id/projects'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const project = req.body;
     if (!project || typeof project !== 'object') {
@@ -339,28 +349,28 @@ app.post('/api/teams/:id/projects', (req, res) => {
     const saved = dbOps.saveTeamProject(req.params.id, project);
     res.json(saved);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Erreur lors de l’enregistrement du projet d’équipe.' });
+    res.status(500).json({ error: err.message || 'Erreur lors de l’enregistrement du projet de groupe.' });
   }
 });
 
-// Récupération d'un projet d'équipe
-app.get('/api/teams/:id/projects/:pid', (req, res) => {
+// Récupération d'un projet de groupe
+app.get(['/api/teams/:id/projects/:pid', '/api/groups/:id/projects/:pid'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.pid)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
     }
     const project = dbOps.getTeamProject(req.params.id, req.params.pid);
     if (!project) {
-      return res.status(404).json({ error: 'Projet d’équipe introuvable.' });
+      return res.status(404).json({ error: 'Projet de groupe introuvable.' });
     }
     res.json(project);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la lecture du projet d’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la lecture du projet de groupe.' });
   }
 });
 
-// Mise à jour d'un projet d'équipe
-app.put('/api/teams/:id/projects/:pid', (req, res) => {
+// Mise à jour d'un projet de groupe
+app.put(['/api/teams/:id/projects/:pid', '/api/groups/:id/projects/:pid'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.pid)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
@@ -373,12 +383,12 @@ app.put('/api/teams/:id/projects/:pid', (req, res) => {
     const saved = dbOps.saveTeamProject(req.params.id, project);
     res.json(saved);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour du projet d’équipe.' });
+    res.status(500).json({ error: err.message || 'Erreur lors de la mise à jour du projet de groupe.' });
   }
 });
 
-// Suppression d'un projet d'équipe
-app.delete('/api/teams/:id/projects/:pid', (req, res) => {
+// Suppression d'un projet de groupe
+app.delete(['/api/teams/:id/projects/:pid', '/api/groups/:id/projects/:pid'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.pid)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
@@ -386,25 +396,25 @@ app.delete('/api/teams/:id/projects/:pid', (req, res) => {
     dbOps.deleteTeamProject(req.params.id, req.params.pid);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la suppression du projet d’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la suppression du projet de groupe.' });
   }
 });
 
-// Récupération de toutes les tâches d'une équipe (pour tableau Kanban global)
-app.get('/api/teams/:id/tasks', (req, res) => {
+// Récupération de toutes les tâches d'un groupe (pour tableau Kanban)
+app.get(['/api/teams/:id/tasks', '/api/groups/:id/tasks'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const tasks = dbOps.getTeamTasks(req.params.id);
     res.json(tasks);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la récupération des tâches de l’équipe.' });
+    res.status(500).json({ error: 'Erreur lors de la récupération des tâches du groupe.' });
   }
 });
 
-// Ajout direct d'une tâche à un projet d'équipe (utilisé en vue solo ou équipe)
-app.post('/api/teams/:id/projects/:pid/tasks', (req, res) => {
+// Ajout direct d'une tâche à un projet de groupe (utilisé en vue solo, groupe ou Kanban)
+app.post(['/api/teams/:id/projects/:pid/tasks', '/api/groups/:id/projects/:pid/tasks'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.pid)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
@@ -416,12 +426,12 @@ app.post('/api/teams/:id/projects/:pid/tasks', (req, res) => {
     const result = dbOps.addTeamTask(req.params.id, req.params.pid, taskObj);
     res.json(result);
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Erreur lors de l’ajout de la tâche d’équipe.' });
+    res.status(500).json({ error: err.message || 'Erreur lors de l’ajout de la tâche de groupe.' });
   }
 });
 
-// Mise à jour rapide d'une tâche d'équipe (changement de statut, Kanban drag & drop, réassignation)
-app.patch('/api/teams/:id/projects/:pid/tasks/:tid', (req, res) => {
+// Mise à jour rapide d'une tâche de groupe (changement de statut, Kanban drag & drop, réassignation, sprint, story)
+app.patch(['/api/teams/:id/projects/:pid/tasks/:tid', '/api/groups/:id/projects/:pid/tasks/:tid'], (req, res) => {
   try {
     if (!isValidId(req.params.id) || !isValidId(req.params.pid) || !isValidId(req.params.tid)) {
       return res.status(400).json({ error: 'Identifiants non valides.' });
@@ -434,20 +444,20 @@ app.patch('/api/teams/:id/projects/:pid/tasks/:tid', (req, res) => {
   }
 });
 
-// Vue globale & Analytics d'une équipe ou d'un projet d'équipe
-app.get('/api/teams/:id/overview', (req, res) => {
+// Vue globale & Analytics d'un groupe ou d'un projet de groupe
+app.get(['/api/teams/:id/overview', '/api/groups/:id/overview'], (req, res) => {
   try {
     if (!isValidId(req.params.id)) {
-      return res.status(400).json({ error: 'Identifiant d’équipe non valide.' });
+      return res.status(400).json({ error: 'Identifiant de groupe non valide.' });
     }
     const projectId = req.query.projectId ? String(req.query.projectId) : null;
     const overview = dbOps.getTeamOverview(req.params.id, projectId);
     if (!overview) {
-      return res.status(404).json({ error: 'Équipe introuvable.' });
+      return res.status(404).json({ error: 'Groupe introuvable.' });
     }
     res.json(overview);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors du calcul de la vue globale de l’équipe.' });
+    res.status(500).json({ error: 'Erreur lors du calcul de la vue globale du groupe.' });
   }
 });
 

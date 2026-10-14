@@ -890,6 +890,98 @@ table.dt td.r, table.dt th.r { text-align: right; }
   padding-top: 4px;
 }
 
+/* ============ Hiérarchie des tâches (Sprint › Story › Task) ============ */
+.kanban-hierarchy-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
+}
+.kanban-hierarchy-badge .sprint-tag {
+  background: var(--hl-soft);
+  color: var(--ink);
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--hl);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.kanban-hierarchy-badge .sep {
+  color: var(--ink-3);
+  font-weight: 800;
+  font-size: .8rem;
+}
+.kanban-hierarchy-badge .story-tag {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--ok);
+  padding: 1px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.kanban-add-col-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px dashed var(--line-soft);
+  background: transparent;
+  color: var(--ink-2);
+  font-weight: 700;
+  font-size: .84rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all .15s ease;
+}
+.kanban-add-col-btn:hover {
+  background: var(--card);
+  border-color: var(--line);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.sprint-pills-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 2px 0 8px;
+}
+.sprint-pill {
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line-soft);
+  background: var(--card);
+  font-size: .82rem;
+  font-weight: 750;
+  color: var(--ink-2);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .12s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.sprint-pill:hover {
+  border-color: var(--line);
+  color: var(--ink);
+  background: var(--card-2);
+}
+.sprint-pill.is-active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
 /* ============ Mobile ============ */
 @media (max-width: 640px) {
   .topbar-in { gap: 8px 10px; padding: 8px 14px; }
@@ -1032,7 +1124,7 @@ table.dt td.r, table.dt th.r { text-align: right; }
 <body>
 <header class="topbar">
   <div class="topbar-in">
-    <a class="brand" href="#/projets" aria-label="Carnet de Prod, accueil">
+    <a class="brand" href="#/kanban" aria-label="Carnet de Prod, accueil">
       <svg class="doodle" viewBox="0 0 40 40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
         <path d="M16 5h8M20 5v4"/>
         <circle cx="20" cy="23" r="13" class="fillhl"/>
@@ -1042,9 +1134,10 @@ table.dt td.r, table.dt th.r { text-align: right; }
       <span>Carnet de Prod</span>
     </a>
     <nav class="nav" aria-label="Navigation principale">
-      <a href="#/projets" data-page="projects">Projets</a>
+      <a href="#/kanban" data-page="kanban">Tableau Kanban</a>
+      <a href="#/projets" data-page="projects">Projets Solo</a>
       <a href="#/tableau" data-page="dashboard">Tableau de bord</a>
-      <a href="#/equipes" data-page="teams">Équipes & Admin</a>
+      <a href="#/groupes" data-page="teams">Groupes & Admin</a>
     </nav>
     <div class="top-spacer"></div>
     <div class="timer-pill" id="timerPill" aria-live="off">
@@ -1440,13 +1533,17 @@ async function apiRemoveTeamMember(teamId, artistId) {
   return true;
 }
 
-/* ================== PROJETS D'ÉQUIPE & VUE GLOBALE (API) ================== */
+/* ================== PROJETS DE GROUPE & VUE GLOBALE (API) ================== */
+let allTasksCache = null;
 let currentTeamProject = null;
 let currentTeamOverview = null;
 let currentTeamTasks = [];
 let currentTeamTasksTeamId = null;
 let teamDetailTab = 'kanban';
 let teamProjectTab = 'kanban';
+let kanbanFilterSprint = 'all';
+let kanbanFilterStory = 'all';
+let kanbanFilterGroup = 'all';
 let kanbanFilterProject = 'all';
 let kanbanFilterMember = 'all';
 let kanbanFilterCat = 'all';
@@ -1454,6 +1551,18 @@ let kanbanFilterSearch = '';
 let teamFilterArtist = 'all';
 let teamFilterStatus = 'all';
 let teamFilterCat = 'all';
+
+async function fetchAllTasks(force = false) {
+  if (!force && allTasksCache && allTasksCache.length) {
+    return allTasksCache;
+  }
+  try {
+    const res = await fetch('/api/tasks', { headers: adminHeaders() });
+    if (!res.ok) throw new Error();
+    allTasksCache = await res.json();
+    return allTasksCache;
+  } catch (_) { return []; }
+}
 
 async function fetchTeamTasks(teamId, force = false) {
   if (!force && currentTeamTasksTeamId === teamId && currentTeamTasks && currentTeamTasks.length) {
@@ -1480,9 +1589,10 @@ async function apiAddTeamTaskDirect(teamId, projectId, taskData) {
   }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || 'Erreur lors de l’ajout de la tâche d’équipe');
+    throw new Error(err.error || 'Erreur lors de l’ajout de la tâche');
   }
   const result = await res.json();
+  allTasksCache = null;
   await fetchTeamTasks(teamId, true);
   if (currentTeamProject && currentTeamProject.id === projectId) {
     currentTeamProject.tasks = result.project.tasks;
@@ -1508,6 +1618,10 @@ async function apiUpdateTeamTaskDirect(teamId, projectId, taskId, updates) {
     throw new Error(err.error || 'Erreur lors de la mise à jour de la tâche');
   }
   const result = await res.json();
+  if (allTasksCache) {
+    const at = allTasksCache.find(x => x.id === taskId);
+    if (at) Object.assign(at, result.task);
+  }
   if (currentTeamTasks && currentTeamTasks.length) {
     const t = currentTeamTasks.find(x => x.id === taskId);
     if (t) Object.assign(t, result.task);
@@ -2664,14 +2778,104 @@ function viewTeamsIndex() {
   return head + statsBox + teamsHtml + adminSec;
 }
 
-/* ============ TABLEAU KANBAN DE L’ÉQUIPE ============ */
-function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject = false) {
+/* ============ TABLEAU KANBAN GLOBAL (PAGE D'ACCUEIL) ============ */
+function viewKanbanHome() {
+  if (allTasksCache === null) {
+    Promise.all([fetchAllTasks(), fetchTeams()]).then(() => renderSoon());
+    return `<div class="card empty" style="padding:48px 24px;text-align:center"><div class="sync-dot saving" style="width:12px;height:12px"></div> <p class="muted" style="margin-top:12px">Chargement du Tableau Kanban de production...</p></div>`;
+  }
+
+  const allTasks = allTasksCache || [];
+  const allGroups = teamsCache || [];
+
+  // En-tête de bienvenue Kanban
+  const head = `
+    <div class="page-head" style="align-items:flex-start;margin-bottom:14px">
+      <div>
+        <div class="row" style="gap:10px;align-items:center">
+          <h1><span class="mark">Tableau Kanban</span></h1>
+          <span class="badge badge-ok" style="font-size:.78rem">Accueil Principal</span>
+        </div>
+        <p class="muted" style="margin:6px 0 0">
+          Supervision de production en 3 niveaux : <b>Sprint</b> › <b>Stories</b> (éléments à produire) › <b>Tâches</b>
+        </p>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" data-act="open-create-kanban-task" data-status="todo">
+          ${ic('plus')} Nouvelle tâche
+        </button>
+        <a class="btn btn-soft" href="#/groupes">
+          👥 Gérer les groupes (${allGroups.length})
+        </a>
+      </div>
+    </div>
+  `;
+
+  // Collecter les projets et membres de tous les groupes
+  const allMembers = [];
+  const allProjects = [];
+  const memberSeen = new Set();
+  const projSeen = new Set();
+  allGroups.forEach(g => {
+    (g.members || []).forEach(m => {
+      if (!memberSeen.has(m.artistId)) {
+        memberSeen.add(m.artistId);
+        allMembers.push({ artistId: m.artistId, artistName: m.artistName, role: m.role, groupName: g.name });
+      }
+    });
+    (g.projects || []).forEach(p => {
+      if (!projSeen.has(p.id)) {
+        projSeen.add(p.id);
+        allProjects.push({ ...p, groupId: g.id, groupName: g.name });
+      }
+    });
+  });
+
+  return head + renderKanbanBoard('all', allTasks, allMembers, allProjects, false, true);
+}
+
+/* ============ TABLEAU KANBAN HIÉRARCHIQUE (Sprint › Story › Task) ============ */
+function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject = false, isGlobalHome = false) {
   const taskList = Array.isArray(allTasks) ? allTasks : [];
   const teamMembers = Array.isArray(members) ? members : [];
   const teamProjects = Array.isArray(projects) ? projects : [];
 
+  // 1. Recueillir la liste des Sprints disponibles
+  const sprints = [];
+  const seenSprints = new Set();
+  taskList.forEach(t => {
+    const s = (t.sprint && t.sprint.trim()) || 'Sprint Beta';
+    if (!seenSprints.has(s)) {
+      seenSprints.add(s);
+      sprints.push(s);
+    }
+  });
+  if (!sprints.length) sprints.push('Sprint Beta');
+
+  // 2. Recueillir la liste des Stories disponibles (selon le sprint sélectionné)
+  const stories = [];
+  const seenStories = new Set();
+  taskList.forEach(t => {
+    if (kanbanFilterSprint === 'all' || (t.sprint || 'Sprint Beta') === kanbanFilterSprint) {
+      const st = (t.story && t.story.trim()) || 'HUD';
+      if (!seenStories.has(st)) {
+        seenStories.add(st);
+        stories.push(st);
+      }
+    }
+  });
+
   // Filtrage interactif
   let filtered = taskList;
+  if (kanbanFilterSprint !== 'all') {
+    filtered = filtered.filter(t => (t.sprint || 'Sprint Beta') === kanbanFilterSprint);
+  }
+  if (kanbanFilterStory !== 'all') {
+    filtered = filtered.filter(t => (t.story || 'HUD') === kanbanFilterStory);
+  }
+  if (isGlobalHome && kanbanFilterGroup !== 'all') {
+    filtered = filtered.filter(t => (t.teamId === kanbanFilterGroup || t.groupId === kanbanFilterGroup));
+  }
   if (!isSingleProject && kanbanFilterProject !== 'all') {
     filtered = filtered.filter(t => t.projectId === kanbanFilterProject);
   }
@@ -2687,39 +2891,81 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
   }
   if (kanbanFilterSearch && kanbanFilterSearch.trim()) {
     const q = kanbanFilterSearch.trim().toLowerCase();
-    filtered = filtered.filter(t => (t.name && t.name.toLowerCase().includes(q)) || (t.assigneeName && t.assigneeName.toLowerCase().includes(q)));
+    filtered = filtered.filter(t =>
+      (t.name && t.name.toLowerCase().includes(q)) ||
+      (t.story && t.story.toLowerCase().includes(q)) ||
+      (t.sprint && t.sprint.toLowerCase().includes(q)) ||
+      (t.assigneeName && t.assigneeName.toLowerCase().includes(q)) ||
+      (t.groupName && t.groupName.toLowerCase().includes(q))
+    );
   }
 
   const todoTasks = filtered.filter(t => t.status === 'todo' || !t.status);
   const wipTasks = filtered.filter(t => t.status === 'wip');
   const doneTasks = filtered.filter(t => t.status === 'done');
 
+  // Barre des onglets de Sprints
+  const sprintPillsBar = `
+    <div class="sprint-pills-bar" style="margin-bottom:12px">
+      <span class="small faint" style="font-weight:750">🏃 Sprints :</span>
+      <button class="sprint-pill ${kanbanFilterSprint === 'all' ? 'is-active' : ''}" data-act="kanban-set-sprint" data-sprint="all">
+        Tous les Sprints (${taskList.length})
+      </button>
+      ${sprints.map(s => {
+        const count = taskList.filter(x => (x.sprint || 'Sprint Beta') === s).length;
+        return `
+          <button class="sprint-pill ${kanbanFilterSprint === s ? 'is-active' : ''}" data-act="kanban-set-sprint" data-sprint="${esc(s)}">
+            🏃 ${esc(s)} <span style="opacity:.7;font-size:.74rem">(${count})</span>
+          </button>
+        `;
+      }).join('')}
+    </div>
+  `;
+
+  // Barre de filtres
   const filterBar = `
     <div class="row" style="gap:10px;margin-bottom:18px;flex-wrap:wrap;align-items:center;justify-content:space-between">
       <div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">
         <input class="input input-sm" style="width:200px" data-act="kanban-search-input" value="${esc(kanbanFilterSearch)}" placeholder="🔍 Filtrer les tâches..." autocomplete="off">
+        
+        <select class="input input-sm" data-act="kanban-filter-story" style="font-size:.84rem" title="Filtrer par Story">
+          <option value="all" ${kanbanFilterStory === 'all' ? 'selected' : ''}>📦 Toutes les stories (${stories.length})</option>
+          ${stories.map(st => `<option value="${esc(st)}" ${kanbanFilterStory === st ? 'selected' : ''}>📦 ${esc(st)}</option>`).join('')}
+        </select>
+
+        ${isGlobalHome && teamsCache && teamsCache.length > 1 ? `
+          <select class="input input-sm" data-act="kanban-filter-group" style="font-size:.84rem" title="Filtrer par groupe">
+            <option value="all" ${kanbanFilterGroup === 'all' ? 'selected' : ''}>👥 Tous les groupes (${teamsCache.length})</option>
+            ${teamsCache.map(g => `<option value="${esc(g.id)}" ${kanbanFilterGroup === g.id ? 'selected' : ''}>👥 ${esc(g.name)}</option>`).join('')}
+          </select>
+        ` : ''}
+
         ${!isSingleProject && teamProjects.length > 1 ? `
-          <select class="input input-sm" data-act="kanban-filter-project" style="font-size:.84rem">
-            <option value="all" ${kanbanFilterProject === 'all' ? 'selected' : ''}>Tous les projets (${teamProjects.length})</option>
+          <select class="input input-sm" data-act="kanban-filter-project" style="font-size:.84rem" title="Filtrer par projet">
+            <option value="all" ${kanbanFilterProject === 'all' ? 'selected' : ''}>📁 Tous les projets (${teamProjects.length})</option>
             ${teamProjects.map(p => `<option value="${esc(p.id)}" ${kanbanFilterProject === p.id ? 'selected' : ''}>📁 ${esc(p.name)}</option>`).join('')}
           </select>
         ` : ''}
-        <select class="input input-sm" data-act="kanban-filter-member" style="font-size:.84rem">
-          <option value="all" ${kanbanFilterMember === 'all' ? 'selected' : ''}>Tous les artistes (${teamMembers.length})</option>
+
+        <select class="input input-sm" data-act="kanban-filter-member" style="font-size:.84rem" title="Filtrer par personne assignée">
+          <option value="all" ${kanbanFilterMember === 'all' ? 'selected' : ''}>Tous les membres (${teamMembers.length})</option>
           <option value="unassigned" ${kanbanFilterMember === 'unassigned' ? 'selected' : ''}>👤 Non assignée(s)</option>
-          ${teamMembers.map(m => `<option value="${esc(m.artistId)}" ${kanbanFilterMember === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+          ${teamMembers.map(m => `<option value="${esc(m.artistId)}" ${kanbanFilterMember === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
         </select>
-        <select class="input input-sm" data-act="kanban-filter-cat" style="font-size:.84rem">
+
+        <select class="input input-sm" data-act="kanban-filter-cat" style="font-size:.84rem" title="Filtrer par catégorie">
           <option value="all" ${kanbanFilterCat === 'all' ? 'selected' : ''}>Toutes catégories</option>
           ${state.categories.map(c => `<option value="${esc(c.id)}" ${kanbanFilterCat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
         </select>
-        ${(kanbanFilterSearch || (!isSingleProject && kanbanFilterProject !== 'all') || kanbanFilterMember !== 'all' || kanbanFilterCat !== 'all') ? `
+
+        ${(kanbanFilterSprint !== 'all' || kanbanFilterStory !== 'all' || kanbanFilterGroup !== 'all' || kanbanFilterSearch || (!isSingleProject && kanbanFilterProject !== 'all') || kanbanFilterMember !== 'all' || kanbanFilterCat !== 'all') ? `
           <button class="btn btn-sm btn-ghost" data-act="kanban-reset-filters">Réinitialiser filtres</button>
         ` : ''}
       </div>
+
       <div>
-        <button class="btn btn-sm btn-primary" data-act="open-create-team-task" data-tid="${esc(teamId)}" ${isSingleProject && teamProjects[0] ? `data-pid="${esc(teamProjects[0].id)}"` : ''}>
-          ${ic('plus')} Nouvelle tâche d’équipe
+        <button class="btn btn-sm btn-primary" data-act="open-create-team-task" ${teamId && teamId !== 'all' ? `data-tid="${esc(teamId)}"` : ''} ${isSingleProject && teamProjects[0] ? `data-pid="${esc(teamProjects[0].id)}"` : ''}>
+          ${ic('plus')} Nouvelle tâche
         </button>
       </div>
     </div>
@@ -2729,22 +2975,33 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
     const running = isRunning(t);
     const spentM = actualMin(t);
     const estM = t.est || 0;
+    const currentTeamId = t.teamId || t.groupId || teamId;
+    const groupName = t.groupName || t.teamName || 'Groupe';
     const projName = t.projectName || (teamProjects.find(p => p.id === t.projectId) || {}).name || '';
+    const sprintName = t.sprint || 'Sprint Beta';
+    const storyName = t.story || 'HUD';
 
     return `
-      <div class="kanban-card ${running ? 'is-running' : ''}" draggable="true" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(teamId)}" data-status="${esc(t.status || 'todo')}">
+      <div class="kanban-card ${running ? 'is-running' : ''}" draggable="true" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(currentTeamId)}" data-status="${esc(t.status || 'todo')}">
+        <div class="kanban-hierarchy-badge">
+          <span class="sprint-tag" title="Sprint">🏃 ${esc(sprintName)}</span>
+          <span class="sep">›</span>
+          <span class="story-tag" title="Story (Élément à produire)">📦 ${esc(storyName)}</span>
+        </div>
+
+        <div class="kanban-card-title">${esc(t.name)}</div>
+
         <div class="kanban-card-meta">
           <div class="row" style="gap:5px;flex-wrap:wrap">
-            ${!isSingleProject && projName ? `<span class="badge" style="font-size:.72rem;padding:1px 7px" title="Projet: ${esc(projName)}">📁 ${esc(projName)}</span>` : ''}
+            <span class="badge" style="font-size:.72rem;padding:1px 7px" title="Groupe: ${esc(groupName)}">👥 ${esc(groupName)}</span>
+            ${projName ? `<span class="badge" style="font-size:.72rem;padding:1px 7px" title="Projet: ${esc(projName)}">📁 ${esc(projName)}</span>` : ''}
             <span class="chip" style="font-size:.72rem;padding:1px 7px">${esc(catName(t.cat))}</span>
           </div>
           <span class="faint small" title="Niveau de confiance">${CONF[t.conf] ? CONF[t.conf].label : t.conf}</span>
         </div>
 
-        <div class="kanban-card-title">${esc(t.name)}</div>
-
         <div class="row" style="justify-content:space-between;align-items:center;gap:6px;font-size:.8rem">
-          <span class="member-chip mini ${t.assigneeId ? '' : 'faint'}" style="font-size:.75rem;padding:2px 7px;cursor:pointer" data-act="open-edit-team-task" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(teamId)}" title="Clique pour réassigner ou modifier">
+          <span class="member-chip mini ${t.assigneeId ? '' : 'faint'}" style="font-size:.75rem;padding:2px 7px;cursor:pointer" data-act="open-edit-team-task" data-tid="${esc(t.id)}" data-pid="${esc(t.projectId)}" data-teamid="${esc(currentTeamId)}" title="Clique pour réassigner ou modifier">
             <span class="avatar mini">${t.assigneeName ? esc(t.assigneeName.slice(0, 1).toUpperCase()) : '?'}</span>
             <span>${esc(t.assigneeName || 'Non assignée')}</span>
           </span>
@@ -2757,25 +3014,25 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
         <div class="kanban-card-actions">
           <div class="row" style="gap:4px">
             ${t.status === 'todo' || !t.status ? `
-              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip">
+              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip">
                 ▶ Commencer
               </button>
             ` : t.status === 'wip' ? `
-              <button class="btn btn-sm ${running ? 'btn-primary' : 'btn-soft'} icon-btn" data-act="toggle-team-timer-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="${running ? 'Pause' : 'Lancer le chrono'}">
+              <button class="btn btn-sm ${running ? 'btn-primary' : 'btn-soft'} icon-btn" data-act="toggle-team-timer-direct" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="${running ? 'Pause' : 'Lancer le chrono'}">
                 ${running ? ic('pause') : ic('play')}
               </button>
-              <button class="btn btn-sm btn-ghost" data-act="adj-team-task-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-v="15" title="+15 min">+15m</button>
-              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="done">
+              <button class="btn btn-sm btn-ghost" data-act="adj-team-task-direct" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-v="15" title="+15 min">+15m</button>
+              <button class="btn btn-sm btn-primary" data-act="kanban-set-status" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="done">
                 ✓ Finir
               </button>
             ` : `
-              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip" title="Remettre en cours">↩ En cours</button>
-              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="todo" title="Remettre à faire">↩ À faire</button>
+              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="wip" title="Remettre en cours">↩ En cours</button>
+              <button class="btn btn-sm btn-ghost" data-act="kanban-set-status" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" data-status="todo" title="Remettre à faire">↩ À faire</button>
             `}
           </div>
           <div class="row" style="gap:2px">
-            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-edit-team-task" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Modifier la tâche">${ic('pencil')}</button>
-            <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="del-team-task-direct" data-teamid="${esc(teamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Supprimer la tâche">${ic('trash')}</button>
+            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-edit-team-task" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Modifier la tâche">${ic('pencil')}</button>
+            <button class="btn btn-sm btn-ghost btn-danger icon-btn" data-act="del-team-task-direct" data-teamid="${esc(currentTeamId)}" data-pid="${esc(t.projectId)}" data-tid="${esc(t.id)}" title="Supprimer la tâche">${ic('trash')}</button>
           </div>
         </div>
       </div>
@@ -2791,11 +3048,15 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
             <span>⏳</span>
             <span>À faire</span>
           </div>
-          <span class="kanban-col-badge">${todoTasks.length}</span>
+          <div class="row" style="gap:6px">
+            <span class="kanban-col-badge">${todoTasks.length}</span>
+            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-create-kanban-task" data-status="todo" title="Ajouter une tâche à faire">${ic('plus')}</button>
+          </div>
         </div>
         <div class="kanban-cards">
           ${todoTasks.length ? todoTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche à faire.<br><span style="font-size:.78rem">Glisse une tâche ici pour la planifier</span></p>'}
         </div>
+        <button class="kanban-add-col-btn" data-act="open-create-kanban-task" data-status="todo">${ic('plus')} Ajouter une tâche</button>
       </div>
 
       <!-- Colonne 2 : En cours -->
@@ -2805,11 +3066,15 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
             <span>⚡</span>
             <span>En cours</span>
           </div>
-          <span class="kanban-col-badge" style="background:var(--hl-soft);border-color:var(--hl);color:var(--ink)">${wipTasks.length}</span>
+          <div class="row" style="gap:6px">
+            <span class="kanban-col-badge" style="background:var(--hl-soft);border-color:var(--hl);color:var(--ink)">${wipTasks.length}</span>
+            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-create-kanban-task" data-status="wip" title="Ajouter une tâche en cours">${ic('plus')}</button>
+          </div>
         </div>
         <div class="kanban-cards">
           ${wipTasks.length ? wipTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche en cours.<br><span style="font-size:.78rem">Glisse une tâche ici pour démarrer</span></p>'}
         </div>
+        <button class="kanban-add-col-btn" data-act="open-create-kanban-task" data-status="wip">${ic('plus')} Ajouter une tâche</button>
       </div>
 
       <!-- Colonne 3 : Terminé -->
@@ -2819,16 +3084,20 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
             <span>✅</span>
             <span>Terminé</span>
           </div>
-          <span class="kanban-col-badge" style="background:rgba(37,99,235,0.12);border-color:var(--ok);color:var(--ok)">${doneTasks.length}</span>
+          <div class="row" style="gap:6px">
+            <span class="kanban-col-badge" style="background:rgba(37,99,235,0.12);border-color:var(--ok);color:var(--ok)">${doneTasks.length}</span>
+            <button class="btn btn-sm btn-ghost icon-btn" data-act="open-create-kanban-task" data-status="done" title="Ajouter une tâche terminée">${ic('plus')}</button>
+          </div>
         </div>
         <div class="kanban-cards">
           ${doneTasks.length ? doneTasks.map(renderCard).join('') : '<p class="faint small" style="text-align:center;padding:24px 0">Aucune tâche terminée.<br><span style="font-size:.78rem">Glisse une tâche ici une fois achevée</span></p>'}
         </div>
+        <button class="kanban-add-col-btn" data-act="open-create-kanban-task" data-status="done">${ic('plus')} Ajouter une tâche</button>
       </div>
     </div>
   `;
 
-  return filterBar + boardHtml;
+  return sprintPillsBar + filterBar + boardHtml;
 }
 
 function viewTeamDetail(teamId) {
@@ -3516,13 +3785,15 @@ const ui = { adding: false, editTime: null, draft: null, focusKey: null, selectA
 function route() {
   const h = location.hash.replace(/^#\/?/, '');
   const [page, id, sub, subId] = h.split('/');
+  if (!page || page === 'kanban') return { page: 'kanban' };
+  if (page === 'projets' || page === 'projets-solo') return { page: 'projects' };
   if (page === 'projet' && getProject(id)) return { page: 'project', id };
   if (page === 'tableau') return { page: 'dashboard' };
-  if ((page === 'equipe' || page === 'equipes') && sub === 'projet' && subId) {
+  if ((page === 'equipe' || page === 'equipes' || page === 'groupe' || page === 'groupes') && sub === 'projet' && subId) {
     return { page: 'team-project', teamId: id, projectId: subId };
   }
-  if (page === 'equipes' || page === 'equipe') return { page: 'teams', id, sub, subId };
-  return { page: 'projects' };
+  if (page === 'equipes' || page === 'equipe' || page === 'groupes' || page === 'groupe') return { page: 'teams', id, sub, subId };
+  return { page: 'kanban' };
 }
 function currentProject() { const r = route(); return r.page === 'project' ? getProject(r.id) : null; }
 
@@ -3551,16 +3822,18 @@ function render() {
   const app = $('#app');
   if (r.page !== 'dashboard') chartCfgs = {};
   let html;
-  if (r.page === 'project') html = viewProject(getProject(r.id));
+  if (r.page === 'kanban') html = viewKanbanHome();
+  else if (r.page === 'project') html = viewProject(getProject(r.id));
   else if (r.page === 'dashboard') html = viewDashboard();
   else if (r.page === 'team-project') html = viewTeamProject(r.teamId, r.projectId);
   else if (r.page === 'teams') html = viewTeams(r.id, r.sub, r.subId);
-  else html = viewProjects();
+  else if (r.page === 'projects') html = viewProjects();
+  else html = viewKanbanHome();
   app.innerHTML = banners() + html;
-  const navKey = r.page === 'project' ? 'projects' : (r.page === 'team-project' || r.page === 'teams') ? 'teams' : r.page;
+  const navKey = r.page === 'kanban' ? 'kanban' : (r.page === 'project' || r.page === 'projects') ? 'projects' : (r.page === 'team-project' || r.page === 'teams') ? 'teams' : r.page;
   $$('.nav a').forEach(a => a.dataset.page === navKey ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   const p = currentProject();
-  document.title = (p ? (p.name || 'Projet') + ' — ' : r.page === 'dashboard' ? 'Tableau de bord — ' : (r.page === 'teams' || r.page === 'team-project') ? 'Équipes & Admin — ' : '') + 'Carnet de Prod';
+  document.title = (r.page === 'kanban' ? 'Tableau Kanban — ' : p ? (p.name || 'Projet') + ' — ' : r.page === 'dashboard' ? 'Tableau de bord — ' : (r.page === 'teams' || r.page === 'team-project') ? 'Groupes & Admin — ' : '') + 'Carnet de Prod';
   drawCharts();
   updateTimerPill();
   $$('.title-input').forEach(autoGrow);
@@ -3807,36 +4080,115 @@ function newTask(fields) {
   return Object.assign({ id: uid(), name: '', cat: 'autre', est: null, conf: 3, spent: 0, status: 'todo', planned: true, reasons: [], doneAt: null }, fields);
 }
 
-/* ================== MODALES D’ÉQUIPE & KANBAN ================== */
-async function openCreateTeamTaskModal(teamId, defaultProjectId = null) {
-  let team = currentTeam && currentTeam.id === teamId ? currentTeam : await fetchTeam(teamId);
-  if (!team) return;
-  const projects = team.projects || [];
-  if (!projects.length) {
-    confirmBox('Aucun projet collectif', 'Pour ajouter des tâches, crée d’abord un projet collectif dans cette équipe.', 'Nouveau projet partagé', () => {
-      closeModal();
-      document.querySelector('[data-act="open-create-team-project"]')?.click();
-    });
-    return;
+/* ================== MODALES DE GROUPE, HIÉRARCHIE & KANBAN ================== */
+async function openCreateKanbanTaskModal(defaultStatus = 'todo', defaultSprint = null, defaultStory = null) {
+  let teams = await fetchTeams(true);
+  if (!teams || !teams.length) {
+    try {
+      await apiCreateTeam('Groupe Principal', 'Groupe de production par défaut');
+      teams = await fetchTeams(true);
+    } catch (_) {
+      confirmBox('Aucun groupe créé', 'Pour organiser vos tâches en Sprints et Stories, créez d’abord un premier groupe.', 'Créer un groupe', () => {
+        closeModal();
+        location.hash = '#/groupes';
+      });
+      return;
+    }
   }
-  const members = team.members || [];
-  const selectedPid = defaultProjectId || (projects[0] ? projects[0].id : '');
+
+  let selectedTeam = (kanbanFilterGroup !== 'all' && teams.find(t => t.id === kanbanFilterGroup)) || teams[0];
+  let fullTeam = await fetchTeam(selectedTeam.id);
+  if (!fullTeam) fullTeam = selectedTeam;
+  let projects = fullTeam.projects || [];
+  if (!projects.length) {
+    try {
+      const defaultProj = await apiSaveTeamProject(selectedTeam.id, {
+        name: 'Production Principale',
+        brief: 'Projet collaboratif du groupe',
+        status: 'wip',
+        tasks: []
+      });
+      fullTeam = await fetchTeam(selectedTeam.id);
+      projects = fullTeam.projects || [defaultProj];
+    } catch (_) {}
+  }
+
+  const members = fullTeam.members || [];
+  const activeSprint = defaultSprint || (kanbanFilterSprint !== 'all' ? kanbanFilterSprint : 'Sprint Beta');
+  const activeStory = defaultStory || (kanbanFilterStory !== 'all' ? kanbanFilterStory : 'HUD');
 
   openModal({
-    title: '➕ Nouvelle tâche pour l’équipe',
+    title: '➕ Nouvelle tâche de production',
+    wide: true,
     body: `
-      <form data-form="create-team-task-direct" data-tid="${esc(teamId)}" class="stack">
-        <div class="field">
-          <label style="font-weight:700">Projet collectif *</label>
-          <select class="input" name="projectId" required ${defaultProjectId ? 'disabled' : ''}>
-            ${projects.map(p => `<option value="${esc(p.id)}" ${p.id === selectedPid ? 'selected' : ''}>📁 ${esc(p.name)}</option>`).join('')}
-          </select>
-          ${defaultProjectId ? `<input type="hidden" name="projectId" value="${esc(defaultProjectId)}">` : ''}
+      <form data-form="create-kanban-task-direct" class="stack">
+        <p class="small muted" style="margin:0 0 10px">Structure hiérarchique : <b>Sprint</b> › <b>Story</b> (élément à produire) › <b>Tâche</b></p>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Groupe *</label>
+            <select class="input" name="teamId" data-act="kanban-create-group-change" required>
+              ${teams.map(t => `<option value="${esc(t.id)}" ${t.id === selectedTeam.id ? 'selected' : ''}>👥 ${esc(t.name)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Projet du groupe *</label>
+            <select class="input" name="projectId" id="kanbanCreateProjSelect" required>
+              ${projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('')}
+            </select>
+          </div>
         </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">🏃 Sprint *</label>
+            <input class="input" name="sprint" list="sprintDatalist" value="${esc(activeSprint)}" placeholder="Ex: Sprint Beta, Sprint Alpha..." required autocomplete="off">
+            <datalist id="sprintDatalist">
+              <option value="Sprint Beta">
+              <option value="Sprint Alpha">
+              <option value="Sprint 1">
+              <option value="Sprint 2">
+              <option value="Sprint Final / Polish">
+            </datalist>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">📦 Story (Élément à produire) *</label>
+            <input class="input" name="story" list="storyDatalist" value="${esc(activeStory)}" placeholder="Ex: HUD, Gameplay, Level Design..." required autocomplete="off">
+            <datalist id="storyDatalist">
+              <option value="HUD">
+              <option value="Menu Principal">
+              <option value="Gameplay & Contrôles">
+              <option value="Level Design">
+              <option value="Système de Combat">
+              <option value="Effets VFX & Shaders">
+              <option value="Animations Joueur">
+            </datalist>
+          </div>
+        </div>
+
         <div class="field">
           <label style="font-weight:700">Nom de la tâche *</label>
-          <input class="input" name="name" placeholder="Ex: Sculpt armure, Texturing Substance..." required autocomplete="off">
+          <input class="input" name="name" placeholder="Ex: Level selection, Health bar, Minimap..." required autocomplete="off">
         </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à (membre du groupe)</label>
+            <select class="input" name="assigneeId" id="kanbanCreateMemberSelect">
+              <option value="">— Non assignée —</option>
+              ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑 (Lead)' : ''}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Statut initial</label>
+            <select class="input" name="status">
+              <option value="todo" ${defaultStatus === 'todo' ? 'selected' : ''}>⏳ À faire</option>
+              <option value="wip" ${defaultStatus === 'wip' ? 'selected' : ''}>⚡ En cours</option>
+              <option value="done" ${defaultStatus === 'done' ? 'selected' : ''}>✅ Terminé</option>
+            </select>
+          </div>
+        </div>
+
         <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
             <label style="font-weight:700">Catégorie</label>
@@ -3844,10 +4196,8 @@ async function openCreateTeamTaskModal(teamId, defaultProjectId = null) {
           </div>
           <div class="field" style="flex:1">
             <label style="font-weight:700">Durée estimée *</label>
-            <input class="input" name="est" placeholder="Ex: 2h, 45min" required autocomplete="off">
+            <input class="input" name="est" placeholder="Ex: 2h, 45min" value="1h30" required autocomplete="off">
           </div>
-        </div>
-        <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
             <label style="font-weight:700">Confiance</label>
             <select class="input" name="conf">
@@ -3858,17 +4208,121 @@ async function openCreateTeamTaskModal(teamId, defaultProjectId = null) {
               <option value="1">1 · Jamais fait</option>
             </select>
           </div>
+        </div>
+
+        <div class="modal-actions" style="margin-top:14px">
+          <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Ajouter la tâche</button>
+        </div>
+      </form>
+    `,
+    cancelLabel: null,
+    okLabel: null
+  });
+}
+
+async function openCreateTeamTaskModal(teamId = null, defaultProjectId = null, defaultStatus = 'todo') {
+  if (!teamId || teamId === 'all') {
+    return openCreateKanbanTaskModal(defaultStatus);
+  }
+  let team = currentTeam && currentTeam.id === teamId ? currentTeam : await fetchTeam(teamId);
+  if (!team) return openCreateKanbanTaskModal(defaultStatus);
+  const projects = team.projects || [];
+  if (!projects.length) {
+    confirmBox('Aucun projet collectif', 'Pour ajouter des tâches, crée d’abord un projet collectif dans ce groupe.', 'Nouveau projet partagé', () => {
+      closeModal();
+      document.querySelector('[data-act="open-create-team-project"]')?.click();
+    });
+    return;
+  }
+  const members = team.members || [];
+  const selectedPid = defaultProjectId || (projects[0] ? projects[0].id : '');
+  const activeSprint = kanbanFilterSprint !== 'all' ? kanbanFilterSprint : 'Sprint Beta';
+  const activeStory = kanbanFilterStory !== 'all' ? kanbanFilterStory : 'HUD';
+
+  openModal({
+    title: '➕ Nouvelle tâche pour le groupe',
+    wide: true,
+    body: `
+      <form data-form="create-team-task-direct" data-tid="${esc(teamId)}" class="stack">
+        <div class="field">
+          <label style="font-weight:700">Projet collectif *</label>
+          <select class="input" name="projectId" required ${defaultProjectId ? 'disabled' : ''}>
+            ${projects.map(p => `<option value="${esc(p.id)}" ${p.id === selectedPid ? 'selected' : ''}>📁 ${esc(p.name)}</option>`).join('')}
+          </select>
+          ${defaultProjectId ? `<input type="hidden" name="projectId" value="${esc(defaultProjectId)}">` : ''}
+        </div>
+
+        <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
-            <label style="font-weight:700">Assigner à</label>
+            <label style="font-weight:700">🏃 Sprint *</label>
+            <input class="input" name="sprint" list="teamSprintDatalist" value="${esc(activeSprint)}" required autocomplete="off">
+            <datalist id="teamSprintDatalist">
+              <option value="Sprint Beta">
+              <option value="Sprint Alpha">
+              <option value="Sprint 1">
+              <option value="Sprint 2">
+            </datalist>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">📦 Story (Élément à produire) *</label>
+            <input class="input" name="story" list="teamStoryDatalist" value="${esc(activeStory)}" required autocomplete="off">
+            <datalist id="teamStoryDatalist">
+              <option value="HUD">
+              <option value="Gameplay">
+              <option value="Level Design">
+              <option value="Combats">
+            </datalist>
+          </div>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Nom de la tâche *</label>
+          <input class="input" name="name" placeholder="Ex: Level selection, Sculpt armure..." required autocomplete="off">
+        </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à (membre du groupe)</label>
             <select class="input" name="assigneeId">
               <option value="">— Non assignée —</option>
               ${members.map(m => `<option value="${esc(m.artistId)}">${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
             </select>
           </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Statut initial</label>
+            <select class="input" name="status">
+              <option value="todo" ${defaultStatus === 'todo' ? 'selected' : ''}>⏳ À faire</option>
+              <option value="wip" ${defaultStatus === 'wip' ? 'selected' : ''}>⚡ En cours</option>
+              <option value="done" ${defaultStatus === 'done' ? 'selected' : ''}>✅ Terminé</option>
+            </select>
+          </div>
         </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Catégorie</label>
+            <select class="input" name="cat">${catOptions('model')}</select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Durée estimée *</label>
+            <input class="input" name="est" placeholder="Ex: 2h, 45min" required autocomplete="off">
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Confiance</label>
+            <select class="input" name="conf">
+              <option value="4">4 · À l'aise</option>
+              <option value="5">5 · Je maîtrise</option>
+              <option value="3" selected>3 · Déjà fait</option>
+              <option value="2">2 · Pas sûr(e)</option>
+              <option value="1">1 · Jamais fait</option>
+            </select>
+          </div>
+        </div>
+
         <div class="modal-actions" style="margin-top:14px">
           <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
-          <button type="submit" class="btn btn-primary">${ic('plus')} Ajouter la tâche d’équipe</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Ajouter la tâche</button>
         </div>
       </form>
     `,
@@ -3880,9 +4334,9 @@ async function openCreateTeamTaskModal(teamId, defaultProjectId = null) {
 async function openSoloToTeamModal() {
   const teams = await fetchTeams(true);
   if (!teams || !teams.length) {
-    confirmBox('Aucune équipe disponible', 'Pour créer une tâche d’équipe, crée d’abord une équipe dans l’espace Équipes.', 'Créer une équipe', () => {
+    confirmBox('Aucun groupe disponible', 'Pour créer une tâche de groupe, crée d’abord un groupe dans l’espace Groupes.', 'Créer un groupe', () => {
       closeModal();
-      location.hash = '#/equipes';
+      location.hash = '#/groupes';
     });
     return;
   }
@@ -3895,14 +4349,14 @@ async function openSoloToTeamModal() {
   const initialName = soloAddNameInp && soloAddNameInp.value ? soloAddNameInp.value.trim() : '';
 
   openModal({
-    title: '👥 Créer une tâche pour l’équipe',
+    title: '👥 Créer une tâche pour le groupe',
     wide: true,
     body: `
       <form data-form="solo-to-team" class="stack">
-        <p class="small muted" style="margin:0 0 10px">Crée une tâche directement dans un projet collectif d’équipe, avec possibilité de la garder aussi dans ton découpage solo.</p>
+        <p class="small muted" style="margin:0 0 10px">Crée une tâche directement dans un projet collectif de groupe, avec possibilité de la garder aussi dans ton découpage solo.</p>
         <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
-            <label style="font-weight:700">Équipe destinataire *</label>
+            <label style="font-weight:700">Groupe destinataire *</label>
             <select class="input" name="teamId" data-act="solo-team-select-change" required>
               ${teams.map(t => `<option value="${esc(t.id)}" ${t.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(t.name)}</option>`).join('')}
             </select>
@@ -3912,6 +4366,17 @@ async function openSoloToTeamModal() {
             <select class="input" name="projectId" id="soloTeamProjSelect" required>
               ${projects.length ? projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif créé)</option>'}
             </select>
+          </div>
+        </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">🏃 Sprint *</label>
+            <input class="input" name="sprint" value="Sprint Beta" required autocomplete="off">
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">📦 Story *</label>
+            <input class="input" name="story" value="HUD" required autocomplete="off">
           </div>
         </div>
 
@@ -3943,7 +4408,7 @@ async function openSoloToTeamModal() {
             </select>
           </div>
           <div class="field" style="flex:1">
-            <label style="font-weight:700">Assigner à</label>
+            <label style="font-weight:700">Assigner à (membre du groupe)</label>
             <select class="input" name="assigneeId" id="soloTeamMemberSelect">
               <option value="">— Non assignée —</option>
               ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
@@ -3960,7 +4425,7 @@ async function openSoloToTeamModal() {
 
         <div class="modal-actions" style="margin-top:14px">
           <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
-          <button type="submit" class="btn btn-primary">${ic('plus')} Créer la tâche d’équipe</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Créer la tâche de groupe</button>
         </div>
       </form>
     `,
@@ -3977,9 +4442,9 @@ async function openPushToTeamModal(taskId) {
 
   const teams = await fetchTeams(true);
   if (!teams || !teams.length) {
-    confirmBox('Aucune équipe disponible', 'Pour transférer cette tâche, crée d’abord une équipe.', 'Créer une équipe', () => {
+    confirmBox('Aucun groupe disponible', 'Pour transférer cette tâche, crée d’abord un groupe.', 'Créer un groupe', () => {
       closeModal();
-      location.hash = '#/equipes';
+      location.hash = '#/groupes';
     });
     return;
   }
@@ -3989,7 +4454,7 @@ async function openPushToTeamModal(taskId) {
   const members = (fullTeam && fullTeam.members) || [];
 
   openModal({
-    title: '👥 Transférer vers une équipe',
+    title: '👥 Transférer vers un groupe',
     wide: true,
     body: `
       <form data-form="push-to-team" data-tid="${esc(t.id)}" class="stack">
@@ -4002,7 +4467,7 @@ async function openPushToTeamModal(taskId) {
 
         <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
-            <label style="font-weight:700">Équipe destinataire *</label>
+            <label style="font-weight:700">Groupe destinataire *</label>
             <select class="input" name="teamId" data-act="push-team-select-change" required>
               ${teams.map(x => `<option value="${esc(x.id)}" ${x.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(x.name)}</option>`).join('')}
             </select>
@@ -4010,13 +4475,13 @@ async function openPushToTeamModal(taskId) {
           <div class="field" style="flex:1">
             <label style="font-weight:700">Projet collectif *</label>
             <select class="input" name="projectId" id="pushTeamProjSelect" required>
-              ${projects.length ? projects.map(x => `<option value="${esc(x.id)}">📁 ${esc(x.name)}</option>`).join('') : '<option value="">(Aucun projet collectif)</option>'}
+              ${projects.length ? projects.map(x => `<option value="${esc(x.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif)</option>'}
             </select>
           </div>
         </div>
 
         <div class="field">
-          <label style="font-weight:700">Assigner à un membre de l’équipe</label>
+          <label style="font-weight:700">Assigner à un membre du groupe</label>
           <select class="input" name="assigneeId" id="pushTeamMemberSelect">
             <option value="">— Non assignée —</option>
             ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
@@ -4037,7 +4502,7 @@ async function openPushToTeamModal(taskId) {
 
         <div class="modal-actions" style="margin-top:14px">
           <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
-          <button type="submit" class="btn btn-primary">${ic('plus')} Transférer à l’équipe</button>
+          <button type="submit" class="btn btn-primary">${ic('plus')} Transférer au groupe</button>
         </div>
       </form>
     `,
@@ -4048,7 +4513,10 @@ async function openPushToTeamModal(taskId) {
 
 async function openEditTeamTaskModal(teamId, projectId, taskId) {
   let task = null;
-  if (currentTeamTasks && currentTeamTasks.length) {
+  if (allTasksCache && allTasksCache.length) {
+    task = allTasksCache.find(x => x.id === taskId);
+  }
+  if (!task && currentTeamTasks && currentTeamTasks.length) {
     task = currentTeamTasks.find(x => x.id === taskId);
   }
   if (!task && currentTeamProject && currentTeamProject.id === projectId) {
@@ -4064,13 +4532,60 @@ async function openEditTeamTaskModal(teamId, projectId, taskId) {
   const members = team ? (team.members || []) : [];
 
   openModal({
-    title: '✏️ Modifier la tâche d’équipe',
+    title: '✏️ Modifier la tâche du groupe',
+    wide: true,
     body: `
       <form data-form="edit-team-task-direct" data-tid="${esc(teamId)}" data-pid="${esc(projectId)}" data-taskid="${esc(taskId)}" class="stack">
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">🏃 Sprint *</label>
+            <input class="input" name="sprint" list="editSprintDatalist" value="${esc(task.sprint || 'Sprint Beta')}" required autocomplete="off">
+            <datalist id="editSprintDatalist">
+              <option value="Sprint Beta">
+              <option value="Sprint Alpha">
+              <option value="Sprint 1">
+              <option value="Sprint 2">
+              <option value="Sprint Final / Polish">
+            </datalist>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">📦 Story (Élément à produire) *</label>
+            <input class="input" name="story" list="editStoryDatalist" value="${esc(task.story || 'HUD')}" required autocomplete="off">
+            <datalist id="editStoryDatalist">
+              <option value="HUD">
+              <option value="Menu Principal">
+              <option value="Gameplay & Contrôles">
+              <option value="Level Design">
+              <option value="Système de Combat">
+              <option value="Effets VFX & Shaders">
+              <option value="Animations Joueur">
+            </datalist>
+          </div>
+        </div>
+
         <div class="field">
           <label style="font-weight:700">Nom de la tâche *</label>
           <input class="input" name="name" value="${esc(task.name)}" required autocomplete="off">
         </div>
+
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Assigner à (membre du groupe)</label>
+            <select class="input" name="assigneeId">
+              <option value="">— Non assignée —</option>
+              ${members.map(m => `<option value="${esc(m.artistId)}" ${task.assigneeId === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
+            </select>
+          </div>
+          <div class="field" style="flex:1">
+            <label style="font-weight:700">Statut</label>
+            <select class="input" name="status">
+              <option value="todo" ${task.status === 'todo' ? 'selected' : ''}>⏳ À faire</option>
+              <option value="wip" ${task.status === 'wip' ? 'selected' : ''}>⚡ En cours</option>
+              <option value="done" ${task.status === 'done' ? 'selected' : ''}>✅ Terminé</option>
+            </select>
+          </div>
+        </div>
+
         <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
             <label style="font-weight:700">Catégorie</label>
@@ -4080,22 +4595,14 @@ async function openEditTeamTaskModal(teamId, projectId, taskId) {
             <label style="font-weight:700">Durée estimée *</label>
             <input class="input" name="est" value="${fmtMin(task.est || 0)}" required autocomplete="off">
           </div>
-        </div>
-        <div class="row" style="gap:10px">
           <div class="field" style="flex:1">
             <label style="font-weight:700">Confiance</label>
             <select class="input" name="conf">
               ${[5, 4, 3, 2, 1].map(lvl => `<option value="${lvl}" ${task.conf === lvl ? 'selected' : ''}>${lvl} · ${CONF[lvl].label}</option>`).join('')}
             </select>
           </div>
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Assigner à</label>
-            <select class="input" name="assigneeId">
-              <option value="">— Non assignée —</option>
-              ${members.map(m => `<option value="${esc(m.artistId)}" ${task.assigneeId === m.artistId ? 'selected' : ''}>${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('')}
-            </select>
-          </div>
         </div>
+
         <div class="modal-actions" style="margin-top:14px">
           <button type="button" class="btn btn-ghost" data-act="close-modal">Annuler</button>
           <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
@@ -4503,8 +5010,16 @@ document.addEventListener('click', async e => {
       render();
       break;
     }
+    case 'open-create-kanban-task': {
+      openCreateKanbanTaskModal(el.dataset.status || 'todo');
+      break;
+    }
     case 'open-create-team-task': {
-      openCreateTeamTaskModal(el.dataset.tid, el.dataset.pid);
+      if (!el.dataset.tid || el.dataset.tid === 'all') {
+        openCreateKanbanTaskModal('todo');
+      } else {
+        openCreateTeamTaskModal(el.dataset.tid, el.dataset.pid);
+      }
       break;
     }
     case 'open-solo-to-team': {
@@ -4519,8 +5034,16 @@ document.addEventListener('click', async e => {
       openEditTeamTaskModal(el.dataset.teamid, el.dataset.pid, el.dataset.tid);
       break;
     }
+    case 'kanban-set-sprint': {
+      kanbanFilterSprint = el.dataset.sprint || 'all';
+      render();
+      break;
+    }
     case 'kanban-reset-filters': {
       kanbanFilterSearch = '';
+      kanbanFilterSprint = 'all';
+      kanbanFilterStory = 'all';
+      kanbanFilterGroup = 'all';
       kanbanFilterProject = 'all';
       kanbanFilterMember = 'all';
       kanbanFilterCat = 'all';
@@ -4867,11 +5390,44 @@ document.addEventListener('submit', async e => {
     await apiSaveTeamProject(currentTeamProject.teamId, currentTeamProject);
     render();
     toast('Tâche ajoutée au projet d’équipe.');
+  } else if (kind === 'create-kanban-task-direct') {
+    const tid = form.elements.teamId.value;
+    const pid = form.elements.projectId.value;
+    const name = form.elements.name.value.trim();
+    const sprint = (form.elements.sprint ? form.elements.sprint.value.trim() : '') || 'Sprint Beta';
+    const story = (form.elements.story ? form.elements.story.value.trim() : '') || 'HUD';
+    if (!name || !tid || !pid) {
+      toast('Veuillez renseigner un groupe, un projet et un nom de tâche.');
+      return;
+    }
+    const cat = form.elements.cat.value;
+    const est = parseDur(form.elements.est.value) || 60;
+    const conf = Number(form.elements.conf.value) || 3;
+    const status = form.elements.status ? form.elements.status.value : 'todo';
+    const assigneeId = form.elements.assigneeId.value || null;
+    let assigneeName = null;
+    const targetTeam = (teamsCache || []).find(x => x.id === tid) || currentTeam;
+    if (assigneeId && targetTeam && targetTeam.members) {
+      const m = targetTeam.members.find(x => x.artistId === assigneeId);
+      if (m) assigneeName = m.artistName;
+    }
+    try {
+      await apiAddTeamTaskDirect(tid, pid, { name, sprint, story, cat, est, conf, status, assigneeId, assigneeName });
+      await fetchAllTasks(true);
+      closeModal();
+      render();
+      toast('Tâche ajoutée au tableau Kanban !');
+    } catch (err) {
+      toast(err.message || 'Erreur lors de l’ajout de la tâche');
+    }
   } else if (kind === 'create-team-task-direct') {
     const tid = form.dataset.tid;
     const pid = form.elements.projectId.value;
     const name = form.elements.name.value.trim();
     if (!name || !tid || !pid) return;
+    const sprint = (form.elements.sprint ? form.elements.sprint.value.trim() : '') || 'Sprint Beta';
+    const story = (form.elements.story ? form.elements.story.value.trim() : '') || 'HUD';
+    const status = (form.elements.status ? form.elements.status.value : '') || 'todo';
     const cat = form.elements.cat.value;
     const est = parseDur(form.elements.est.value) || 60;
     const conf = Number(form.elements.conf.value) || 3;
@@ -4882,10 +5438,11 @@ document.addEventListener('submit', async e => {
       if (m) assigneeName = m.artistName;
     }
     try {
-      await apiAddTeamTaskDirect(tid, pid, { name, cat, est, conf, assigneeId, assigneeName });
+      await apiAddTeamTaskDirect(tid, pid, { name, sprint, story, status, cat, est, conf, assigneeId, assigneeName });
+      await fetchAllTasks(true);
       closeModal();
       render();
-      toast('Tâche d’équipe créée avec succès !');
+      toast('Tâche créée avec succès !');
     } catch (err) {
       toast(err.message || 'Erreur lors de l’ajout de la tâche');
     }
@@ -4897,6 +5454,8 @@ document.addEventListener('submit', async e => {
       toast('Veuillez renseigner un nom, une équipe et un projet.');
       return;
     }
+    const sprint = (form.elements.sprint ? form.elements.sprint.value.trim() : '') || 'Sprint Beta';
+    const story = (form.elements.story ? form.elements.story.value.trim() : '') || 'HUD';
     const cat = form.elements.cat.value;
     const est = parseDur(form.elements.est.value) || 60;
     const conf = Number(form.elements.conf.value) || 3;
@@ -4910,22 +5469,23 @@ document.addEventListener('submit', async e => {
     const keepSoloCopy = form.elements.keepSoloCopy ? form.elements.keepSoloCopy.checked : false;
 
     try {
-      await apiAddTeamTaskDirect(teamId, projectId, { name, cat, est, conf, assigneeId, assigneeName });
+      await apiAddTeamTaskDirect(teamId, projectId, { name, sprint, story, cat, est, conf, assigneeId, assigneeName });
       if (keepSoloCopy && p) {
         p.tasks.push(newTask({ name, cat, est, conf, planned: p.status === 'plan' }));
         commit();
       }
+      await fetchAllTasks(true);
       closeModal();
-      toast('Tâche d’équipe créée avec succès !');
+      toast('Tâche de groupe créée avec succès !');
     } catch (err) {
-      toast(err.message || 'Erreur lors de l’envoi à l’équipe');
+      toast(err.message || 'Erreur lors de l’envoi au groupe');
     }
   } else if (kind === 'push-to-team') {
     const origTid = form.dataset.tid;
     const teamId = form.elements.teamId.value;
     const projectId = form.elements.projectId.value;
     if (!teamId || !projectId) {
-      toast('Sélectionnez une équipe et un projet collectif.');
+      toast('Sélectionnez un groupe et un projet collectif.');
       return;
     }
     const targetTask = p ? p.tasks.find(x => x.id === origTid) : null;
@@ -4942,6 +5502,8 @@ document.addEventListener('submit', async e => {
     try {
       await apiAddTeamTaskDirect(teamId, projectId, {
         name: targetTask.name,
+        sprint: targetTask.sprint || 'Sprint Beta',
+        story: targetTask.story || 'HUD',
         cat: targetTask.cat,
         est: targetTask.est,
         conf: targetTask.conf,
@@ -4955,8 +5517,9 @@ document.addEventListener('submit', async e => {
         p.tasks = p.tasks.filter(x => x.id !== origTid);
         commit();
       }
+      await fetchAllTasks(true);
       closeModal();
-      toast(transferMode === 'move' ? 'Tâche déplacée vers l’équipe avec succès !' : 'Tâche dupliquée vers l’équipe avec succès !');
+      toast(transferMode === 'move' ? 'Tâche déplacée vers le groupe avec succès !' : 'Tâche dupliquée vers le groupe avec succès !');
     } catch (err) {
       toast(err.message || 'Erreur lors du transfert.');
     }
@@ -4966,6 +5529,9 @@ document.addEventListener('submit', async e => {
     const taskId = form.dataset.taskid;
     const name = form.elements.name.value.trim();
     if (!name || !teamId || !projectId || !taskId) return;
+    const sprint = form.elements.sprint ? form.elements.sprint.value.trim() : undefined;
+    const story = form.elements.story ? form.elements.story.value.trim() : undefined;
+    const status = form.elements.status ? form.elements.status.value : undefined;
     const cat = form.elements.cat.value;
     const est = parseDur(form.elements.est.value) || 60;
     const conf = Number(form.elements.conf.value) || 3;
@@ -4976,11 +5542,17 @@ document.addEventListener('submit', async e => {
       const m = targetTeam.members.find(x => x.artistId === assigneeId);
       if (m) assigneeName = m.artistName;
     }
+    const updates = { name, cat, est, conf, assigneeId, assigneeName };
+    if (sprint !== undefined) updates.sprint = sprint;
+    if (story !== undefined) updates.story = story;
+    if (status !== undefined) updates.status = status;
+
     try {
-      await apiUpdateTeamTaskDirect(teamId, projectId, taskId, { name, cat, est, conf, assigneeId, assigneeName });
+      await apiUpdateTeamTaskDirect(teamId, projectId, taskId, updates);
+      await fetchAllTasks(true);
       closeModal();
       render();
-      toast('Tâche d’équipe mise à jour.');
+      toast('Tâche mise à jour avec succès.');
     } catch (err) {
       toast(err.message || 'Erreur');
     }
@@ -5060,9 +5632,33 @@ document.addEventListener('change', e => {
     kanbanFilterMember = el.value;
     render();
     return;
+  } else if (act === 'kanban-filter-story') {
+    kanbanFilterStory = el.value;
+    render();
+    return;
+  } else if (act === 'kanban-filter-group') {
+    kanbanFilterGroup = el.value;
+    render();
+    return;
   } else if (act === 'kanban-filter-cat') {
     kanbanFilterCat = el.value;
     render();
+    return;
+  } else if (act === 'kanban-create-group-change') {
+    const chosenTeamId = el.value;
+    fetchTeam(chosenTeamId).then(team => {
+      if (!team) return;
+      const projSelect = $('#kanbanCreateProjSelect');
+      const memSelect = $('#kanbanCreateMemberSelect');
+      if (projSelect) {
+        projSelect.innerHTML = (team.projects || []).length
+          ? (team.projects || []).map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('')
+          : '<option value="">(Aucun projet de groupe)</option>';
+      }
+      if (memSelect) {
+        memSelect.innerHTML = '<option value="">— Non assignée —</option>' + (team.members || []).map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑 (Lead)' : ''}</option>`).join('');
+      }
+    });
     return;
   } else if (act === 'solo-team-select-change' || act === 'push-team-select-change') {
     const chosenTeamId = el.value;
