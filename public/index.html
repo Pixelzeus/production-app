@@ -1356,6 +1356,7 @@ async function selectArtist(artist, stateData = null) {
     if (!state.student) state.student = artist.name;
   }
   closeModal();
+  await Promise.all([fetchTeams(true), fetchAllTasks(true)]).catch(() => {});
   render();
   saveNow();
 }
@@ -1367,6 +1368,28 @@ let currentTeam = null;
 let adminStatsCache = null;
 let adminKey = sessionStorage.getItem('carnet:admin_key') || '';
 let adminProtected = false;
+
+function getArtistGroups() {
+  if (!currentArtist || !teamsCache) return [];
+  return (teamsCache || []).filter(g => (g.members || []).some(m => m.artistId === currentArtist.id));
+}
+
+function getActiveGroup() {
+  const groups = getArtistGroups();
+  if (!groups.length) return null;
+  try {
+    const savedId = localStorage.getItem('carnet-de-prod:active-group');
+    if (savedId) {
+      const found = groups.find(g => g.id === savedId);
+      if (found) return found;
+    }
+  } catch (_) {}
+  return groups[0];
+}
+
+function setActiveGroupId(id) {
+  try { localStorage.setItem('carnet-de-prod:active-group', id); } catch (_) {}
+}
 
 function adminHeaders(base = {}) {
   const h = { ...base };
@@ -2780,21 +2803,88 @@ function viewTeamsIndex() {
 
 /* ============ TABLEAU KANBAN GLOBAL (PAGE D'ACCUEIL) ============ */
 function viewKanbanHome() {
-  if (allTasksCache === null) {
+  if (allTasksCache === null || !teamsLoaded) {
     Promise.all([fetchAllTasks(), fetchTeams()]).then(() => renderSoon());
     return `<div class="card empty" style="padding:48px 24px;text-align:center"><div class="sync-dot saving" style="width:12px;height:12px"></div> <p class="muted" style="margin-top:12px">Chargement du Tableau Kanban de production...</p></div>`;
   }
 
-  const allTasks = allTasksCache || [];
   const allGroups = teamsCache || [];
 
-  // En-tête de bienvenue Kanban
+  if (!currentArtist) {
+    return `
+      <div class="card empty" style="padding:56px 24px;text-align:center;max-width:680px;margin:30px auto">
+        <div style="font-size:3rem;margin-bottom:14px">🎨</div>
+        <h2>Bienvenue sur Carnet de Prod</h2>
+        <p class="muted" style="margin:8px 0 24px;font-size:1.05rem">
+          Pour accéder à votre tableau Kanban de production et planifier vos Sprints & Stories, veuillez sélectionner ou créer votre profil d'artiste.
+        </p>
+        <button class="btn btn-primary btn-big" data-act="switch-artist">
+          Choisir ou créer un profil d'artiste
+        </button>
+      </div>
+    `;
+  }
+
+  const artistGroups = getArtistGroups();
+
+  if (artistGroups.length === 0) {
+    return `
+      <div class="card" style="padding:40px 28px;max-width:680px;margin:24px auto;text-align:center">
+        <div style="font-size:3rem;margin-bottom:12px">👥</div>
+        <h2>Tu n'es encore membre d'aucun groupe</h2>
+        <p class="muted" style="margin:8px 0 24px;font-size:1rem;line-height:1.5">
+          Sur Carnet de Prod, chaque groupe de production dispose d'un espace Kanban strictement dédié.<br>
+          Rejoins un groupe existant ci-dessous ou crée un nouveau groupe pour commencer.
+        </p>
+
+        ${allGroups.length > 0 ? `
+          <div style="text-align:left;background:var(--card-2);padding:18px;border-radius:12px;border:1px solid var(--line-hair);margin-bottom:24px">
+            <div style="font-weight:750;font-size:.95rem;margin-bottom:12px">Groupes de production disponibles :</div>
+            <div class="stack" style="gap:10px">
+              ${allGroups.map(g => `
+                <div class="row" style="justify-content:space-between;padding:10px 14px;background:var(--card);border:1.5px solid var(--line-soft);border-radius:10px">
+                  <div>
+                    <div style="font-weight:700;font-size:1rem">👥 ${esc(g.name)}</div>
+                    <div class="small faint">${(g.members || []).length} membre(s) · ${(g.projects || []).length} projet(s)</div>
+                  </div>
+                  <button class="btn btn-sm btn-primary" data-act="join-group-direct" data-gid="${esc(g.id)}">
+                    Rejoindre ce groupe
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="row" style="justify-content:center;gap:12px">
+          <button class="btn btn-primary" data-act="open-create-team">
+            ${ic('plus')} Créer un nouveau groupe
+          </button>
+          <a class="btn btn-soft" href="#/groupes">
+            Administration des groupes
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  const activeGroup = getActiveGroup() || artistGroups[0];
+  const groupTasks = (allTasksCache || []).filter(t => t.groupId === activeGroup.id || t.teamId === activeGroup.id);
+  const groupMembers = activeGroup.members || [];
+  const groupProjects = activeGroup.projects || [];
+
+  // En-tête de bienvenue Kanban avec groupe actif
   const head = `
     <div class="page-head" style="align-items:flex-start;margin-bottom:14px">
       <div>
-        <div class="row" style="gap:10px;align-items:center">
+        <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
           <h1><span class="mark">Tableau Kanban</span></h1>
-          <span class="badge badge-ok" style="font-size:.78rem">Accueil Principal</span>
+          <span class="badge badge-ok" style="font-size:.82rem;font-weight:700">👥 ${esc(activeGroup.name)}</span>
+          ${artistGroups.length > 1 ? `
+            <select class="input input-sm" data-act="switch-active-group" style="font-size:.82rem;font-weight:700;width:auto;cursor:pointer" title="Basculer vers un autre de vos groupes">
+              ${artistGroups.map(g => `<option value="${esc(g.id)}" ${g.id === activeGroup.id ? 'selected' : ''}>Changer de groupe : 👥 ${esc(g.name)}</option>`).join('')}
+            </select>
+          ` : ''}
         </div>
         <p class="muted" style="margin:6px 0 0">
           Supervision de production en 3 niveaux : <b>Sprint</b> › <b>Stories</b> (éléments à produire) › <b>Tâches</b>
@@ -2805,33 +2895,13 @@ function viewKanbanHome() {
           ${ic('plus')} Nouvelle tâche
         </button>
         <a class="btn btn-soft" href="#/groupes">
-          👥 Gérer les groupes (${allGroups.length})
+          ⚙️ Administration & Groupes
         </a>
       </div>
     </div>
   `;
 
-  // Collecter les projets et membres de tous les groupes
-  const allMembers = [];
-  const allProjects = [];
-  const memberSeen = new Set();
-  const projSeen = new Set();
-  allGroups.forEach(g => {
-    (g.members || []).forEach(m => {
-      if (!memberSeen.has(m.artistId)) {
-        memberSeen.add(m.artistId);
-        allMembers.push({ artistId: m.artistId, artistName: m.artistName, role: m.role, groupName: g.name });
-      }
-    });
-    (g.projects || []).forEach(p => {
-      if (!projSeen.has(p.id)) {
-        projSeen.add(p.id);
-        allProjects.push({ ...p, groupId: g.id, groupName: g.name });
-      }
-    });
-  });
-
-  return head + renderKanbanBoard('all', allTasks, allMembers, allProjects, false, true);
+  return head + renderKanbanBoard(activeGroup.id, groupTasks, groupMembers, groupProjects, false, true);
 }
 
 /* ============ TABLEAU KANBAN HIÉRARCHIQUE (Sprint › Story › Task) ============ */
@@ -2872,9 +2942,6 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
   }
   if (kanbanFilterStory !== 'all') {
     filtered = filtered.filter(t => (t.story || 'HUD') === kanbanFilterStory);
-  }
-  if (isGlobalHome && kanbanFilterGroup !== 'all') {
-    filtered = filtered.filter(t => (t.teamId === kanbanFilterGroup || t.groupId === kanbanFilterGroup));
   }
   if (!isSingleProject && kanbanFilterProject !== 'all') {
     filtered = filtered.filter(t => t.projectId === kanbanFilterProject);
@@ -2932,13 +2999,6 @@ function renderKanbanBoard(teamId, allTasks, members, projects, isSingleProject 
           <option value="all" ${kanbanFilterStory === 'all' ? 'selected' : ''}>📦 Toutes les stories (${stories.length})</option>
           ${stories.map(st => `<option value="${esc(st)}" ${kanbanFilterStory === st ? 'selected' : ''}>📦 ${esc(st)}</option>`).join('')}
         </select>
-
-        ${isGlobalHome && teamsCache && teamsCache.length > 1 ? `
-          <select class="input input-sm" data-act="kanban-filter-group" style="font-size:.84rem" title="Filtrer par groupe">
-            <option value="all" ${kanbanFilterGroup === 'all' ? 'selected' : ''}>👥 Tous les groupes (${teamsCache.length})</option>
-            ${teamsCache.map(g => `<option value="${esc(g.id)}" ${kanbanFilterGroup === g.id ? 'selected' : ''}>👥 ${esc(g.name)}</option>`).join('')}
-          </select>
-        ` : ''}
 
         ${!isSingleProject && teamProjects.length > 1 ? `
           <select class="input input-sm" data-act="kanban-filter-project" style="font-size:.84rem" title="Filtrer par projet">
@@ -3112,7 +3172,7 @@ function viewTeamDetail(teamId) {
 
   const head = `
     <div style="margin-bottom:16px">
-      <a class="back no-print" href="#/equipes">${ic('left')} Toutes les équipes</a>
+      <a class="back no-print" href="#/groupes">${ic('left')} Administration des groupes</a>
     </div>
     <div class="page-head">
       <div>
@@ -4082,21 +4142,37 @@ function newTask(fields) {
 
 /* ================== MODALES DE GROUPE, HIÉRARCHIE & KANBAN ================== */
 async function openCreateKanbanTaskModal(defaultStatus = 'todo', defaultSprint = null, defaultStory = null) {
+  if (!currentArtist) {
+    confirmBox('Profil artiste requis', 'Veuillez d’abord choisir votre profil d’artiste pour créer une tâche.', 'Choisir un artiste', () => {
+      closeModal();
+      openArtistSelectModal();
+    });
+    return;
+  }
+
   let teams = await fetchTeams(true);
-  if (!teams || !teams.length) {
-    try {
-      await apiCreateTeam('Groupe Principal', 'Groupe de production par défaut');
-      teams = await fetchTeams(true);
-    } catch (_) {
-      confirmBox('Aucun groupe créé', 'Pour organiser vos tâches en Sprints et Stories, créez d’abord un premier groupe.', 'Créer un groupe', () => {
-        closeModal();
-        location.hash = '#/groupes';
-      });
-      return;
+  let artistGroups = getArtistGroups();
+
+  if (!artistGroups || !artistGroups.length) {
+    if (!teams || !teams.length) {
+      try {
+        const newGroup = await apiCreateTeam('Groupe Principal', 'Groupe de production par défaut');
+        await apiAddTeamMember(newGroup.id, currentArtist.id, 'lead');
+        teams = await fetchTeams(true);
+        artistGroups = getArtistGroups();
+      } catch (_) {}
     }
   }
 
-  let selectedTeam = (kanbanFilterGroup !== 'all' && teams.find(t => t.id === kanbanFilterGroup)) || teams[0];
+  if (!artistGroups || !artistGroups.length) {
+    confirmBox('Aucun groupe assigné', `Vous n'êtes assigné(e) à aucun groupe de production. Veuillez d'abord rejoindre un groupe ou en créer un dans l'espace Groupes.`, 'Voir les groupes', () => {
+      closeModal();
+      location.hash = '#/groupes';
+    });
+    return;
+  }
+
+  const selectedTeam = getActiveGroup() || artistGroups[0];
   let fullTeam = await fetchTeam(selectedTeam.id);
   if (!fullTeam) fullTeam = selectedTeam;
   let projects = fullTeam.projects || [];
@@ -4122,21 +4198,22 @@ async function openCreateKanbanTaskModal(defaultStatus = 'todo', defaultSprint =
     wide: true,
     body: `
       <form data-form="create-kanban-task-direct" class="stack">
+        <input type="hidden" name="teamId" value="${esc(selectedTeam.id)}">
         <p class="small muted" style="margin:0 0 10px">Structure hiérarchique : <b>Sprint</b> › <b>Story</b> (élément à produire) › <b>Tâche</b></p>
 
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Groupe *</label>
-            <select class="input" name="teamId" data-act="kanban-create-group-change" required>
-              ${teams.map(t => `<option value="${esc(t.id)}" ${t.id === selectedTeam.id ? 'selected' : ''}>👥 ${esc(t.name)}</option>`).join('')}
-            </select>
+        <div class="row" style="gap:10px;align-items:center;padding:10px 14px;background:var(--card-2);border-radius:10px;border:1px solid var(--line-hair);margin-bottom:6px">
+          <div style="flex:1">
+            <span class="small faint">Groupe rattaché (automatique) :</span>
+            <div style="font-weight:750;font-size:1.02rem">👥 ${esc(selectedTeam.name)}</div>
           </div>
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Projet du groupe *</label>
-            <select class="input" name="projectId" id="kanbanCreateProjSelect" required>
-              ${projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('')}
-            </select>
-          </div>
+          <span class="badge badge-ok" style="font-size:.78rem">Ton groupe de production</span>
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Projet du groupe *</label>
+          <select class="input" name="projectId" id="kanbanCreateProjSelect" required>
+            ${projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('')}
+          </select>
         </div>
 
         <div class="row" style="gap:10px">
@@ -4176,7 +4253,7 @@ async function openCreateKanbanTaskModal(defaultStatus = 'todo', defaultSprint =
             <label style="font-weight:700">Assigner à (membre du groupe)</label>
             <select class="input" name="assigneeId" id="kanbanCreateMemberSelect">
               <option value="">— Non assignée —</option>
-              ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑 (Lead)' : ''}</option>`).join('')}
+              ${members.map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑 (Lead)' : ''} ${currentArtist && currentArtist.id === m.artistId ? '(Moi)' : ''}</option>`).join('')}
             </select>
           </div>
           <div class="field" style="flex:1">
@@ -4332,15 +4409,20 @@ async function openCreateTeamTaskModal(teamId = null, defaultProjectId = null, d
 }
 
 async function openSoloToTeamModal() {
+  if (!currentArtist) {
+    toast('Veuillez d’abord sélectionner un profil d’artiste.');
+    return;
+  }
   const teams = await fetchTeams(true);
-  if (!teams || !teams.length) {
-    confirmBox('Aucun groupe disponible', 'Pour créer une tâche de groupe, crée d’abord un groupe dans l’espace Groupes.', 'Créer un groupe', () => {
+  const artistGroups = getArtistGroups();
+  if (!artistGroups || !artistGroups.length) {
+    confirmBox('Aucun groupe assigné', 'Pour créer une tâche de groupe, rejoins ou crée d’abord un groupe dans l’espace Groupes.', 'Espace Groupes', () => {
       closeModal();
       location.hash = '#/groupes';
     });
     return;
   }
-  const defaultTeam = teams[0];
+  const defaultTeam = getActiveGroup() || artistGroups[0];
   const fullTeam = await fetchTeam(defaultTeam.id);
   const projects = (fullTeam && fullTeam.projects) || [];
   const members = (fullTeam && fullTeam.members) || [];
@@ -4353,20 +4435,25 @@ async function openSoloToTeamModal() {
     wide: true,
     body: `
       <form data-form="solo-to-team" class="stack">
-        <p class="small muted" style="margin:0 0 10px">Crée une tâche directement dans un projet collectif de groupe, avec possibilité de la garder aussi dans ton découpage solo.</p>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Groupe destinataire *</label>
-            <select class="input" name="teamId" data-act="solo-team-select-change" required>
-              ${teams.map(t => `<option value="${esc(t.id)}" ${t.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(t.name)}</option>`).join('')}
-            </select>
+        <p class="small muted" style="margin:0 0 10px">Crée une tâche directement dans votre groupe de production, avec possibilité de la garder aussi dans votre découpage solo.</p>
+        
+        <div class="row" style="gap:10px;align-items:center;padding:10px 14px;background:var(--card-2);border-radius:10px;border:1px solid var(--line-hair);margin-bottom:6px">
+          <div style="flex:1">
+            <span class="small faint">Groupe destinataire :</span>
+            <div style="font-weight:750;font-size:1.02rem">👥 ${esc(defaultTeam.name)}</div>
           </div>
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Projet collectif *</label>
-            <select class="input" name="projectId" id="soloTeamProjSelect" required>
-              ${projects.length ? projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif créé)</option>'}
+          ${artistGroups.length > 1 ? `
+            <select class="input input-sm" name="teamId" data-act="solo-team-select-change" style="width:auto;font-size:.82rem">
+              ${artistGroups.map(t => `<option value="${esc(t.id)}" ${t.id === defaultTeam.id ? 'selected' : ''}>Changer : 👥 ${esc(t.name)}</option>`).join('')}
             </select>
-          </div>
+          ` : `<input type="hidden" name="teamId" value="${esc(defaultTeam.id)}"><span class="badge badge-ok" style="font-size:.78rem">Ton groupe</span>`}
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Projet collectif *</label>
+          <select class="input" name="projectId" id="soloTeamProjSelect" required>
+            ${projects.length ? projects.map(p => `<option value="${esc(p.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif créé)</option>'}
+          </select>
         </div>
 
         <div class="row" style="gap:10px">
@@ -4440,15 +4527,21 @@ async function openPushToTeamModal(taskId) {
   const t = p.tasks.find(x => x.id === taskId);
   if (!t) return;
 
+  if (!currentArtist) {
+    toast('Veuillez d’abord sélectionner un profil d’artiste.');
+    return;
+  }
+
   const teams = await fetchTeams(true);
-  if (!teams || !teams.length) {
-    confirmBox('Aucun groupe disponible', 'Pour transférer cette tâche, crée d’abord un groupe.', 'Créer un groupe', () => {
+  const artistGroups = getArtistGroups();
+  if (!artistGroups || !artistGroups.length) {
+    confirmBox('Aucun groupe assigné', 'Pour transférer cette tâche, rejoins ou crée d’abord un groupe dans l’espace Groupes.', 'Espace Groupes', () => {
       closeModal();
       location.hash = '#/groupes';
     });
     return;
   }
-  const defaultTeam = teams[0];
+  const defaultTeam = getActiveGroup() || artistGroups[0];
   const fullTeam = await fetchTeam(defaultTeam.id);
   const projects = (fullTeam && fullTeam.projects) || [];
   const members = (fullTeam && fullTeam.members) || [];
@@ -4465,19 +4558,23 @@ async function openPushToTeamModal(taskId) {
           </div>
         </div>
 
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Groupe destinataire *</label>
-            <select class="input" name="teamId" data-act="push-team-select-change" required>
-              ${teams.map(x => `<option value="${esc(x.id)}" ${x.id === defaultTeam.id ? 'selected' : ''}>👥 ${esc(x.name)}</option>`).join('')}
-            </select>
+        <div class="row" style="gap:10px;align-items:center;padding:10px 14px;background:var(--card-2);border-radius:10px;border:1px solid var(--line-hair);margin-bottom:6px">
+          <div style="flex:1">
+            <span class="small faint">Groupe destinataire :</span>
+            <div style="font-weight:750;font-size:1.02rem">👥 ${esc(defaultTeam.name)}</div>
           </div>
-          <div class="field" style="flex:1">
-            <label style="font-weight:700">Projet collectif *</label>
-            <select class="input" name="projectId" id="pushTeamProjSelect" required>
-              ${projects.length ? projects.map(x => `<option value="${esc(x.id)}">📁 ${esc(p.name)}</option>`).join('') : '<option value="">(Aucun projet collectif)</option>'}
+          ${artistGroups.length > 1 ? `
+            <select class="input input-sm" name="teamId" data-act="push-team-select-change" style="width:auto;font-size:.82rem">
+              ${artistGroups.map(x => `<option value="${esc(x.id)}" ${x.id === defaultTeam.id ? 'selected' : ''}>Changer : 👥 ${esc(x.name)}</option>`).join('')}
             </select>
-          </div>
+          ` : `<input type="hidden" name="teamId" value="${esc(defaultTeam.id)}"><span class="badge badge-ok" style="font-size:.78rem">Ton groupe</span>`}
+        </div>
+
+        <div class="field">
+          <label style="font-weight:700">Projet collectif *</label>
+          <select class="input" name="projectId" id="pushTeamProjSelect" required>
+            ${projects.length ? projects.map(x => `<option value="${esc(x.id)}">📁 ${esc(x.name)}</option>`).join('') : '<option value="">(Aucun projet collectif)</option>'}
+          </select>
         </div>
 
         <div class="field">
@@ -4641,6 +4738,24 @@ document.addEventListener('click', async e => {
     case 'switch-artist': openArtistModal(false); break;
     case 'choose-artist': {
       selectArtist({ id: el.dataset.aid, name: el.dataset.aname });
+      break;
+    }
+    case 'join-group-direct': {
+      const gid = el.dataset.gid;
+      if (!gid) return;
+      if (!currentArtist) {
+        toast('Veuillez d’abord sélectionner un profil d’artiste.');
+        return;
+      }
+      try {
+        await apiAddTeamMember(gid, currentArtist.id, 'member');
+        setActiveGroupId(gid);
+        await Promise.all([fetchTeams(true), fetchAllTasks(true)]);
+        toast('Tu as rejoint le groupe avec succès !');
+        render();
+      } catch (err) {
+        toast(err.message || 'Impossible de rejoindre le groupe');
+      }
       break;
     }
     case 'theme': { const next = currentTheme() === 'dark' ? 'light' : 'dark'; applyTheme(next); try { localStorage.setItem(THEME_KEY, next); } catch (_) { } break; }
@@ -5298,9 +5413,16 @@ document.addEventListener('submit', async e => {
     if (!name) return;
     try {
       const created = await apiCreateTeam(name, desc);
+      if (currentArtist) {
+        try {
+          await apiAddTeamMember(created.id, currentArtist.id, 'lead');
+          setActiveGroupId(created.id);
+          await Promise.all([fetchTeams(true), fetchAllTasks(true)]);
+        } catch (_) {}
+      }
       closeModal();
       location.hash = '#/equipe/' + created.id;
-      toast(`Équipe « ${created.name} » créée avec succès !`);
+      toast(`Groupe « ${created.name} » créé avec succès !`);
     } catch (err) {
       toast(err.message || 'Erreur lors de la création');
     }
@@ -5632,6 +5754,11 @@ document.addEventListener('change', e => {
     kanbanFilterMember = el.value;
     render();
     return;
+  } else if (act === 'switch-active-group') {
+    const chosenGid = el.value;
+    setActiveGroupId(chosenGid);
+    render();
+    return;
   } else if (act === 'kanban-filter-story') {
     kanbanFilterStory = el.value;
     render();
@@ -5662,6 +5789,7 @@ document.addEventListener('change', e => {
     return;
   } else if (act === 'solo-team-select-change' || act === 'push-team-select-change') {
     const chosenTeamId = el.value;
+    setActiveGroupId(chosenTeamId);
     fetchTeam(chosenTeamId).then(team => {
       if (!team) return;
       const projSelect = act === 'solo-team-select-change' ? $('#soloTeamProjSelect') : $('#pushTeamProjSelect');
@@ -5672,7 +5800,7 @@ document.addEventListener('change', e => {
           : '<option value="">(Aucun projet collectif créé)</option>';
       }
       if (memSelect) {
-        memSelect.innerHTML = '<option value="">— Non assignée —</option>' + (team.members || []).map(m => `<option value="${esc(m.artistId)}">${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('');
+        memSelect.innerHTML = '<option value="">— Non assignée —</option>' + (team.members || []).map(m => `<option value="${esc(m.artistId)}" ${currentArtist && currentArtist.id === m.artistId ? 'selected' : ''}>👤 ${esc(m.artistName)} ${m.role === 'lead' ? '👑' : ''}</option>`).join('');
       }
     });
     return;
@@ -5981,6 +6109,7 @@ if (!storageOK) { try { localStorage.setItem('__t', '1'); localStorage.removeIte
     const loaded = await loadArtistState(saved.id);
     state = loaded ? normalize(loaded) : freshState();
     if (!state.student) state.student = saved.name;
+    await Promise.all([fetchTeams(true), fetchAllTasks(true)]).catch(() => {});
     render();
     saveNow();
   } else {
